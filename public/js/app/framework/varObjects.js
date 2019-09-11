@@ -28,6 +28,13 @@ window.Service = function(){
         ContainerPanel,
         APIUrl,
         LoadingComplete,
+        Custom: null,
+        Modification: null,
+        SubmitTransformation: null,
+        Transformation: null,
+        DomEvents: null,
+        Data: null,
+        Action: null,
         ErrorHandler: null,
         NotificationHandler: null,
         ServerRequest: null,
@@ -107,15 +114,15 @@ window.Service.AddProperty('Transformation',function(){
 
 window.Service.AddProperty('DomEvents',function(){
 
-    let events = [];
-    let addMethod = function(f){
-        events.push(f);
+    let addMethod = function(name,f){
+        Response[name] = f;
     };
 
-    return {
-        AddMethod: addMethod,
-        Events: events
+    let Response = {
+        AddMethod: addMethod
     };
+
+    return Response;
 }());
 
 window.Service.AddProperty('Data',function(){

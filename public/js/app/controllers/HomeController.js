@@ -1,4 +1,4 @@
-﻿window.Controller.Home = function () {
+window.Controller.Home = function () {
 
     const init = function () {
         window.Service.Data.AddMethod("home-listing", function (component) {

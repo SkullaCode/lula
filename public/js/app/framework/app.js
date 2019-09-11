@@ -3,7 +3,7 @@ jQuery(function(){
     window.Service.Transformation.Bootstrap();
     //DOMEvents();
 
-    window["Controller"]["Default"]["FormSubmit"] = function(e, success=null, error=null){
+    window.Controller.Default.FormSubmit = function(e, success=null, error=null){
         e.preventDefault();
         if(window.Service.SubmitButton !== null) return false;
         window.Service.SubmitButton = jQuery(this);
@@ -70,7 +70,7 @@ jQuery(function(){
         else window.Service.ServerRequest(site_url,params,method,success,error);
     };
 
-    window["Controller"]["Default"]["FileSelect"] = function(e){
+    window.Controller.Default.FileSelect = function(e){
         e.preventDefault();
         //if there is a triggered action do not execute
         if(window.Service.ActionButton !== null) return false;
@@ -100,7 +100,7 @@ jQuery(function(){
         window.Service.ActionButton = null;
     };
 
-    window["Controller"]["Default"]["ModalSelect"] = function(e){
+    window.Controller.Default.ModalSelect = function(e){
         e.preventDefault();
         if(window.Service.ActionButton !== null) return false;
         window.Service.ActionButton = jQuery(this);
@@ -124,7 +124,7 @@ jQuery(function(){
         window.Service.ActionButton = null;
     };
 
-    window["Controller"]["Default"]["PanelSelect"] = function(e){
+    window.Controller.Default.PanelSelect = function(e){
         e.preventDefault();
         if(window.Service.ActionButton !== null) return false;
         window.Service.ActionButton = jQuery(this);

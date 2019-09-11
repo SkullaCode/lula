@@ -10,27 +10,33 @@ window.Service.Data.AddMethod('Bootstrap', function(){
     window.Service.LoadingComplete = false;
 
     if(sessionStorage.getItem('GenderList') !== null){
-        //VBOX.ModelData.List['Gender'] = JSON.parse(sessionStorage.getItem('GenderList'));
+        //window.Service.ModelData.List['Gender'] = JSON.parse(sessionStorage.getItem('GenderList'));
     }
     else{
-        /*ajx('/list/gender',null,'GET',function(data){
-            VBOX.ModelData.List['Gender'] = data.data;
+        /*window.Service.ServerRequest('/list/gender',null,'GET',function(data){
+            window.Service.ModelData.List['Gender'] = data.data;
             sessionStorage.setItem('GenderList',JSON.stringify(data.data));
-        },VBOX_LoaderErrorHandler);*/
+        },window.Service.ErrorHandler);*/
     }
     window.Service.LoadingComplete = true;
 });
 
 window.Service.Data.AddMethod('static-listing-panel',function(component){
-    window.Service.Bind(component,window.Service.ModelData["listing-panel"][component.data("id")])
+    if(typeof component.data("id") !== "undefined"){
+        window.Service.Bind(component,window.Service.ModelData["listing-panel"][component.data("id")]);
+    }
 });
 
 window.Service.Data.AddMethod('static-listing-modal',function(component){
-    window.Service.Bind(component,window.Service.ModelData["listing-modal"][component.data("id")])
+    if(typeof component.data("id") !== "undefined"){
+        window.Service.Bind(component,window.Service.ModelData["listing-modal"][component.data("id")]);
+    }
 });
 
 window.Service.Data.AddMethod('static-listing-form', function(component){
-    window.Service.BindForm(component,window.Service.ModelData["listing-form"][component.data("id")]);
+    if(typeof component.data("id") !== "undefined"){
+        window.Service.BindForm(component,window.Service.ModelData["listing-form"][component.data("id")]);
+    }
 });
 
 
