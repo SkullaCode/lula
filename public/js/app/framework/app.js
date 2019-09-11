@@ -124,10 +124,9 @@ jQuery(function(){
         window.Service.ActionButton = null;
     };
 
-    window.Controller.Default.PanelSelect = function(e){
-        e.preventDefault();
+    window.Controller.Default.PanelSelect = function(elem){
         if(window.Service.ActionButton !== null) return false;
-        window.Service.ActionButton = jQuery(this);
+        window.Service.ActionButton = jQuery(elem);
         let panel = window.Service.FindElement(`#${window.Service.ActionButton.data("action")}`);
         if(typeof window.Service.ActionButton.data("id") !== "undefined")
             panel.data("id",window.Service.ActionButton.data("id"));
@@ -140,11 +139,9 @@ jQuery(function(){
             window.Service.LoadPanel(panel);
         }
         //DOMEvents();
-        let custom = jQuery(this).data("custom");
+        let custom = jQuery(elem).data("custom");
         if(typeof custom !== "undefined"){
-            let func = window.Service.Modification[custom];
-            if(typeof func !== "undefined")
-                func(window.Service.LoadedPanel);
+            window.Service.ExecuteCustom(custom,window.Service.LoadedPanel);
         }
         window.Service.ActionButton = null;
     };

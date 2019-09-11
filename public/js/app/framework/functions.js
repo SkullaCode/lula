@@ -572,24 +572,26 @@ window.Service.AddProperty("FormSubmitDataHandler",function(data){
 });
 
 window.Service.AddProperty("LoadPanel",function(elem,target=null){
-    let action = elem.data("action");
-    let func = window.Service.Data[action];
-    if(typeof func !== "undefined") func(elem);
-    else window.Service.Data["static-listing-panel"](elem);
+    if(typeof elem !== "undefined"){
+        let action = elem.data("action");
+        let func = window.Service.Data[action];
+        if(typeof func !== "undefined") func(elem);
+        else window.Service.Data["static-listing-panel"](elem);
 
-    // we have to place panel on the DOM before we load it.....
-    // idk if its a javascript thing or jQuery thing
-    window.Service.ContainerPanel = jQuery("#container-panel");
-    window.Service.ContainerPanel.empty().append(elem);
-    let elem_id = (target == null) ? jQuery("#MainContainer") : jQuery(`#${target}`);
-    elem_id.css("display","none");
-    elem_id.empty();
-    elem_id.html(elem).fadeIn("slow");
-    window.Service.LoadedPanel = elem;
-    window.Service.ContainerPanel.empty();
-    window.Service.ContainerPanel = null;
-    window.Service.SubmitButton = null;
-    window.Service.ActionButton = null;
+        // we have to place panel on the DOM before we load it.....
+        // idk if its a javascript thing or jQuery thing
+        window.Service.ContainerPanel = jQuery("#container-panel");
+        window.Service.ContainerPanel.empty().append(elem);
+        let elem_id = (target == null) ? jQuery("#MainContainer") : jQuery(`#${target}`);
+        elem_id.css("display","none");
+        elem_id.empty();
+        elem_id.html(elem).fadeIn("slow");
+        window.Service.LoadedPanel = elem;
+        window.Service.ContainerPanel.empty();
+        window.Service.ContainerPanel = null;
+        window.Service.SubmitButton = null;
+        window.Service.ActionButton = null;
+    }
 });
 
 window.Service.AddProperty("LoadLayout",function(layout,panel){

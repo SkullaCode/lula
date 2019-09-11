@@ -1,6 +1,12 @@
 window.Controller.Home = function () {
 
     const init = function () {
+        window.Service.Modification.AddMethod("ColorRed",function(component){
+            let header = jQuery(component).find("h1");
+            header.css("color","red");
+            console.log(header);
+        });
+
         window.Service.Data.AddMethod("home-listing", function (component) {
                 window.Service.ServerRequest("Home/Data",{},"GET",function(data){
                     window.Service.ModelData["listing"] = [];

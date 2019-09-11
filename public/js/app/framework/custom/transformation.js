@@ -17,7 +17,7 @@ AddMethod('Bootstrap',function(){
         }
         else{
             clearInterval(id);
-            const defaultPanel = 'listing';
+            const defaultPanel = jQuery("#MainContainer").data("action");
             window.Service.MetaData['NotificationType'] = 'toaster';
             jQuery.ajaxSetup({headers: {"X-Session-Token": window.Service.MetaData.SessionToken }});
             let panel = window.Service.FindElement(`#${defaultPanel}`);
