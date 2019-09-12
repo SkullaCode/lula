@@ -2,22 +2,22 @@
 /**
  * -- Error Handler --
  * This function is responsible for handling all requests
- * which return with eithr a 400 or 500 status code
+ * which return 400 or 500 level status codes
  *
  * @param j
  * @param d
  * @param e
  * @constructor
  */
-window.Service.AddProperty("ErrorHandler",function(j,d,e){
-    if(window.Service.LoadedForm !== null){
-        window.Service.LoadedForm.find('input,select,textarea,button')
+Service.AddProperty("ErrorHandler",function(j,d,e){
+    if(Service.LoadedForm !== null){
+        Service.LoadedForm.find('input,select,textarea,button')
             .prop("disabled",false) // enable disabled for properties
             .each(function(){
                 //find elements that have the class 'clear-error' which
                 //indicates they should be cleared and clear them.
                 let elem = jQuery(this);
-                if(elem.hasClass("clear-error")){
+                if(elem.hasClass(Service.SYSTEM_CLEAR_ERROR)){
                     if(elem.prop("type") === "select-one"){
                         elem.prop("selectedIndex",0);
                     }
@@ -36,34 +36,47 @@ window.Service.AddProperty("ErrorHandler",function(j,d,e){
         Entity: "Application"
     };
     if(j.responseText.length > 0)
-        message = JSON.parse(j.responseText);
+        try{
+            message = JSON.parse(j.responseText);
+        }
+    catch(e){
+
+    }
+
 
     //add status codes and how they should be treated here
     switch(j.status){
         case 500: {
-            window.Service.NotificationHandler(message);
+            Service.NotificationHandler(message,"INTERNAL_SERVER_ERROR");
             break;
         }
         case 401:{
-            window.location.href = window.location.origin;
+            location.href = location.origin;
             break;
         }
         case 403:{
-            window.location.href = window.location.origin;
+            location.href = location.origin;
             break;
         }
         case 404:{
-            window.Service.NotificationHandler(message);
+            Service.NotificationHandler(message,"NOT_FOUND");
             break;
         }
     }
-    if(window.Service.SubmitButton !== null){
-        window.Service.SubmitButton.prop("disabled",false);
-        window.Service.SubmitButton = null;
+    if(Service.SubmitButton !== null){
+        Service.SubmitButton.prop("disabled",false);
+        Service.SubmitButton = null;
     }
 });
 
-window.Service.AddProperty("NotificationHandler",function(obj){
+/**
+ * -- Notification Handler --
+ * This function handles default implementation for notification
+ * system.
+ * @param obj
+ * @param status
+ */
+Service.AddProperty("NotificationHandler",function(obj,status){
 
 });
 
@@ -79,7 +92,7 @@ window.Service.AddProperty("NotificationHandler",function(obj){
  * @param hasFile boolean that determines if a file is in the form or not
  */
 //todo work out how to incorporate submitting files
-window.Service.AddProperty("ServerRequest",function(site,params,request,success,error,hasFile=false){
+Service.AddProperty("ServerRequest",function(site,params,request,success,error,hasFile=false){
     request = (request === undefined || request === null || !request)
         ? 'POST'
         : request.toUpperCase();
@@ -91,13 +104,13 @@ window.Service.AddProperty("ServerRequest",function(site,params,request,success,
     }
     //disable form fields so that they cannot be edited
     //while submission is taking place
-    if(window.Service.LoadedForm !== null){
-        window.Service.LoadedForm.find('input,select,textarea').prop("disabled",true);
+    if(Service.LoadedForm !== null){
+        Service.LoadedForm.find('input,select,textarea').prop("disabled",true);
     }
     //disable the button that triggered the action so that request cannot
     //be duplicated.
-    if(window.Service.SubmitButton !== null){
-        window.Service.SubmitButton.prop("disabled",true);
+    if(Service.SubmitButton !== null){
+        Service.SubmitButton.prop("disabled",true);
     }
 
     let ajax_params = {
@@ -107,19 +120,24 @@ window.Service.AddProperty("ServerRequest",function(site,params,request,success,
             //check if reload header is set and reload the page
             //if it is
             if(jqXHR.getResponseHeader("X-Reload")){
-                window.location.reload();
+                location.reload();
                 return;
             }
             //check if the redirect header is set and redirect
             //the page if it is
             if(jqXHR.getResponseHeader("X-Redirect")){
-                window.location.href = jqXHR.getResponseHeader("X-Redirect");
+                location.href = jqXHR.getResponseHeader("X-Redirect");
                 return;
             }
             let res = {};
             //ensure data is in JSON format
             if(typeof data === 'string' && data.length > 0){
-                data = JSON.parse(data);
+                try{
+                    data = JSON.parse(data);
+                }
+                catch(e){
+
+                }
             }
             res.success = status;
             res.message = jqXHR.statusText;
@@ -139,55 +157,55 @@ window.Service.AddProperty("ServerRequest",function(site,params,request,success,
     if(requestTypes.indexOf(request.toUpperCase()) >= 0){
         ajax_params.data = params;
     }
-    $.ajax(ajax_params);
+    jQuery.ajax(ajax_params);
 });
 
 /**
  * -- LaunchModal --
- * contains the logic required to launch an instance
- * of a modal
+ * This function handles default implementation for
+ * launching a modal
  *
  * @constructor
  */
-window.Service.AddProperty("LaunchModal",function(){
-    window.Service.LoadedModal.modal();
-    const action = window.Service.LoadedModal.data("action");
+Service.AddProperty("LaunchModal",function(){
+    Service.LoadedModal.modal();
+    const action = Service.LoadedModal.data("action");
     if(typeof action === "string"){
-        let func = window.Service.Data[action];
-        if(typeof func !== "undefined") func(window.Service.LoadedModal);
-        else window.Service.Data["static-listing-modal"](window.Service.LoadedModal);
+        let func = Service.Data[action];
+        if(typeof func !== "undefined") func(Service.LoadedModal);
+        else Service.Data[DefaultModalListing](Service.LoadedModal);
     }
-    window.Service.LoadedModal.on('hide.bs.modal',function(e){
-        if(window.Service.SubmitButton !== null){
+    Service.LoadedModal.on('hide.bs.modal',function(e){
+        if(Service.SubmitButton !== null){
             e.preventDefault();
             e.stopImmediatePropagation();
             return false;
         }
     });
-    window.Service.LoadedModal.on('hidden.bs.modal',function(){
+    Service.LoadedModal.on('hidden.bs.modal',function(){
         //todo determine if a request
         // is in progress and only remove after
         // it is complete
 
-        window.Service.LoadedModal.remove();
-        window.Service.LoadedModal = null;
-        window.Service.SubmitButton = null;
-        window.Service.Data.Store = {};
-        jQuery(".modal-container").empty();
+        Service.LoadedModal.remove();
+        Service.LoadedModal = null;
+        Service.SubmitButton = null;
+        Service.Data.Store = {};
+        jQuery(`.${ModalContainer}`).empty();
     });
 });
 
 /**
  * -- BindByID --
  * this function is responsible for binding the data
- * in 'window.Service.ModelData' to the elements of the desired
+ * in 'Service.ModelData' to the elements of the desired
  * component. only components with the class 'bind'
  * or 'bind-loop' are handled by this function
  *
  * @param component element that will have its elements bound
  * @param data data set from which values will be used in binding
  */
-window.Service.AddProperty("Bind",function(component, data){
+Service.AddProperty("Bind",function(component, data){
     let elems = component.find(".bind");
     jQuery.each(elems,function(){
         let elem = jQuery(this);
@@ -195,7 +213,7 @@ window.Service.AddProperty("Bind",function(component, data){
         if(elem.prop("tagName") === "SELECT"){
             let list = elem.data("list");
             if(typeof list !== "undefined"){
-                let listGroup = window.Service.ModelData.List[list];
+                let listGroup = Service.ModelData.List[list];
                 if(typeof listGroup !== "undefined"){
                     elem.empty();
                     elem.append("<option value=\"\"> --Select-- </option>");
@@ -208,18 +226,18 @@ window.Service.AddProperty("Bind",function(component, data){
         // if the element is an image bind the value to image source
         if(elem.prop("tagName") === "IMG"){
             if(typeof elem.data("property") !== "undefined"){
-                elem.prop("src",window.Service.GetProperty(elem.data("property"),data));
+                elem.prop("src",Service.GetProperty(elem.data("property"),data));
             }
             else if(typeof elem.prop("id") !== "undefined"){
-                elem.prop("src",window.Service.GetProperty(elem.prop("id"),data));
+                elem.prop("src",Service.GetProperty(elem.prop("id"),data));
             }
         }
         else {
             if(typeof elem.data("property") !== "undefined"){
-                let property = window.Service.GetProperty(elem.data("property"),data);
+                let property = Service.GetProperty(elem.data("property"),data);
                 //determine if a transformation method is present on the element
                 if(typeof elem.data("action") !== "undefined"){
-                    property = window.Service.Transform(elem.data("action"),property);
+                    property = Service.Transform(elem.data("action"),property);
                 }
                 //bind property to element as valid HTML
                 if(elem.hasClass('bind-value')){
@@ -243,7 +261,7 @@ window.Service.AddProperty("Bind",function(component, data){
                 }
             }
             else if(typeof elem.data("loop") !== "undefined"){
-                let property = window.Service.GetProperty(elem.data("loop"),data);
+                let property = Service.GetProperty(elem.data("loop"),data);
 
                 //get the looped element
                 let child = elem.children();
@@ -258,9 +276,9 @@ window.Service.AddProperty("Bind",function(component, data){
                         $.each(childElems,function() {
                             let childElem = $(this);
                             if(typeof childElem.data("property") !== "undefined"){
-                                let property = window.Service.GetProperty(childElem.data("property"),item);
+                                let property = Service.GetProperty(childElem.data("property"),item);
                                 if(typeof childElem.data("action") !== "undefined"){
-                                    property = window.Service.Transform(childElem.data("action"),property);
+                                    property = Service.Transform(childElem.data("action"),property);
                                 }
                                 //bind property to element as valid HTML
                                 if(childElem.hasClass('bind-value')){
@@ -284,9 +302,9 @@ window.Service.AddProperty("Bind",function(component, data){
                                 }
                             }
                             else{
-                                let property = window.Service.GetProperty(childElem.prop("id"),item);
+                                let property = Service.GetProperty(childElem.prop("id"),item);
                                 if(typeof childElem.data("action") !== "undefined"){
-                                    property = window.Service.Transform(childElem.data("action"),property);
+                                    property = Service.Transform(childElem.data("action"),property);
                                 }
                                 //bind property to element as valid HTML
                                 if(childElem.hasClass('bind-value')){
@@ -316,13 +334,13 @@ window.Service.AddProperty("Bind",function(component, data){
                 }
 
                 if(typeof elem.data("action") !== "undefined"){
-                    elem = window.Service.Transform(elem.data("action"),elem);
+                    elem = Service.Transform(elem.data("action"),elem);
                 }
             }
             else{
-                let property = window.Service.GetProperty(elem.prop("id"),data);
+                let property = Service.GetProperty(elem.prop("id"),data);
                 if(typeof elem.data("action") !== "undefined"){
-                    property = window.Service.Transform(elem.data("action"),property);
+                    property = Service.Transform(elem.data("action"),property);
                 }
                 //bind property to element as valid HTML
                 if(elem.hasClass('bind-value')){
@@ -354,14 +372,14 @@ window.Service.AddProperty("Bind",function(component, data){
         let elem = $(this);
         if(elem.prop("tagName") === "IMG"){
             if(typeof elem.prop("id") !== "undefined"){
-                elem.prop("src",window.Service.GetProperty(elem.prop("id"),window.Service.MetaData));
+                elem.prop("src",Service.GetProperty(elem.prop("id"),Service.MetaData));
             }
         }
         else {
             if(typeof elem.prop("id") !== "undefined"){
-                let property = window.Service.GetProperty(elem.prop("id"),window.Service.MetaData);
+                let property = Service.GetProperty(elem.prop("id"),Service.MetaData);
                 if(typeof elem.data("action") !== "undefined"){
-                    let func = window.Service.Transformation[elem.data("action")];
+                    let func = Service.Transformation[elem.data("action")];
                     if(typeof func !== "undefined"){
                         property = func(property);
                     }
@@ -372,7 +390,7 @@ window.Service.AddProperty("Bind",function(component, data){
     });
 });
 
-window.Service.AddProperty("BindForm",function(form, ds){
+Service.AddProperty("BindForm",function(form, ds){
     if(ds === null) return;
     if(typeof form === "undefined") return;
     let els = jQuery(form).find('input,select,textarea');
@@ -380,19 +398,15 @@ window.Service.AddProperty("BindForm",function(form, ds){
 
     for(let x=0; x<els.length; x++){
         let el = null;
-        let elem = $(els[x]);
-        el = window.Service.GetProperty(elem.prop("id"),ds);
+        let elem = jQuery(els[x]);
+        el = Service.GetProperty(elem.prop("id"),ds);
 
         if(elem[0].type === 'select-one'){
-            let list = elem.data("list");
+            let list = elem.data(Service.SYSTEM_LIST);
             if(typeof list !== "undefined"){
-                let listGroup = window.Service.ModelData.List[list];
+                let listGroup = Service.ModelData.List[list];
                 if(typeof listGroup !== "undefined"){
-                    elem.empty();
-                    elem.append("<option value=\"\"> --Select-- </option>");
-                    jQuery.each(listGroup, function () {
-                        elem.append("<option value=\""+this.Value+"\">"+this.Text+"</option>");
-                    });
+                    Service.SelectListBuilder(elem,listGroup);
                 }
             }
         }
@@ -471,11 +485,11 @@ window.Service.AddProperty("BindForm",function(form, ds){
         }
     }
     for(let x=0; (els && x < els.length); x++) {
-        window.Service.TriggerEvents($(els[x]));
+        Service.TriggerEvents(jQuery(els[x]));
     }
 });
 
-window.Service.AddProperty("GetProperty",function(id,data){
+Service.AddProperty("GetProperty",function(id,data){
     if(id === null) return data;
     if(typeof id === 'undefined') return data;
     id = id.split(".");
@@ -497,21 +511,21 @@ window.Service.AddProperty("GetProperty",function(id,data){
     return property;
 });
 
-window.Service.AddProperty("ListUpdate",function(elem,target){
+Service.AddProperty("ListUpdate",function(elem,target){
     if(elem.value.length > 0){
-        $.get("/" + elem.dataset["url"] + '/' + elem.value, function (data) {
-            target = $(target);
+        Service.ServerRequest(`/${elem.dataset["url"]}/${elem.value}`,{},"GET",function(result){
+            target = jQuery(target);
             target.empty();
-            target.append("<option value=\"\">--Select--</option>");
-            $.each(data, function () {
+            target.append(`<option value="">--Select--</option>`);
+            jQuery.each(result.data, function () {
                 let selected = (parseInt(target.data().value) === parseInt(this.Value)) ? "selected" : "";
-                target.append("<option value=\""+this.Value+"\" "+selected+">"+this.Text+"</option>");
+                target.append(`<option value="${this.Value}" ${selected}> ${this.Text}</option>`);
             });
-        });
+        },Service.ErrorHandler);
     }
 });
 
-window.Service.AddProperty("TriggerEvents",function(elem){
+Service.AddProperty("TriggerEvents",function(elem){
     let click = elem.prop("onclick");
     let change = elem.prop("onchange");
     if(click !== null)
@@ -521,12 +535,12 @@ window.Service.AddProperty("TriggerEvents",function(elem){
         elem.change();
 });
 
-window.Service.AddProperty("ImagePreview",function(input, target) {
+Service.AddProperty("ImagePreview",function(input, target) {
     if (input.length === 1 && input[0].files[0]) {
         let reader = new FileReader();
 
         reader.onload = function (e) {
-            //todo determine file type and handle preview accordinly
+            //todo determine file type and handle preview accordingly
             target.prop("src", e.target.result);
         };
 
@@ -534,14 +548,14 @@ window.Service.AddProperty("ImagePreview",function(input, target) {
     }
 });
 
-window.Service.AddProperty("FormSubmitSuccessHandler",function(data){
-    window.Service.LoadedForm.find('input,select,textarea,button')
+Service.AddProperty("FormSubmitSuccessHandler",function(data){
+    Service.LoadedForm.find('input,select,textarea,button')
         .prop("disabled",false) //enable disabled form elements
         .each(function(){
             //find elements that have the class 'clear-success' which
             //indicates they should be cleared and clear them.
             let elem = jQuery(this);
-            if(elem.hasClass("clear-success")){
+            if(elem.hasClass(Service.SYSTEM_CLEAR_SUCCESS)){
                 if(elem.prop("type") === "select-one"){
                     elem.prop("selectedIndex",0);
                 }
@@ -553,58 +567,58 @@ window.Service.AddProperty("FormSubmitSuccessHandler",function(data){
                 }
             }
         });
-    window.Service.SubmitButton.prop("disabled",false);
-    let closeOnComplete = window.Service.SubmitButton.hasClass("close-on-complete");
-    window.Service.LoadedForm = null;
+    Service.SubmitButton.prop("disabled",false);
+    let closeOnComplete = Service.SubmitButton.hasClass(Service.SYSTEM_CLOSE_ON_COMPLETE);
+    Service.LoadedForm = null;
     if(data.success === false){
-        window.Service.NotificationHandler(data.message);
+        Service.NotificationHandler(data.message);
     }
     else {
-        window.Service.FormSubmitDataHandler(data.data);
+        Service.FormSubmitDataHandler(data.data);
     }
-    window.Service.SubmitButton = null;
+    Service.SubmitButton = null;
     if(closeOnComplete)
-        if (window.Service.LoadedModal !== null) window.Service.LoadedModal.modal('hide');
+        if (Service.LoadedModal !== null) Service.LoadedModal.modal('hide');
 });
 
-window.Service.AddProperty("FormSubmitDataHandler",function(data){
+Service.AddProperty("FormSubmitDataHandler",function(data){
 
 });
 
-window.Service.AddProperty("LoadPanel",function(elem,target=null){
+Service.AddProperty("LoadPanel",function(elem,target=null){
     if(typeof elem !== "undefined"){
-        let action = elem.data("action");
-        let func = window.Service.Data[action];
+        let action = elem.data(Service.SYSTEM_ACTION);
+        let func = Service.Data[action];
         if(typeof func !== "undefined") func(elem);
-        else window.Service.Data["static-listing-panel"](elem);
+        else Service.Data[Service.SYSTEM_DEFAULT_PANEL_DATA](elem);
 
         // we have to place panel on the DOM before we load it.....
         // idk if its a javascript thing or jQuery thing
-        window.Service.ContainerPanel = jQuery("#container-panel");
-        window.Service.ContainerPanel.empty().append(elem);
+        Service.ContainerPanel = jQuery("#container-panel");
+        Service.ContainerPanel.empty().append(elem);
         let elem_id = (target == null) ? jQuery("#MainContainer") : jQuery(`#${target}`);
         elem_id.css("display","none");
         elem_id.empty();
         elem_id.html(elem).fadeIn("slow");
-        window.Service.LoadedPanel = elem;
-        window.Service.ContainerPanel.empty();
-        window.Service.ContainerPanel = null;
-        window.Service.SubmitButton = null;
-        window.Service.ActionButton = null;
+        Service.LoadedPanel = elem;
+        Service.ContainerPanel.empty();
+        Service.ContainerPanel = null;
+        Service.SubmitButton = null;
+        Service.ActionButton = null;
     }
 });
 
-window.Service.AddProperty("LoadLayout",function(layout,panel){
-    let action = layout.data("action");
-    let func = window.Service.Data[action];
+Service.AddProperty("LoadLayout",function(layout,panel){
+    let action = layout.data(Service.SYSTEM_ACTION);
+    let func = Service.Data[action];
     if(typeof func !== "undefined")
         func(layout);
 
     jQuery('#webapp-layout').empty().append(layout);
-    window.Service.LoadPanel(panel);
+    Service.LoadPanel(panel);
 });
 
-window.Service.AddProperty("SelectListBuilder",function(elem,list,holder = "-- Select --"){
+Service.AddProperty("SelectListBuilder",function(elem,list,holder = "-- Select --"){
     elem.empty();
     if(typeof holder === "string"){
         elem.append(`<option value=""> ${holder} </option>`);
@@ -617,29 +631,29 @@ window.Service.AddProperty("SelectListBuilder",function(elem,list,holder = "-- S
     });
 });
 
-window.Service.AddProperty("FindElement",function(name){
+Service.AddProperty("FindElement",function(name){
     let templateContent = jQuery('template').prop('content');
     templateContent = jQuery(templateContent);
     let item = templateContent.find(name);
     if(item.length > 0){
         let clone = item.clone();
-        const action = clone.data("action");
-        const custom = clone.data("custom");
+        const action = clone.data(Service.SYSTEM_ACTION);
+        const custom = clone.data(Service.SYSTEM_CUSTOM);
         let element = jQuery(clone.html());
         if(element.length !== 1){
             element = jQuery("<div></div>").append(clone.html())
         }
-        if(typeof action !== "undefined")element.data("action",action);
-        if(typeof custom !== "undefined")element.data("custom",custom);
+        if(typeof action !== "undefined")element.data(Service.SYSTEM_ACTION,action);
+        if(typeof custom !== "undefined")element.data(Service.SYSTEM_CUSTOM,custom);
         return element;
     }
     return jQuery();
 });
 
-window.Service.AddProperty("Transform",function(action,component){
+Service.AddProperty("Transform",function(action,component){
     action = action.split("|");
     action.forEach(function(item){
-        let func = window.Service.Transformation[item];
+        let func = Service.Transformation[item];
         if(typeof func !== "undefined"){
             component = func(component);
         }
@@ -647,10 +661,10 @@ window.Service.AddProperty("Transform",function(action,component){
     return component;
 });
 
-window.Service.AddProperty("ExecuteCustom",function(action,component){
+Service.AddProperty("ExecuteCustom",function(action,component){
     action = action.split("|");
     action.forEach(function(item){
-        let func = window.Service.Modification[item];
+        let func = Service.Modification[item];
         if(typeof func !== "undefined"){
             component = func(component);
         }
@@ -658,10 +672,10 @@ window.Service.AddProperty("ExecuteCustom",function(action,component){
     return component;
 });
 
-window.Service.AddProperty("ExecuteSubmitTransformation",function(action,component,params){
+Service.AddProperty("ExecuteSubmitTransformation",function(action,component,params){
     action = action.split("|");
     action.forEach(function(item){
-        let func = window.Service.SubmitTransformation[item];
+        let func = Service.SubmitTransformation[item];
         if(typeof func !== "undefined"){
             params = func(component,params);
         }

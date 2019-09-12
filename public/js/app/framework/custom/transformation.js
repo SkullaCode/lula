@@ -14,11 +14,13 @@ Service.Transformation.Bootstrap = function(){
         }
         else{
             clearInterval(id);
-            const defaultPanel = jQuery("#MainContainer").data("action");
+            const defaultPanel = jQuery("#MainContainer").data(Service.SYSTEM_ACTION);
             window.Service.MetaData['NotificationType'] = 'toaster';
             //jQuery.ajaxSetup({headers: {"X-Session-Token": window.Service.MetaData.SessionToken }});
-            let panel = window.Service.FindElement(`#${defaultPanel}`);
-            window.Service.LoadPanel(panel);
+            if(typeof defaultPanel !== "undefined"){
+                let panel = window.Service.FindElement(`#${defaultPanel}`);
+                window.Service.LoadPanel(panel);
+            }
         }
     };
     id = setInterval(timer, 500);

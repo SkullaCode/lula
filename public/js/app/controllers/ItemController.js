@@ -16,7 +16,7 @@ Controller.Init = function () {
             GenderLabel: "Person Gender",
             Gender: 1
         };
-        const id = component.data("id");
+        const id = component.data(Service.SYSTEM_ID);
         Service.Bind(component,data[id]);
     });
 
@@ -53,6 +53,28 @@ Controller.Init = function () {
             data: data,
             columns: listingHeaders
         });
+    });
+
+    Service.Data.AddMethod("modal-data",function(component){
+        console.log(component);
+        const data = [];
+        data[12] = {
+            NameLabel: "Person Name",
+            Name: "John",
+            AgeLabel: "Person Age",
+            Age: 30,
+            GenderLabel: "Person Gender",
+            Gender: 1
+        };
+        const id = component.data(Service.SYSTEM_ID);
+        if(typeof id !== "undefined"){
+            data[12].ModalTitle = "New Modal";
+            const form = Service.FindElement("#form");
+            form.attr("id","formSubmit");
+            Service.Bind(form,data[id]);
+            Service.Bind(component,data[id]);
+            component.find(".modal-body").append(form);
+        }
     });
 
     Service.Transformation.AddMethod("capitalize",function(component){

@@ -1,3 +1,5 @@
+const ModalContainer = "modal-container";
+const DefaultModalListing = "static-listing-modal";
 window.Controller = function(){
     let AddProperty = function(name,f){
         Response[name] = f;
@@ -67,7 +69,20 @@ window.Service = function(){
         Transform: null,
         ExecuteCustom: null,
         ExecuteSubmitTransformation: null,
-        AddProperty: addProperty
+        AddProperty: addProperty,
+        SYSTEM_ID: "id",
+        SYSTEM_PROPERTY: "property",
+        SYSTEM_TARGET: "target",
+        SYSTEM_ACTION: "action",
+        SYSTEM_CUSTOM: "custom",
+        SYSTEM_URL: "href",
+        SYSTEM_METHOD: "method",
+        SYSTEM_FILE_UPLOAD_CONTAINER: ".file-upload",
+        SYSTEM_CLEAR_ERROR: "clear-error",
+        SYSTEM_CLEAR_SUCCESS: "clear-success",
+        SYSTEM_CLOSE_ON_COMPLETE: "close-on-complete",
+        SYSTEM_DEFAULT_PANEL_DATA: "static-listing-panel",
+        SYSTEM_LIST: "list"
     };
 
     return Response;
