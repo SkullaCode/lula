@@ -1,5 +1,18 @@
-window.Controller = {};
-window.Controller.Default = {};
+window.Controller = function(){
+    let AddProperty = function(name,f){
+        Response[name] = f;
+    };
+
+    let Response = {
+        AddProperty,
+        FormSubmit: null,
+        FileSelect: null,
+        ModalSelect: null,
+        PanelSelect: null
+    };
+
+    return Response;
+}();
 
 window.Service = function(){
     let LoadedModal = null;

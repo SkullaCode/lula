@@ -5,10 +5,7 @@
  * that should be executed. if there needs to be more than one method called, use the pipe (|)
  * them. note that during binding only elements with the class 'bind' or 'bind-loop' will be considered
 */
-
-const {AddMethod} = window.Service.Transformation;
-
-AddMethod('Bootstrap',function(){
+Service.Transformation.Bootstrap = function(){
 
     let id = null;
     let timer = function(){
@@ -19,10 +16,10 @@ AddMethod('Bootstrap',function(){
             clearInterval(id);
             const defaultPanel = jQuery("#MainContainer").data("action");
             window.Service.MetaData['NotificationType'] = 'toaster';
-            jQuery.ajaxSetup({headers: {"X-Session-Token": window.Service.MetaData.SessionToken }});
+            //jQuery.ajaxSetup({headers: {"X-Session-Token": window.Service.MetaData.SessionToken }});
             let panel = window.Service.FindElement(`#${defaultPanel}`);
             window.Service.LoadPanel(panel);
         }
     };
     id = setInterval(timer, 500);
-});
+};

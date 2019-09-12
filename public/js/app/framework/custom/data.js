@@ -5,7 +5,7 @@
  * that the panel or modal will use while binding takes place.
  */
 
-window.Service.Data.AddMethod('Bootstrap', function(){
+Service.Data.Bootstrap = function(){
     window.Service.ModelData.List = {};
     window.Service.LoadingComplete = false;
 
@@ -19,7 +19,7 @@ window.Service.Data.AddMethod('Bootstrap', function(){
         },window.Service.ErrorHandler);*/
     }
     window.Service.LoadingComplete = true;
-});
+};
 
 window.Service.Data.AddMethod('static-listing-panel',function(component){
     if(typeof component.data("id") !== "undefined"){
