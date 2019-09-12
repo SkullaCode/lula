@@ -508,16 +508,16 @@ Service.AddProperty("GetProperty",function(id,data){
     return property;
 });
 
+/**
+ * -- List Update --
+ * this function is used for creating a secondary dropdown
+ * list from a primary one (eg. Selecting a country and
+ * retrieving associated states)
+ */
 Service.AddProperty("ListUpdate",function(elem,target){
     if(elem.value.length > 0){
-        Service.ServerRequest(`/${elem.dataset["url"]}/${elem.value}`,{},"GET",function(result){
-            target = jQuery(target);
-            target.empty();
-            target.append(`<option value="">--Select--</option>`);
-            jQuery.each(result.data, function () {
-                let selected = (parseInt(target.data().value) === parseInt(this.Value)) ? "selected" : "";
-                target.append(`<option value="${this.Value}" ${selected}> ${this.Text}</option>`);
-            });
+        Service.ServerRequest(`/${elem.dataset[Service.SYSTEM_URL]}/${elem.value}`,{},"GET",function(result){
+            Service.SelectListBuilder(jQuery(target),result.data);
         },Service.ErrorHandler);
     }
 });
@@ -564,22 +564,17 @@ Service.AddProperty("FormSubmitSuccessHandler",function(data){
                 }
             }
         });
+    //enable submit button
     Service.SubmitButton.prop("disabled",false);
     let closeOnComplete = Service.SubmitButton.hasClass(Service.SYSTEM_CLOSE_ON_COMPLETE);
     Service.LoadedForm = null;
-    if(data.success === false){
-        Service.NotificationHandler(data.message);
-    }
-    else {
-        Service.FormSubmitDataHandler(data.data);
-    }
+    //trigger notification event
+    Service.NotificationHandler(data.message);
     Service.SubmitButton = null;
+
+    //close the modal if directed to do so
     if(closeOnComplete)
         if (Service.LoadedModal !== null) Service.LoadedModal.modal('hide');
-});
-
-Service.AddProperty("FormSubmitDataHandler",function(data){
-
 });
 
 Service.AddProperty("LoadPanel",function(elem,target=null){
@@ -603,16 +598,6 @@ Service.AddProperty("LoadPanel",function(elem,target=null){
         Service.SubmitButton = null;
         Service.ActionButton = null;
     }
-});
-
-Service.AddProperty("LoadLayout",function(layout,panel){
-    let action = layout.data(Service.SYSTEM_ACTION);
-    let func = Service.Data[action];
-    if(typeof func !== "undefined")
-        func(layout);
-
-    jQuery('#webapp-layout').empty().append(layout);
-    Service.LoadPanel(panel);
 });
 
 Service.AddProperty("SelectListBuilder",function(elem,list){

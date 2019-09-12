@@ -56,7 +56,6 @@ Controller.Init = function () {
     });
 
     Service.Data.AddMethod("modal-data",function(component){
-        console.log(component);
         const data = [];
         data[12] = {
             NameLabel: "Person Name",
