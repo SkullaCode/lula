@@ -169,7 +169,7 @@ Service.AddProperty("ServerRequest",function(site,params,request,success,error,h
  */
 Service.AddProperty("LaunchModal",function(){
     Service.LoadedModal.modal();
-    const action = Service.LoadedModal.data("action");
+    const action = Service.LoadedModal.data(Service.SYSTEM_ACTION);
     if(typeof action === "string"){
         let func = Service.Data[action];
         if(typeof func !== "undefined") func(Service.LoadedModal);
@@ -206,41 +206,38 @@ Service.AddProperty("LaunchModal",function(){
  * @param data data set from which values will be used in binding
  */
 Service.AddProperty("Bind",function(component, data){
-    let elems = component.find(".bind");
+    let elems = component.find(`.${Service.SYSTEM_BIND}`);
     jQuery.each(elems,function(){
         let elem = jQuery(this);
 
+        //if the element is a select list we build it out
         if(elem.prop("tagName") === "SELECT"){
-            let list = elem.data("list");
+            let list = elem.data(Service.SYSTEM_LIST);
             if(typeof list !== "undefined"){
                 let listGroup = Service.ModelData.List[list];
                 if(typeof listGroup !== "undefined"){
-                    elem.empty();
-                    elem.append("<option value=\"\"> --Select-- </option>");
-                    jQuery.each(listGroup, function () {
-                        elem.append("<option value=\""+this.Value+"\">"+this.Text+"</option>");
-                    });
+                    Service.SelectListBuilder(elem,listGroup);
                 }
             }
         }
         // if the element is an image bind the value to image source
         if(elem.prop("tagName") === "IMG"){
-            if(typeof elem.data("property") !== "undefined"){
-                elem.prop("src",Service.GetProperty(elem.data("property"),data));
+            if(typeof elem.data(Service.SYSTEM_PROPERTY) !== "undefined"){
+                elem.prop("src",Service.GetProperty(elem.data(Service.SYSTEM_PROPERTY),data));
             }
             else if(typeof elem.prop("id") !== "undefined"){
                 elem.prop("src",Service.GetProperty(elem.prop("id"),data));
             }
         }
         else {
-            if(typeof elem.data("property") !== "undefined"){
-                let property = Service.GetProperty(elem.data("property"),data);
+            if(typeof elem.data(Service.SYSTEM_PROPERTY) !== "undefined"){
+                let property = Service.GetProperty(elem.data(Service.SYSTEM_PROPERTY),data);
                 //determine if a transformation method is present on the element
-                if(typeof elem.data("action") !== "undefined"){
-                    property = Service.Transform(elem.data("action"),property);
+                if(typeof elem.data(Service.SYSTEM_ACTION) !== "undefined"){
+                    property = Service.Transform(elem.data(Service.SYSTEM_ACTION),property);
                 }
                 //bind property to element as valid HTML
-                if(elem.hasClass('bind-value')){
+                if(elem.hasClass(Service.SYSTEM_BIND_VALUE)){
                     if(elem.is('input,select,textarea')){
                         elem.val(property);
                     }
@@ -260,8 +257,8 @@ Service.AddProperty("Bind",function(component, data){
                     elem.html(property);
                 }
             }
-            else if(typeof elem.data("loop") !== "undefined"){
-                let property = Service.GetProperty(elem.data("loop"),data);
+            else if(typeof elem.data(Service.SYSTEM_LOOP) !== "undefined"){
+                let property = Service.GetProperty(elem.data(Service.SYSTEM_LOOP),data);
 
                 //get the looped element
                 let child = elem.children();
@@ -272,16 +269,16 @@ Service.AddProperty("Bind",function(component, data){
                         //we do not use the original
                         let childClone = child.clone();
                         //find all the elements that should be bound
-                        let childElems = childClone.find(".bind-loop");
+                        let childElems = childClone.find(`.${Service.SYSTEM_BIND_LOOP}`);
                         $.each(childElems,function() {
-                            let childElem = $(this);
-                            if(typeof childElem.data("property") !== "undefined"){
-                                let property = Service.GetProperty(childElem.data("property"),item);
-                                if(typeof childElem.data("action") !== "undefined"){
-                                    property = Service.Transform(childElem.data("action"),property);
+                            let childElem = jQuery(this);
+                            if(typeof childElem.data(Service.SYSTEM_PROPERTY) !== "undefined"){
+                                let property = Service.GetProperty(childElem.data(Service.SYSTEM_PROPERTY),item);
+                                if(typeof childElem.data(Service.SYSTEM_ACTION) !== "undefined"){
+                                    property = Service.Transform(childElem.data(Service.SYSTEM_ACTION),property);
                                 }
                                 //bind property to element as valid HTML
-                                if(childElem.hasClass('bind-value')){
+                                if(childElem.hasClass(Service.SYSTEM_BIND_VALUE)){
                                     if(childElem.is('input,select,textarea')){
                                         childElem.val(property);
                                     }
@@ -303,11 +300,11 @@ Service.AddProperty("Bind",function(component, data){
                             }
                             else{
                                 let property = Service.GetProperty(childElem.prop("id"),item);
-                                if(typeof childElem.data("action") !== "undefined"){
-                                    property = Service.Transform(childElem.data("action"),property);
+                                if(typeof childElem.data(Service.SYSTEM_ACTION) !== "undefined"){
+                                    property = Service.Transform(childElem.data(Service.SYSTEM_ACTION),property);
                                 }
                                 //bind property to element as valid HTML
-                                if(childElem.hasClass('bind-value')){
+                                if(childElem.hasClass(Service.SYSTEM_BIND_VALUE)){
                                     if(childElem.is('input,select,textarea')){
                                         childElem.val(property);
                                     }
@@ -333,17 +330,17 @@ Service.AddProperty("Bind",function(component, data){
                     });
                 }
 
-                if(typeof elem.data("action") !== "undefined"){
-                    elem = Service.Transform(elem.data("action"),elem);
+                if(typeof elem.data(Service.SYSTEM_ACTION) !== "undefined"){
+                    elem = Service.Transform(elem.data(Service.SYSTEM_ACTION),elem);
                 }
             }
             else{
                 let property = Service.GetProperty(elem.prop("id"),data);
-                if(typeof elem.data("action") !== "undefined"){
-                    property = Service.Transform(elem.data("action"),property);
+                if(typeof elem.data(Service.SYSTEM_ACTION) !== "undefined"){
+                    property = Service.Transform(elem.data(Service.SYSTEM_ACTION),property);
                 }
                 //bind property to element as valid HTML
-                if(elem.hasClass('bind-value')){
+                if(elem.hasClass(Service.SYSTEM_BIND_VALUE)){
                     if(elem.is('input,select,textarea')){
                         elem.val(property);
                     }
@@ -367,9 +364,9 @@ Service.AddProperty("Bind",function(component, data){
     });
 
     //bind meta data
-    let elems_meta = component.find(".bind-meta");
-    $.each(elems_meta,function(){
-        let elem = $(this);
+    let elems_meta = component.find(`.${Service.SYSTEM_BIND_META}`);
+    jQuery.each(elems_meta,function(){
+        let elem = jQuery(this);
         if(elem.prop("tagName") === "IMG"){
             if(typeof elem.prop("id") !== "undefined"){
                 elem.prop("src",Service.GetProperty(elem.prop("id"),Service.MetaData));
@@ -378,8 +375,8 @@ Service.AddProperty("Bind",function(component, data){
         else {
             if(typeof elem.prop("id") !== "undefined"){
                 let property = Service.GetProperty(elem.prop("id"),Service.MetaData);
-                if(typeof elem.data("action") !== "undefined"){
-                    let func = Service.Transformation[elem.data("action")];
+                if(typeof elem.data(Service.SYSTEM_ACTION) !== "undefined"){
+                    let func = Service.Transformation[elem.data(Service.SYSTEM_ACTION)];
                     if(typeof func !== "undefined"){
                         property = func(property);
                     }
@@ -618,14 +615,8 @@ Service.AddProperty("LoadLayout",function(layout,panel){
     Service.LoadPanel(panel);
 });
 
-Service.AddProperty("SelectListBuilder",function(elem,list,holder = "-- Select --"){
+Service.AddProperty("SelectListBuilder",function(elem,list){
     elem.empty();
-    if(typeof holder === "string"){
-        elem.append(`<option value=""> ${holder} </option>`);
-    }
-    if(typeof holder === "function"){
-        elem.append(`<option value=""> ${holder()} </option>`);
-    }
     jQuery.each(list, function () {
         elem.append(`<option data-value="${this.Value}" value="${this.Value}+"> ${this.Text} </option>`);
     });
