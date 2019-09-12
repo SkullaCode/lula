@@ -6,36 +6,38 @@
  */
 
 Service.Data.Bootstrap = function(){
-    window.Service.ModelData.List = {};
-    window.Service.LoadingComplete = false;
+    Service.ModelData.List = {};
+    Service.LoadingComplete = false;
 
     if(sessionStorage.getItem('GenderList') !== null){
-        //window.Service.ModelData.List['Gender'] = JSON.parse(sessionStorage.getItem('GenderList'));
+        Service.ModelData.List['Gender'] = JSON.parse(sessionStorage.getItem('GenderList'));
     }
     else{
-        /*window.Service.ServerRequest('/list/gender',null,'GET',function(data){
-            window.Service.ModelData.List['Gender'] = data.data;
-            sessionStorage.setItem('GenderList',JSON.stringify(data.data));
-        },window.Service.ErrorHandler);*/
+        const data = [
+            { Value: 1, Text: "Male"},
+            { Value: 2, Text: "Female"}
+        ];
+        Service.ModelData.List['Gender'] = data;
+        sessionStorage.setItem('GenderList',JSON.stringify(data));
     }
-    window.Service.LoadingComplete = true;
+    Service.LoadingComplete = true;
 };
 
-window.Service.Data.AddMethod('static-listing-panel',function(component){
+Service.Data.AddMethod('static-listing-panel',function(component){
     if(typeof component.data("id") !== "undefined"){
-        window.Service.Bind(component,window.Service.ModelData["listing-panel"][component.data("id")]);
+        Service.Bind(component,Service.ModelData["listing-panel"][component.data("id")]);
     }
 });
 
-window.Service.Data.AddMethod('static-listing-modal',function(component){
+Service.Data.AddMethod('static-listing-modal',function(component){
     if(typeof component.data("id") !== "undefined"){
-        window.Service.Bind(component,window.Service.ModelData["listing-modal"][component.data("id")]);
+        Service.Bind(component,Service.ModelData["listing-modal"][component.data("id")]);
     }
 });
 
-window.Service.Data.AddMethod('static-listing-form', function(component){
+Service.Data.AddMethod('static-listing-form', function(component){
     if(typeof component.data("id") !== "undefined"){
-        window.Service.BindForm(component,window.Service.ModelData["listing-form"][component.data("id")]);
+        Service.BindForm(component,Service.ModelData["listing-form"][component.data("id")]);
     }
 });
 

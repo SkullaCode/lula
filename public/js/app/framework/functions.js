@@ -605,11 +605,15 @@ window.Service.AddProperty("LoadLayout",function(layout,panel){
 });
 
 window.Service.AddProperty("SelectListBuilder",function(elem,list,holder = "-- Select --"){
-    //todo determine if holder should be used or not
     elem.empty();
-    elem.append("<option value=\"\">" + holder + "</option>");
+    if(typeof holder === "string"){
+        elem.append(`<option value=""> ${holder} </option>`);
+    }
+    if(typeof holder === "function"){
+        elem.append(`<option value=""> ${holder()} </option>`);
+    }
     jQuery.each(list, function () {
-        elem.append("<option value=\""+this.Value+"\">"+this.Text+"</option>");
+        elem.append(`<option data-value="${this.Value}" value="${this.Value}+"> ${this.Text} </option>`);
     });
 });
 
@@ -618,10 +622,13 @@ window.Service.AddProperty("FindElement",function(name){
     templateContent = jQuery(templateContent);
     let item = templateContent.find(name);
     if(item.length > 0){
-        let element = item.clone();
-        const action = element.data("action");
-        const custom = element.data("custom");
-        element = jQuery(element.html());
+        let clone = item.clone();
+        const action = clone.data("action");
+        const custom = clone.data("custom");
+        let element = jQuery(clone.html());
+        if(element.length !== 1){
+            element = jQuery("<div></div>").append(clone.html())
+        }
         if(typeof action !== "undefined")element.data("action",action);
         if(typeof custom !== "undefined")element.data("custom",custom);
         return element;

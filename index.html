@@ -4,16 +4,18 @@
     <meta charset="UTF-8">
     <title>Javascript UI</title>
     <link rel="stylesheet" href="public/css/bootstrap.min.css">
-    <!--<link rel="stylesheet" href="public/css/dataTables.bootstrap.min.css">
-    <link rel="stylesheet" href="public/css/dataTables.responsive.css">-->
+    <link rel="stylesheet" href="public/css/datatables.min.css">
+    <link rel="stylesheet" href="public/css/dataTables.bootstrap.min.css">
+    <!--<link rel="stylesheet" href="public/css/dataTables.responsive.css">-->
     <link rel="stylesheet" href="public/css/font-awesome.min.css">
     <link rel="stylesheet" href="public/css/vanillatoasts.css">
     <link rel="stylesheet" href="public/css/sweetalert.css">
     <link rel="stylesheet" href="public/css/site.css">
     <script src="public/js/jquery.min.js"></script>
     <script src="public/js/bootstrap.min.js"></script>
-   <!-- <script src="public/js/dataTables.bootstrap.min.js"></script>
-    <script src="public/js/dataTables.responsive.js"></script>-->
+    <script src="public/js/datatables.min.js"></script>
+   <script src="public/js/dataTables.bootstrap.min.js"></script>
+    <!-- <script src="public/js/dataTables.responsive.js"></script>-->
     <script src="public/js/vanillatoasts.js"></script>
     <script src="public/js/sweetalert.min.js"></script>
     <script src="public/js/app/framework/varObjects.js"></script>
@@ -92,14 +94,15 @@
 <div class="container-fluid text-center">
     <div class="row content">
         <div class="col-sm-2 sidenav">
-            <p><a href="#">Link</a></p>
-            <p><a href="#">Link</a></p>
-            <p><a href="#">Link</a></p>
+            <p><a data-action="form" data-target="SmallTarget" onclick="Controller.PanelSelect(this)">Launch Form</a></p>
+            <p><a data-action="form" data-target="SmallTarget" data-id="12" onclick="Controller.PanelSelect(this)">Launch Form With Data</a></p>
+            <p><a data-action="table" data-target="SmallTarget" onclick="Controller.PanelSelect(this)">Launch Table</a></p>
+            <p><a data-action="datatable" data-target="SmallTarget" onclick="Controller.PanelSelect(this)">Launch DataTable</a></p>
         </div>
         <div id="MainContainer" data-action="home" class="col-sm-8 text-left">
             <h1>Loading......</h1>
         </div>
-        <div class="col-sm-2 sidenav">
+        <div id="SmallTarget" class="col-sm-2 sidenav">
             <div class="well">
                 <p>ADS</p>
             </div>
@@ -114,7 +117,7 @@
     <p>Footer Text</p>
 </footer>
 <template>
-    <div id="home">
+    <div id="home" data-action="home-data">
         <div>
             <h1>Welcome</h1>
             <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.</p>
@@ -123,15 +126,54 @@
             <p>Lorem ipsum...</p>
         </div>
     </div>
-    <div id="about">
+    <div id="about" data-action="about-data">
         <div>
             <h1>About Us</h1>
             <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.</p>
         </div>
     </div>
-    <div id="contact">
+    <div id="contact" data-action="contact-data">
         <h3>Contact us Today!</h3>
         <p><i class="fa fa-facebook"></i> <i class="fa fa-twitter"></i> <i class="fa fa-instagram"></i></p>
+    </div>
+    <div id="form" data-action="form-data">
+        <div class="row">
+            <div class="col-xs-12">
+                <div class="form-group">
+                    <label class="bind control-label" id="NameLabel"></label>
+                    <input type="text" name="name" class="form-control bind bind-value" id="Name" data-action="capitalize"/>
+                </div>
+                <div class="form-group">
+                    <label class="bind control-label" id="AgeLabel"></label>
+                    <input type="number" name="age" class="form-control bind bind-value" id="Age">
+                </div>
+                <div class="form-group">
+                    <label class="bind control-label" id="GenderLabel"></label>
+                    <select name="gender" id="Gender" class="form-control bind bind-value" data-list="Gender"></select>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div id="table" data-action="table-data">
+        <table id="tableTable" class="table table-condensed table-bordered">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Age</th>
+                </tr>
+            </thead>
+            <tbody class="bind" data-loop="">
+                <tr>
+                    <td class="bind-loop" id="Name"></td>
+                    <td class="bind-loop" id="Age"></td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+    <div id="datatable" data-action="datatable-data">
+        <div>
+            <table id="datatableTable" class="table table-condensed table-bordered"></table>
+        </div>
     </div>
 </template>
 </body>
