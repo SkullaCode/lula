@@ -18,16 +18,16 @@
     <!-- <script src="public/js/dataTables.responsive.js"></script>-->
     <script src="public/js/vanillatoasts.js"></script>
     <script src="public/js/sweetalert.min.js"></script>
-    <script src="public/js/app/framework/varObjects.js"></script>
-    <script src="public/js/app/framework/functions.js"></script>
-    <script src="public/js/app/framework/custom/action.js"></script>
-    <script src="public/js/app/framework/custom/custom.js"></script>
-    <script src="public/js/app/framework/custom/data.js"></script>
-    <script src="public/js/app/framework/custom/domEvents.js"></script>
-    <script src="public/js/app/framework/custom/modification.js"></script>
-    <script src="public/js/app/framework/custom/submitTransformation.js"></script>
-    <script src="public/js/app/framework/custom/transformation.js"></script>
-    <script src="public/js/app/framework/app.js"></script>
+    <script src="public/js/app/services/varObjects.js"></script>
+    <script src="public/js/app/services/functions.js"></script>
+    <script src="public/js/app/services/custom/action.js"></script>
+    <script src="public/js/app/services/custom/custom.js"></script>
+    <script src="public/js/app/services/custom/data.js"></script>
+    <script src="public/js/app/services/custom/domEvents.js"></script>
+    <script src="public/js/app/services/custom/modification.js"></script>
+    <script src="public/js/app/services/custom/submitTransformation.js"></script>
+    <script src="public/js/app/services/custom/transformation.js"></script>
+    <script src="public/js/app/services/app.js"></script>
     <script src="public/js/app/controllers/ItemController.js"></script>
 </head>
 <style>
@@ -81,12 +81,9 @@
         <div class="collapse navbar-collapse" id="myNavbar">
             <ul class="nav navbar-nav">
                 <li class="active"><a data-action="home" onclick="Controller.PanelSelect(this)">Home</a></li>
-                <li><a data-action="about" data-custom="ColorRed" onclick="Controller.PanelSelect(this)">About</a></li>
-                <li><a href="#">Projects</a></li>
+                <li><a data-action="about" data-custom="ColorRed|Capitalize" onclick="Controller.PanelSelect(this)">About</a></li>
+                <li><a href="projects.html">Projects</a></li>
                 <li><a data-action="contact" onclick="Controller.PanelSelect(this)">Contact</a></li>
-            </ul>
-            <ul class="nav navbar-nav navbar-right">
-                <li><a href="#"><span class="glyphicon glyphicon-log-in"></span> Login</a></li>
             </ul>
         </div>
     </div>
@@ -188,12 +185,37 @@
                     </div>
                     <div class="modal-body"></div>
                     <div class="modal-footer">
-                        <button type="button" class="btn btn-success" data-action="#formSubmit" data-method="post" data-href="/form_submit.html" onclick="Controller.FormSubmit(this)">Submit</button>
-                        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                        <button
+                                type="button"
+                                class="btn btn-success"
+                                data-action="#formSubmit"
+                                data-method="post"
+                                data-href="/form_submit.html"
+                                onclick="Controller.FormSubmit(this)"
+                        >Submit</button>
+                        <button
+                                type="button"
+                                class="btn btn-success"
+                                data-action="#formSubmit"
+                                data-method="post"
+                                data-href="/form_submit.html"
+                                data-success-handler="CustomSuccessHandler"
+                                data-error-handler="CustomErrorHandler"
+                                data-custom="TransformFormStage1|transform-form-stage-2"
+                                onclick="Controller.FormSubmit(this)"
+                        >Submit Custom</button>
+                        <button
+                                type="button"
+                                class="btn btn-default"
+                                data-dismiss="modal"
+                        >Close</button>
                     </div>
                 </div>
             </div>
         </div>
+    </div>
+    <div id="file-select">
+        <div class="file-upload"></div>
     </div>
 </template>
 </body>

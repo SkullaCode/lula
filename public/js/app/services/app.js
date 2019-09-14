@@ -1,4 +1,14 @@
-Controller.AddProperty("FormSubmit",function(elem, success=null, error=null){
+/**
+ * -- Form Submit --
+ * Handles form submission triggered by the element placed on.
+ * It will only execute if there is no other submission
+ * in progress. Behavior is to locate the form for submission,
+ * serialize form fields (including files), execute submit transformation
+ * function on form fields if present, and send the result to
+ * Service.ServerRequest to be processed.
+ */
+Controller.AddProperty("FormSubmit",function(elem){
+    //exit if another submission is in progress
     if(Service.SubmitButton !== null) return false;
     Service.SubmitButton = jQuery(elem);
     let target = Service.SubmitButton.data(Service.SYSTEM_ACTION);
@@ -7,6 +17,7 @@ Controller.AddProperty("FormSubmit",function(elem, success=null, error=null){
     let site_url = "";
     let method = "";
     let params = {};
+    let hasFile = false;
 
     //load the form from target specified. if not
     //load the parent form element
@@ -24,6 +35,7 @@ Controller.AddProperty("FormSubmit",function(elem, success=null, error=null){
         return false;
     }
 
+    //retrieve form fields and submission data from loaded form
     if(Service.LoadedForm.is("form")){
         data = jQuery(Service.LoadedForm.serializeArray());
         site_url = Service.LoadedForm[0].action;
@@ -43,8 +55,11 @@ Controller.AddProperty("FormSubmit",function(elem, success=null, error=null){
     if(typeof site_url === "undefined") return false;
     if(typeof method === "undefined") method = "GET";
 
+    //determine if the form has a file, and if so serialize
+    //using FormData object, or just use an object
     const file = Service.LoadedForm.find("input[type='file']");
     if(file.length > 0){
+        hasFile = true;
         params = new FormData();
         jQuery(file).each(function(e){
             params.append(file[e].name,file[e].files);
@@ -58,16 +73,51 @@ Controller.AddProperty("FormSubmit",function(elem, success=null, error=null){
         });
     }
 
+    //determine if there are submit transformations and execute them
     if(typeof custom !== "undefined")
         params = Service.ExecuteSubmitTransformation(custom,Service.LoadedForm,params);
 
-    success = (success !== null) ? window[success] : Service.FormSubmitSuccessHandler;
-    error = (error !== null) ? window[error] : Service.ErrorHandler;
+    //determine the response handlers to use for success and error
+    //defaults are chosen by default obviously
+    let success = Service.FormSubmitSuccessHandler;
+    let error = Service.ErrorHandler;
+    if(typeof Service.SubmitButton.data(Service.SYSTEM_SUCCESS_HANDLER) !== "undefined"){
+        success = Controller[Service.SubmitButton.data(Service.SYSTEM_SUCCESS_HANDLER)];
+    }
+    if(typeof Service.SubmitButton.data(Service.SYSTEM_ERROR_HANDLER) !== "undefined"){
+        error = Controller[Service.SubmitButton.data(Service.SYSTEM_ERROR_HANDLER)];
+    }
+
+    //determine how the form submission should be processed
+    //if a specific action was specified we use that
+    //otherwise we use the default server request
     let ex = Service.Action[target];
-    if(typeof ex !== "undefined") ex(site_url,method,params,success,error);
-    else Service.ServerRequest(site_url,params,method,success,error);
+    if(typeof ex !== "undefined") ex({
+        site: site_url,
+        params: params,
+        request: method,
+        success: success,
+        error: error,
+        hasFile: hasFile
+    });
+    else Service.ServerRequest({
+        site: site_url,
+        params: params,
+        request: method,
+        success: success,
+        error: error,
+        hasFile: hasFile,
+    });
 });
 
+/**
+ * -- File Select --
+ * Handles file selection and preview. It will only execute if
+ * there is no other action in progress. Behaviour is to
+ * locate the container with the file input and image,
+ * execute click function on file input to launch dialog,
+ * and setup the preview for showing when selected.
+ */
 Controller.AddProperty("FileSelect",function(elem){
     //if there is a triggered action do not execute
     if(Service.ActionButton !== null) return false;
@@ -75,13 +125,13 @@ Controller.AddProperty("FileSelect",function(elem){
     let target = Service.ActionButton.data(Service.SYSTEM_ACTION);
     let custom = Service.ActionButton.data(Service.SYSTEM_CUSTOM);
     //load the form associated with the file
-    Service.LoadedForm = (typeof target === "undefined")
+    const form = (typeof target === "undefined")
         ? jQuery(Service.ActionButton.parents(Service.SYSTEM_FILE_UPLOAD_CONTAINER))
         : jQuery(document).find(`#${target}`);
     // find the file input element
-    let input = Service.LoadedForm.find("input[type=file]");
+    let input = form.find("input[type=file]");
     // find the image element that displays preview
-    let img = Service.LoadedForm.find("img");
+    let img = form.find("img");
     // trigger click event that opens upload file dialog
     input.click();
     // update preview image when file is changed
@@ -91,12 +141,22 @@ Controller.AddProperty("FileSelect",function(elem){
     input.change();
     // execute custom code on the form
     if(typeof custom !== "undefined"){
-        Service.ExecuteCustom(custom,Service.LoadedForm);
+        Service.ExecuteCustom(custom,form);
     }
     //enable other actions when complete
     Service.ActionButton = null;
 });
 
+/**
+ * -- Modal Select --
+ * Handles launching modals. It will only execute if
+ * there is no other action in progress. Behaviour is to
+ * Find the element specified and update the loaded modal
+ * property with it, place it on the DOM in the modal
+ * container (this is just an empty div with the specified
+ * class that MUST be in the layout), execute any custom
+ * modifications, and launch.
+ */
 Controller.AddProperty("ModalSelect",function(elem){
     //if there is a triggered action do not execute
     if(Service.ActionButton !== null) return false;
@@ -124,6 +184,15 @@ Controller.AddProperty("ModalSelect",function(elem){
     Service.ActionButton = null;
 });
 
+/**
+ * -- Panel Select --
+ * Handles loading new panels unto the DOM. It will only
+ * execute if there is no other action in progress.
+ * Behaviour is to Find the element specified and update
+ * the loaded panel property with it, determine the target
+ * where the panel should be placed, load panel unto
+ * the DOM, and execute custom modifications if specified
+ */
 Controller.AddProperty("PanelSelect",function(elem){
     //if there is a triggered action do not execute
     if(Service.ActionButton !== null) return false;

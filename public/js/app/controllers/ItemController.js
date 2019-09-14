@@ -6,6 +6,12 @@ Controller.Init = function () {
         header.css("color","red");
     });
 
+    Service.Modification.Capitalize = function(component){
+        let header = jQuery(component).find("h1");
+        header.css("font-weight","bolder");
+        header.css("font-variant-caps","all-petite-caps");
+    };
+
     Service.Data.AddMethod("form-data",function(component){
         const data = [];
         data[12] = {
@@ -80,6 +86,26 @@ Controller.Init = function () {
         return (typeof component === "undefined" || component === null)
             ? "" : component.toUpperCase();
     });
+
+    Service.SubmitTransformation.TransformFormStage1 = function(component,params){
+        alert("form is being transformed..... stage 1");
+        return params;
+    };
+
+    Service.SubmitTransformation.AddMethod("transform-form-stage-2",function(component,params){
+        alert("form is being transformed..... stage 2");
+        return params;
+    });
+};
+
+Controller.CustomSuccessHandler = function(result){
+    alert("Custom success handler was fired");
+    Service.FormSubmitSuccessHandler(result);
+};
+
+Controller.CustomErrorHandler = function(e){
+    alert("Custom error handler was fired");
+    Service.ErrorHandler(e);
 };
 
 jQuery(function(){

@@ -23,21 +23,21 @@ Service.Data.Bootstrap = function(){
     Service.LoadingComplete = true;
 };
 
-Service.Data.AddMethod('static-listing-panel',function(component){
+Service.Data.AddMethod(DefaultPanelListing,function(component){
     if(typeof component.data("id") !== "undefined"){
-        Service.Bind(component,Service.ModelData["listing-panel"][component.data("id")]);
+        Service.Bind(component,Service.ModelData[DefaultListingName][component.data("id")]);
     }
 });
 
-Service.Data.AddMethod('static-listing-modal',function(component){
+Service.Data.AddMethod(DefaultModalListing,function(component){
     if(typeof component.data("id") !== "undefined"){
-        Service.Bind(component,Service.ModelData["listing-modal"][component.data("id")]);
+        Service.Bind(component,Service.ModelData[DefaultListingName][component.data("id")]);
     }
 });
 
-Service.Data.AddMethod('static-listing-form', function(component){
+Service.Data.AddMethod(DefaultFormListing, function(component){
     if(typeof component.data("id") !== "undefined"){
-        Service.BindForm(component,Service.ModelData["listing-form"][component.data("id")]);
+        Service.BindForm(component,Service.ModelData[DefaultListingName][component.data("id")]);
     }
 });
 

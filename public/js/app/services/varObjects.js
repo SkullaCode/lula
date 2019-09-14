@@ -1,12 +1,21 @@
-const ModalContainer = "modal-container";
-const DefaultModalListing = "static-listing-modal";
+const ModalContainer        = "modal-container";
+const DefaultModalListing   = "static-listing-modal";
+const DefaultPanelListing   = "static-listing-panel";
+const DefaultFormListing    = "static-listing-form";
+const DefaultListingName    = "model-list";
+
 window.Controller = function(){
     let AddProperty = function(name,f){
         Response[name] = f;
     };
 
+    let AddMethod = function(name,f){
+        AddProperty(name,f);
+    };
+
     let Response = {
         AddProperty,
+        AddMethod,
         FormSubmit: null,
         FileSelect: null,
         ModalSelect: null,
@@ -30,6 +39,10 @@ window.Service = function(){
 
     let addProperty = function(name,f){
          Response[name] = f;
+    };
+
+    let addMethod = function(name,f){
+        addProperty(name,f);
     };
 
     let Response = {
@@ -70,6 +83,7 @@ window.Service = function(){
         ExecuteCustom                       : null,
         ExecuteSubmitTransformation         : null,
         AddProperty                         : addProperty,
+        AddMethod                           : addMethod,
         SYSTEM_ID                           : "id",
         SYSTEM_PROPERTY                     : "property",
         SYSTEM_TARGET                       : "target",
@@ -87,7 +101,9 @@ window.Service = function(){
         SYSTEM_BIND_VALUE                   : "bind-value",
         SYSTEM_BIND_META                    : "bind-meta",
         SYSTEM_LOOP                         : "loop",
-        SYSTEM_BIND_LOOP                    : "bind-loop"
+        SYSTEM_BIND_LOOP                    : "bind-loop",
+        SYSTEM_SUCCESS_HANDLER              : "success-handler",
+        SYSTEM_ERROR_HANDLER                : "error-handler"
     };
 
     return Response;

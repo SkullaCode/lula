@@ -3,16 +3,10 @@
  * -- Error Handler --
  * This function is responsible for handling all requests
  * which return 400 or 500 level status codes
- *
- * @param j
- * @param d
- * @param e
- * @constructor
  */
-Service.AddProperty("ErrorHandler",function(j,d,e){
+Service.AddProperty("ErrorHandler",function(result){
     if(Service.LoadedForm !== null){
         Service.LoadedForm.find('input,select,textarea,button')
-            .prop("disabled",false) // enable disabled for properties
             .each(function(){
                 //find elements that have the class 'clear-error' which
                 //indicates they should be cleared and clear them.
@@ -32,12 +26,12 @@ Service.AddProperty("ErrorHandler",function(j,d,e){
     }
 
     let message = {
-        Code: j.statusText,
+        Code: result.request.statusText,
         Entity: "Application"
     };
-    if(j.responseText.length > 0)
+    if(result.request.responseText.length > 0)
         try{
-            message = JSON.parse(j.responseText);
+            message = JSON.parse(result.request.responseText);
         }
     catch(e){
 
@@ -45,9 +39,9 @@ Service.AddProperty("ErrorHandler",function(j,d,e){
 
 
     //add status codes and how they should be treated here
-    switch(j.status){
+    switch(result.request.status){
         case 500: {
-            Service.NotificationHandler(message,"INTERNAL_SERVER_ERROR");
+            Service.NotificationHandler({});
             break;
         }
         case 401:{
@@ -59,48 +53,75 @@ Service.AddProperty("ErrorHandler",function(j,d,e){
             break;
         }
         case 404:{
-            Service.NotificationHandler(message,"NOT_FOUND");
+            Service.NotificationHandler({});
             break;
         }
-    }
-    if(Service.SubmitButton !== null){
-        Service.SubmitButton.prop("disabled",false);
-        Service.SubmitButton = null;
     }
 });
 
 /**
- * -- Notification Handler --
- * This function handles default implementation for notification
- * system.
- * @param obj
- * @param status
+ * -- Form Submit Success Handler --
+ * This function handles successful responses
+ * from calls to the server by default.
+ *
+ * @param result object containing success handler parameters
  */
-Service.AddProperty("NotificationHandler",function(obj,status){
+Service.AddProperty("FormSubmitSuccessHandler",function(result){
+    Service.LoadedForm.find('input,select,textarea,button')
+        .each(function(){
+            //find elements that have the class 'clear-success' which
+            //indicates they should be cleared and clear them.
+            let elem = jQuery(this);
+            if(elem.hasClass(Service.SYSTEM_CLEAR_SUCCESS)){
+                if(elem.prop("type") === "select-one"){
+                    elem.prop("selectedIndex",0);
+                }
+                else if(elem.is("input")){
+                    elem.val("");
+                }
+                else if(elem.is("textarea")){
+                    elem.val("");
+                }
+            }
+        });
+    //trigger notification event
+    Service.NotificationHandler(result);
+
+    //close the modal if directed to do so
+    if(Service.SubmitButton.hasClass(Service.SYSTEM_CLOSE_ON_COMPLETE))
+        if (Service.LoadedModal !== null) Service.LoadedModal.modal('hide');
+});
+
+/**
+ * -- Notification Handler --
+ * This function handles the default implementation for notifications
+ *
+ * @param result object containing notification parameters
+ */
+Service.AddProperty("NotificationHandler",function(result){
 
 });
 
 /**
  * -- Server Request --
- * This function handles all regular ajax requests
+ * This function handles ajax requests
  *
- * @param site the URL that the request is to target
- * @param params parameters that should be sent with the request
- * @param request type of the request either "POST" or "GET" etc
- * @param success function that should be executed on success
- * @param error function that should be executed on error
- * @param hasFile boolean that determines if a file is in the form or not
+ * @param requirements object containing request parameters
  */
-//todo work out how to incorporate submitting files
-Service.AddProperty("ServerRequest",function(site,params,request,success,error,hasFile=false){
-    request = (request === undefined || request === null || !request)
+Service.AddProperty("ServerRequest",function(requirements){
+    //ensure there is a request type
+    requirements.request = (typeof requirements.request === "undefined" || requirements.request === null || !requirements.request)
         ? 'POST'
-        : request.toUpperCase();
+        : requirements.request.toUpperCase();
 
+    //ensure there are request headers
+    if(typeof requirements.headers === "undefined" || requirements.headers === null || !requirements.headers){
+        requirements.headers = [];
+    }
     // fix: throws an exception if a POST request is sent
     //without a body
-    if(params === null){
-        params = {};
+    if(requirements.params === null){
+        requirements.params = {};
     }
     //disable form fields so that they cannot be edited
     //while submission is taking place
@@ -114,9 +135,16 @@ Service.AddProperty("ServerRequest",function(site,params,request,success,error,h
     }
 
     let ajax_params = {
-        url 		: site,
-        type 		: request,
+        url 		: requirements.site,
+        type 		: requirements.request,
         success 	: function(data,status,jqXHR){
+            //enable disabled elements
+            if(Service.LoadedForm !== null){
+                Service.LoadedForm.find('input,select,textarea').prop("disabled",false);
+            }
+            if(Service.SubmitButton !== null){
+                Service.SubmitButton.prop("disabled",false);
+            }
             //check if reload header is set and reload the page
             //if it is
             if(jqXHR.getResponseHeader("X-Reload")){
@@ -143,19 +171,44 @@ Service.AddProperty("ServerRequest",function(site,params,request,success,error,h
             res.message = jqXHR.statusText;
             res.data = data;
             //execute the success callback with results received.
-            (typeof success === 'string') ? window[success](res) : success(res)
+            requirements.success(res);
+            Service.LoadedForm = null;
+            Service.SubmitButton = null;
         },
-        error       : error,
+        error       : function(request, status, error){
+            //enable disabled elements
+            if(Service.LoadedForm !== null){
+                Service.LoadedForm.find('input,select,textarea').prop("disabled",false);
+            }
+            if(Service.SubmitButton !== null){
+                Service.SubmitButton.prop("disabled",false);
+            }
+            requirements.error({
+                request, status, error
+            });
+            Service.LoadedForm = null;
+            Service.SubmitButton = null;
+        },
+        //execute specified actions before request is sent
         beforeSend  : function(xhr){
             xhr.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
+            if(requirements.headers.length > 0){
+                jQuery.each(requirements.headers,function(){
+                    xhr.setRequestHeader(this.Name,this.Value);
+                });
+            }
         }
     };
     //list request types that require message body
     //and determine if the current request is in
     //the list.
-    let requestTypes = ['POST','PUT','HEAD'];
-    if(requestTypes.indexOf(request.toUpperCase()) >= 0){
-        ajax_params.data = params;
+    let requestTypes = ['POST','PUT','HEAD','DELETE'];
+    if(requestTypes.indexOf(requirements.request.toUpperCase()) >= 0){
+        ajax_params.data = requirements.params;
+    }
+    if(requirements.hasFile){
+        ajax_params.processData = false;
+        ajax_params.contentType = false;
     }
     jQuery.ajax(ajax_params);
 });
@@ -165,7 +218,6 @@ Service.AddProperty("ServerRequest",function(site,params,request,success,error,h
  * This function handles default implementation for
  * launching a modal
  *
- * @constructor
  */
 Service.AddProperty("LaunchModal",function(){
     Service.LoadedModal.modal();
@@ -196,11 +248,12 @@ Service.AddProperty("LaunchModal",function(){
 });
 
 /**
- * -- BindByID --
+ * -- Bind --
  * this function is responsible for binding the data
  * in 'Service.ModelData' to the elements of the desired
  * component. only components with the class 'bind'
- * or 'bind-loop' are handled by this function
+ * or 'bind-loop' are handled by this function. Binding
+ * is done using the id property.
  *
  * @param component element that will have its elements bound
  * @param data data set from which values will be used in binding
@@ -387,6 +440,15 @@ Service.AddProperty("Bind",function(component, data){
     });
 });
 
+/**
+ * -- Bind Form --
+ * this function binds data to the supplied form.
+ * data is bound to input,select, and textarea
+ * elements.
+ *
+ * @param form the form element
+ * @param ds data set from which values will be used in binding
+ */
 Service.AddProperty("BindForm",function(form, ds){
     if(ds === null) return;
     if(typeof form === "undefined") return;
@@ -486,6 +548,14 @@ Service.AddProperty("BindForm",function(form, ds){
     }
 });
 
+/**
+ * -- Get Property --
+ * this function is used to get a specific data property
+ * form the data provided.
+ *
+ * @param id name of the property to retrieve
+ * @param data data set from which the property will be retrieved
+ */
 Service.AddProperty("GetProperty",function(id,data){
     if(id === null) return data;
     if(typeof id === 'undefined') return data;
@@ -513,6 +583,9 @@ Service.AddProperty("GetProperty",function(id,data){
  * this function is used for creating a secondary dropdown
  * list from a primary one (eg. Selecting a country and
  * retrieving associated states)
+ *
+ * @param elem the element selected
+ * @param target the element to update with created select list
  */
 Service.AddProperty("ListUpdate",function(elem,target){
     if(elem.value.length > 0){
@@ -522,6 +595,13 @@ Service.AddProperty("ListUpdate",function(elem,target){
     }
 });
 
+/**
+ * -- Trigger Events --
+ * this function triggers onclick and onchange events if
+ * present on the element passed to it
+ *
+ * @param elem element on which to trigger events
+ */
 Service.AddProperty("TriggerEvents",function(elem){
     let click = elem.prop("onclick");
     let change = elem.prop("onchange");
@@ -532,6 +612,14 @@ Service.AddProperty("TriggerEvents",function(elem){
         elem.change();
 });
 
+/**
+ * -- Image Preview --
+ * this function allows an image preview when a file
+ * is selected
+ *
+ * @param input the file input element
+ * @param target the img element to show the preview
+ */
 Service.AddProperty("ImagePreview",function(input, target) {
     if (input.length === 1 && input[0].files[0]) {
         let reader = new FileReader();
@@ -545,38 +633,15 @@ Service.AddProperty("ImagePreview",function(input, target) {
     }
 });
 
-Service.AddProperty("FormSubmitSuccessHandler",function(data){
-    Service.LoadedForm.find('input,select,textarea,button')
-        .prop("disabled",false) //enable disabled form elements
-        .each(function(){
-            //find elements that have the class 'clear-success' which
-            //indicates they should be cleared and clear them.
-            let elem = jQuery(this);
-            if(elem.hasClass(Service.SYSTEM_CLEAR_SUCCESS)){
-                if(elem.prop("type") === "select-one"){
-                    elem.prop("selectedIndex",0);
-                }
-                else if(elem.is("input")){
-                    elem.val("");
-                }
-                else if(elem.is("textarea")){
-                    elem.val("");
-                }
-            }
-        });
-    //enable submit button
-    Service.SubmitButton.prop("disabled",false);
-    let closeOnComplete = Service.SubmitButton.hasClass(Service.SYSTEM_CLOSE_ON_COMPLETE);
-    Service.LoadedForm = null;
-    //trigger notification event
-    Service.NotificationHandler(data.message);
-    Service.SubmitButton = null;
-
-    //close the modal if directed to do so
-    if(closeOnComplete)
-        if (Service.LoadedModal !== null) Service.LoadedModal.modal('hide');
-});
-
+/**
+ * -- Load Panel --
+ * this function is responsible for loading html templates
+ * into the panel location specified. if no location
+ * is specified the default is used.
+ *
+ * @param elem the panel selected to be loaded
+ * @param target location where it should be placed
+ */
 Service.AddProperty("LoadPanel",function(elem,target=null){
     if(typeof elem !== "undefined"){
         let action = elem.data(Service.SYSTEM_ACTION);
@@ -600,6 +665,15 @@ Service.AddProperty("LoadPanel",function(elem,target=null){
     }
 });
 
+/**
+ * -- Select List Builder --
+ * this function is responsible for building the options
+ * for a select element passed to it. data for each
+ * option is retrieved from a list provided.
+ *
+ * @param elem select list element
+ * @param list array of objects to construct options
+ */
 Service.AddProperty("SelectListBuilder",function(elem,list){
     elem.empty();
     jQuery.each(list, function () {
@@ -607,6 +681,13 @@ Service.AddProperty("SelectListBuilder",function(elem,list){
     });
 });
 
+/**
+ * -- Find Element --
+ * this function retrieves templates from the
+ * template tag and ensures they are recognized by the DOM
+ *
+ * @param name name of the element to retrieve
+ */
 Service.AddProperty("FindElement",function(name){
     let templateContent = jQuery('template').prop('content');
     templateContent = jQuery(templateContent);
@@ -626,6 +707,32 @@ Service.AddProperty("FindElement",function(name){
     return jQuery();
 });
 
+/**
+ * -- Execute Custom --
+ * this function automates the execution of modifications to
+ * panels or modals that have been loaded
+ *
+ * @param action names of the custom actions to execute
+ * @param component panel or modal on which to apply custom actions
+ */
+Service.AddProperty("ExecuteCustom",function(action,component){
+    action = action.split("|");
+    action.forEach(function(item){
+        let func = Service.Modification[item];
+        if(typeof func !== "undefined"){
+            func(component);
+        }
+    });
+});
+
+/**
+ * -- Transform --
+ * this function automates the execution of modifications to
+ * elements during binding.
+ *
+ * @param action names of the custom actions to execute
+ * @param component element on which to apply custom actions
+ */
 Service.AddProperty("Transform",function(action,component){
     action = action.split("|");
     action.forEach(function(item){
@@ -637,17 +744,15 @@ Service.AddProperty("Transform",function(action,component){
     return component;
 });
 
-Service.AddProperty("ExecuteCustom",function(action,component){
-    action = action.split("|");
-    action.forEach(function(item){
-        let func = Service.Modification[item];
-        if(typeof func !== "undefined"){
-            component = func(component);
-        }
-    });
-    return component;
-});
-
+/**
+ * -- Execute Submit Transformation --
+ * this function automates the execution of modification to
+ * form elements before they are sent to the server
+ *
+ * @param action names of the custom actions to execute
+ * @param component element on which to apply custom actions
+ * @param params current form fields in the request
+ */
 Service.AddProperty("ExecuteSubmitTransformation",function(action,component,params){
     action = action.split("|");
     action.forEach(function(item){
