@@ -14,7 +14,7 @@ Service.Transformation.Bootstrap = function(){
         }
         else{
             clearInterval(id);
-            const defaultPanel = jQuery("#MainContainer").data(Service.SYSTEM_ACTION);
+            const defaultPanel = jQuery(`#${MainContainer}`).data(Service.SYSTEM_ACTION);
             window.Service.MetaData['NotificationType'] = 'toaster';
             //jQuery.ajaxSetup({headers: {"X-Session-Token": window.Service.MetaData.SessionToken }});
             if(typeof defaultPanel !== "undefined"){

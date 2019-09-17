@@ -643,7 +643,7 @@ Service.AddProperty("ImagePreview",function(input, target) {
  * @param target location where it should be placed
  */
 Service.AddProperty("LoadPanel",function(elem,target=null){
-    if(typeof elem !== "undefined"){
+    if(typeof elem !== "undefined" && typeof elem === "object"){
         let action = elem.data(Service.SYSTEM_ACTION);
         let func = Service.Data[action];
         if(typeof func !== "undefined") func(elem);
@@ -660,8 +660,6 @@ Service.AddProperty("LoadPanel",function(elem,target=null){
         Service.LoadedPanel = elem;
         Service.ContainerPanel.empty();
         Service.ContainerPanel = null;
-        Service.SubmitButton = null;
-        Service.ActionButton = null;
     }
 });
 

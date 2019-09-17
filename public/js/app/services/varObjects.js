@@ -1,3 +1,4 @@
+const MainContainer         = "MainContainer";
 const ModalContainer        = "modal-container";
 const DefaultModalListing   = "static-listing-modal";
 const DefaultPanelListing   = "static-listing-panel";

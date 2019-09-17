@@ -169,11 +169,16 @@ Controller.AddProperty("ModalSelect",function(elem){
         const modalContainer = jQuery(ModalContainer);
         modalContainer.empty().append(Service.LoadedModal);
         //update modal attributes
-        if(typeof Service.ActionButton.data(Service.SYSTEM_ID) !== "undefined")
-            Service.LoadedModal.data(Service.SYSTEM_ID,Service.ActionButton.data(Service.SYSTEM_ID));
-        if(typeof Service.ActionButton.data(Service.SYSTEM_PROPERTY) !== "undefined")
-            Service.LoadedModal.data(Service.SYSTEM_PROPERTY,Service.ActionButton.data(Service.SYSTEM_PROPERTY));
-        let custom = jQuery(elem).data(Service.SYSTEM_CUSTOM);
+        const dataAttributes = Service.ActionButton.data();
+        const filterList = ["action","custom"];
+        jQuery.each(dataAttributes,function(key,value){
+            //filter out action and custom attribute
+            // these are defined on the modal
+            if(jQuery.inArray(key,filterList) === -1){
+                Service.LoadedModal.data(key,value);
+            }
+        });
+        let custom = Service.ActionButton.data(Service.SYSTEM_CUSTOM);
         //execute custom changes
         if(typeof custom !== "undefined"){
             Service.ExecuteCustom(custom,Service.LoadedModal);
@@ -198,21 +203,26 @@ Controller.AddProperty("PanelSelect",function(elem){
     if(Service.ActionButton !== null) return false;
     Service.ActionButton = jQuery(elem);
     //locate panel
-    let panel = Service.FindElement(`#${Service.ActionButton.data(Service.SYSTEM_ACTION)}`);
-    //load panel attributes
-    if(typeof Service.ActionButton.data(Service.SYSTEM_ID) !== "undefined")
-        panel.data(Service.SYSTEM_ID,Service.ActionButton.data(Service.SYSTEM_ID));
-    if(typeof Service.ActionButton.data(Service.SYSTEM_PROPERTY) !== "undefined")
-        panel.data(Service.SYSTEM_PROPERTY,Service.ActionButton.data(Service.SYSTEM_PROPERTY));
+    Service.LoadedPanel = Service.FindElement(`#${Service.ActionButton.data(Service.SYSTEM_ACTION)}`);
+    //update modal attributes
+    const dataAttributes = Service.ActionButton.data();
+    const filterList = ["action","custom","target"];
+    jQuery.each(dataAttributes,function(key,value){
+        //filter out action and custom attribute
+        // these are defined on the panel
+        if(jQuery.inArray(key,filterList) === -1){
+            Service.LoadedPanel.data(key,value);
+        }
+    });
     //load panel unto the DOM
     if(typeof  Service.ActionButton.data(Service.SYSTEM_TARGET) !== "undefined"){
-        Service.LoadPanel(panel,Service.ActionButton.data(Service.SYSTEM_TARGET));
+        Service.LoadPanel(Service.LoadedPanel,Service.ActionButton.data(Service.SYSTEM_TARGET));
     }
     else{
-        Service.LoadPanel(panel);
+        Service.LoadPanel(Service.LoadedPanel);
     }
     //execute custom changes
-    let custom = jQuery(elem).data(Service.SYSTEM_CUSTOM);
+    let custom = Service.ActionButton.data(Service.SYSTEM_CUSTOM);
     if(typeof custom !== "undefined"){
         Service.ExecuteCustom(custom,Service.LoadedPanel);
     }
