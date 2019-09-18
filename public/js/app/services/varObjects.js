@@ -83,6 +83,8 @@ window.Service = function(){
         Transform                           : null,
         ExecuteCustom                       : null,
         ExecuteSubmitTransformation         : null,
+        ToasterNotification                 : null,
+        AlertNotification                   : null,
         AddProperty                         : addProperty,
         AddMethod                           : addMethod,
         SYSTEM_ID                           : "id",

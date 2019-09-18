@@ -41,7 +41,11 @@ Service.AddProperty("ErrorHandler",function(result){
     //add status codes and how they should be treated here
     switch(result.request.status){
         case 500: {
-            Service.NotificationHandler({});
+            Service.NotificationHandler({
+                success: "error",
+                message: result.error,
+                data: result.request.responseJSON
+            });
             break;
         }
         case 401:{
@@ -53,7 +57,11 @@ Service.AddProperty("ErrorHandler",function(result){
             break;
         }
         case 404:{
-            Service.NotificationHandler({});
+            Service.NotificationHandler({
+                success: "error",
+                message: result.error,
+                data: result.request.responseJSON
+            });
             break;
         }
     }
@@ -99,7 +107,22 @@ Service.AddProperty("FormSubmitSuccessHandler",function(result){
  * @param result object containing notification parameters
  */
 Service.AddProperty("NotificationHandler",function(result){
-
+        if(result.success === "success"){
+            if(typeof Service.ToasterNotification === "function"){
+                Service.ToasterNotification(result.message,result.data);
+            }
+            else{
+                alert(result.message);
+            }
+        }
+        else{
+            if(typeof Service.AlertNotification === "function"){
+                Service.AlertNotification(result.message,result.data);
+            }
+            else{
+                alert(result.message)
+            }
+        }
 });
 
 /**
