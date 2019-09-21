@@ -23,6 +23,12 @@ Service.AddProperty("ErrorHandler",function(result){
                     }
                 }
             });
+
+        //check if a complete action was specified and execute it
+        let completeAction = Service.LoadedForm.data(Service.SYSTEM_COMPLETE);
+        if(typeof completeAction !== "undefined" && Controller.hasOwnProperty(completeAction)){
+            Controller[completeAction](result);
+        }
     }
 
     let message = {
@@ -43,7 +49,7 @@ Service.AddProperty("ErrorHandler",function(result){
         case 500: {
             Service.NotificationHandler({
                 success: "error",
-                message: result.error,
+                message: result.message,
                 data: result.request.responseJSON
             });
             break;
@@ -59,7 +65,7 @@ Service.AddProperty("ErrorHandler",function(result){
         case 404:{
             Service.NotificationHandler({
                 success: "error",
-                message: result.error,
+                message: result.message,
                 data: result.request.responseJSON
             });
             break;
@@ -92,6 +98,12 @@ Service.AddProperty("FormSubmitSuccessHandler",function(result){
                 }
             }
         });
+
+    //check if a complete action was specified and execute it
+    let completeAction = Service.LoadedForm.data(Service.SYSTEM_COMPLETE);
+    if(typeof completeAction !== "undefined" && Controller.hasOwnProperty(completeAction)){
+        Controller[completeAction](result);
+    }
     //trigger notification event
     Service.NotificationHandler(result);
 
@@ -107,7 +119,7 @@ Service.AddProperty("FormSubmitSuccessHandler",function(result){
  * @param result object containing notification parameters
  */
 Service.AddProperty("NotificationHandler",function(result){
-        if(result.success === "success"){
+        if(result.status === "success"){
             if(typeof Service.ToasterNotification === "function"){
                 Service.ToasterNotification(result.message,result.data);
             }
@@ -190,7 +202,7 @@ Service.AddProperty("ServerRequest",function(requirements){
 
                 }
             }
-            res.success = status;
+            res.status = status;
             res.message = jqXHR.statusText;
             res.data = data;
             //execute the success callback with results received.
@@ -207,7 +219,7 @@ Service.AddProperty("ServerRequest",function(requirements){
                 Service.SubmitButton.prop("disabled",false);
             }
             requirements.error({
-                request, status, error
+                request, status, message: error
             });
             Service.LoadedForm = null;
             Service.SubmitButton = null;
@@ -628,11 +640,10 @@ Service.AddProperty("ListUpdate",function(elem,target){
 Service.AddProperty("TriggerEvents",function(elem){
     let click = elem.prop("onclick");
     let change = elem.prop("onchange");
-    if(click !== null)
-        elem.click();
-
-    if(change !== null)
-        elem.change();
+    let blur = elem.prop("onblur");
+    if( click   !== null ) elem.click();
+    if( change  !== null ) elem.change();
+    if( blur    !== null ) elem.blur();
 });
 
 /**

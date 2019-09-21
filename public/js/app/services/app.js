@@ -13,6 +13,7 @@ Controller.AddProperty("FormSubmit",function(elem){
     Service.SubmitButton = jQuery(elem);
     let target = Service.SubmitButton.data(Service.SYSTEM_ACTION);
     let custom = Service.SubmitButton.data(Service.SYSTEM_CUSTOM);
+    let complete = Service.SubmitButton.data(Service.SYSTEM_COMPLETE);
     let data = [];
     let site_url = "";
     let method = "";
@@ -27,6 +28,11 @@ Controller.AddProperty("FormSubmit",function(elem){
     }
     else{
         Service.LoadedForm = jQuery(document).find(target);
+    }
+
+    //if a complete function is defined add it to the loaded form
+    if(typeof complete !== "undefined"){
+        Service.LoadedForm.data(Service.SYSTEM_COMPLETE,Service.SubmitButton.data(Service.SYSTEM_COMPLETE));
     }
 
     // if LoadedForm is not specified, terminate the action
@@ -81,10 +87,12 @@ Controller.AddProperty("FormSubmit",function(elem){
     //defaults are chosen by default obviously
     let success = Service.FormSubmitSuccessHandler;
     let error = Service.ErrorHandler;
-    if(typeof Service.SubmitButton.data(Service.SYSTEM_SUCCESS_HANDLER) !== "undefined"){
+    let successHandler = Service.SubmitButton.data(Service.SYSTEM_SUCCESS_HANDLER);
+    let errorHandler = Service.SubmitButton.data(Service.SYSTEM_ERROR_HANDLER);
+    if(typeof successHandler !== "undefined" && Controller.hasOwnProperty(successHandler)){
         success = Controller[Service.SubmitButton.data(Service.SYSTEM_SUCCESS_HANDLER)];
     }
-    if(typeof Service.SubmitButton.data(Service.SYSTEM_ERROR_HANDLER) !== "undefined"){
+    if(typeof errorHandler !== "undefined" && Controller.hasOwnProperty(errorHandler)){
         error = Controller[Service.SubmitButton.data(Service.SYSTEM_ERROR_HANDLER)];
     }
 
@@ -170,7 +178,7 @@ Controller.AddProperty("ModalSelect",function(elem){
         modalContainer.empty().append(Service.LoadedModal);
         //update modal attributes
         const dataAttributes = Service.ActionButton.data();
-        const filterList = ["action","custom"];
+        const filterList = [Service.SYSTEM_ACTION,Service.SYSTEM_CUSTOM];
         jQuery.each(dataAttributes,function(key,value){
             //filter out action and custom attribute
             // these are defined on the modal
@@ -206,7 +214,7 @@ Controller.AddProperty("PanelSelect",function(elem){
     Service.LoadedPanel = Service.FindElement(`#${Service.ActionButton.data(Service.SYSTEM_ACTION)}`);
     //update modal attributes
     const dataAttributes = Service.ActionButton.data();
-    const filterList = ["action","custom","target"];
+    const filterList = [Service.SYSTEM_ACTION,Service.SYSTEM_CUSTOM,Service.SYSTEM_TARGET];
     jQuery.each(dataAttributes,function(key,value){
         //filter out action and custom attribute
         // these are defined on the panel
