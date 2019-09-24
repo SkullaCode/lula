@@ -14,13 +14,13 @@ Service.Transformation.Bootstrap = function(){
         }
         else{
             clearInterval(id);
-            const defaultPanel = jQuery(`#${MainContainer}`).data(Service.SYSTEM_ACTION);
             window.Service.MetaData['NotificationType'] = 'toaster';
             //jQuery.ajaxSetup({headers: {"X-Session-Token": window.Service.MetaData.SessionToken }});
-            if(typeof defaultPanel !== "undefined"){
-                let panel = window.Service.FindElement(`#${defaultPanel}`);
-                window.Service.LoadPanel(panel);
-            }
+            //const defaultPanel = jQuery(`#${MainContainer}`).data(Service.SYSTEM_ACTION);
+            //if(typeof defaultPanel !== "undefined"){
+            //    Service.LoadPanel(Service.FindElement(`#${defaultPanel}`));
+            //}
+            Controller.PanelSelect(document.getElementById(`${MainContainer}`));
         }
     };
     id = setInterval(timer, 500);

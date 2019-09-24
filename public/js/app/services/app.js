@@ -169,6 +169,8 @@ Controller.AddProperty("ModalSelect",function(elem){
     //if there is a triggered action do not execute
     if(Service.ActionButton !== null) return false;
     Service.ActionButton = jQuery(elem);
+    //make action button aware of loaded type
+    Service.ActionButton.data(Service.SYSTEM_LOAD_TYPE,"modal");
     //if a modal is already loaded do not execute
     if(Service.LoadedModal === null){
         let action = Service.ActionButton.data(Service.SYSTEM_ACTION);
@@ -210,24 +212,25 @@ Controller.AddProperty("PanelSelect",function(elem){
     //if there is a triggered action do not execute
     if(Service.ActionButton !== null) return false;
     Service.ActionButton = jQuery(elem);
+    //make action button aware of loaded type
+    Service.ActionButton.data(Service.SYSTEM_LOAD_TYPE,"panel");
     //locate panel
-    Service.LoadedPanel = Service.FindElement(`#${Service.ActionButton.data(Service.SYSTEM_ACTION)}`);
+    const panel = Service.FindElement(`#${Service.ActionButton.data(Service.SYSTEM_ACTION)}`);
     //update modal attributes
-    const dataAttributes = Service.ActionButton.data();
     const filterList = [Service.SYSTEM_ACTION,Service.SYSTEM_CUSTOM,Service.SYSTEM_TARGET];
-    jQuery.each(dataAttributes,function(key,value){
+    jQuery.each(Service.ActionButton.data(),function(key,value){
         //filter out action and custom attribute
         // these are defined on the panel
         if(jQuery.inArray(key,filterList) === -1){
-            Service.LoadedPanel.data(key,value);
+            panel.data(key,value);
         }
     });
     //load panel unto the DOM
     if(typeof  Service.ActionButton.data(Service.SYSTEM_TARGET) !== "undefined"){
-        Service.LoadPanel(Service.LoadedPanel,Service.ActionButton.data(Service.SYSTEM_TARGET));
+        Service.LoadPanel(panel,Service.ActionButton.data(Service.SYSTEM_TARGET));
     }
     else{
-        Service.LoadPanel(Service.LoadedPanel);
+        Service.LoadPanel(panel);
     }
     //execute custom changes
     let custom = Service.ActionButton.data(Service.SYSTEM_CUSTOM);
@@ -235,6 +238,14 @@ Controller.AddProperty("PanelSelect",function(elem){
         Service.ExecuteCustom(custom,Service.LoadedPanel);
     }
     Service.ActionButton = null;
+});
+
+/**
+ * -- Reload Panel --
+ * this function reloads the current panel
+ */
+Controller.AddProperty("ReloadPanel",function(){
+    Service.LoadPanel(Service.LoadedPanel);
 });
 
 jQuery(function(){

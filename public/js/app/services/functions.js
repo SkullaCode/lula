@@ -25,11 +25,22 @@ Service.AddProperty("ErrorHandler",function(result){
             });
 
         //check if a complete action was specified and execute it
-        let completeAction = Service.LoadedForm.data(Service.SYSTEM_COMPLETE);
-        if(typeof completeAction !== "undefined" && Controller.hasOwnProperty(completeAction)){
-            Controller[completeAction](result);
-        }
+        /*let completeAction = Service.LoadedForm.data(Service.SYSTEM_COMPLETE);
+        if(typeof completeAction !== "undefined"){
+            completeAction = completeAction.split("|");
+            completeAction.forEach(function(item){
+                if(Controller.hasOwnProperty(item)){
+                    Controller[item](result);
+                }
+                else if(Service.Custom.hasOwnProperty(item)){
+                    Service.Custom[item](result);
+                }
+            });
+        }*/
+        Service.LoadedForm = null;
+        Service.SubmitButton = null;
     }
+    Service.ActionButton = null;
 
     let message = {
         Code: result.request.statusText,
@@ -74,6 +85,39 @@ Service.AddProperty("ErrorHandler",function(result){
 });
 
 /**
+ * -- Success Handler --
+ * This function handles successful responses
+ * from calls to the server by default.
+ *
+ * @param result object containing success handler parameters
+ */
+Service.AddProperty("SuccessHandler",function(result){
+
+    //trigger notification event
+    Service.NotificationHandler(result);
+
+    //check if a complete action was specified and execute it
+    let completeAction = Service.ActionButton.data(Service.SYSTEM_COMPLETE);
+    if(typeof completeAction !== "undefined"){
+        completeAction = completeAction.split("|");
+        completeAction.forEach(function(item){
+            if(Controller.hasOwnProperty(item)){
+                Controller[item](result);
+            }
+            else if(Service.Custom.hasOwnProperty(item)){
+                Service.Custom[item](result);
+            }
+        });
+    }
+
+    //close the modal if directed to do so
+    if(Service.ActionButton.hasClass(Service.SYSTEM_CLOSE_ON_COMPLETE)){
+        if (Service.LoadedModal !== null) Service.LoadedModal.modal('hide');
+    }
+    Service.ActionButton = null;
+});
+
+/**
  * -- Form Submit Success Handler --
  * This function handles successful responses
  * from calls to the server by default.
@@ -101,15 +145,26 @@ Service.AddProperty("FormSubmitSuccessHandler",function(result){
 
     //check if a complete action was specified and execute it
     let completeAction = Service.LoadedForm.data(Service.SYSTEM_COMPLETE);
-    if(typeof completeAction !== "undefined" && Controller.hasOwnProperty(completeAction)){
-        Controller[completeAction](result);
+    if(typeof completeAction !== "undefined"){
+        completeAction = completeAction.split("|");
+        completeAction.forEach(function(item){
+            if(Controller.hasOwnProperty(item)){
+                Controller[item](result);
+            }
+            else if(Service.Custom.hasOwnProperty(item)){
+                Service.Custom[item](result);
+            }
+        });
     }
     //trigger notification event
     Service.NotificationHandler(result);
 
     //close the modal if directed to do so
-    if(Service.SubmitButton.hasClass(Service.SYSTEM_CLOSE_ON_COMPLETE))
+    if(Service.SubmitButton.hasClass(Service.SYSTEM_CLOSE_ON_COMPLETE)){
         if (Service.LoadedModal !== null) Service.LoadedModal.modal('hide');
+    }
+    Service.LoadedForm = null;
+    Service.SubmitButton = null;
 });
 
 /**
@@ -153,6 +208,16 @@ Service.AddProperty("ServerRequest",function(requirements){
     if(typeof requirements.headers === "undefined" || requirements.headers === null || !requirements.headers){
         requirements.headers = [];
     }
+
+    //ensure there are handlers for success and error results
+    if(typeof requirements.success === "undefined" || requirements.success === null || !requirements.success){
+       requirements.success = Service.SuccessHandler;
+    }
+
+    if(typeof requirements.error === "undefined" || requirements.error === null || !requirements.error){
+        requirements.error = Service.ErrorHandler;
+    }
+
     // fix: throws an exception if a POST request is sent
     //without a body
     if(requirements.params === null){
@@ -207,8 +272,6 @@ Service.AddProperty("ServerRequest",function(requirements){
             res.data = data;
             //execute the success callback with results received.
             requirements.success(res);
-            Service.LoadedForm = null;
-            Service.SubmitButton = null;
         },
         error       : function(request, status, error){
             //enable disabled elements
@@ -221,8 +284,6 @@ Service.AddProperty("ServerRequest",function(requirements){
             requirements.error({
                 request, status, message: error
             });
-            Service.LoadedForm = null;
-            Service.SubmitButton = null;
         },
         //execute specified actions before request is sent
         beforeSend  : function(xhr){
@@ -677,6 +738,10 @@ Service.AddProperty("ImagePreview",function(input, target) {
  * @param target location where it should be placed
  */
 Service.AddProperty("LoadPanel",function(elem,target=null){
+    const clone = elem.clone();
+    jQuery.each(elem.data(),function(key,val){
+        clone.data(key,val);
+    });
     if(typeof elem !== "undefined" && typeof elem === "object"){
         let action = elem.data(Service.SYSTEM_ACTION);
         let func = Service.Data[action];
@@ -687,13 +752,13 @@ Service.AddProperty("LoadPanel",function(elem,target=null){
         // idk if its a javascript thing or jQuery thing
         Service.ContainerPanel = jQuery("#container-panel");
         Service.ContainerPanel.empty().append(elem);
-        let elem_id = (target == null) ? jQuery("#MainContainer") : jQuery(`#${target}`);
+        let elem_id = (target == null) ? jQuery(`#${MainContainer}`) : jQuery(`#${target}`);
         elem_id.css("display","none");
         elem_id.empty();
         elem_id.html(elem).fadeIn("slow");
-        Service.LoadedPanel = elem;
         Service.ContainerPanel.empty();
         Service.ContainerPanel = null;
+        Service.LoadedPanel = clone;
     }
 });
 
@@ -729,14 +794,16 @@ Service.AddProperty("FindElement",function(name){
         const action = clone.data(Service.SYSTEM_ACTION);
         const custom = clone.data(Service.SYSTEM_CUSTOM);
         let element = jQuery(clone.html());
+        //ensure we have one root element
         if(element.length !== 1){
             element = jQuery("<div></div>").append(clone.html())
         }
+        //add system actions as data properties
         if(typeof action !== "undefined")element.data(Service.SYSTEM_ACTION,action);
         if(typeof custom !== "undefined")element.data(Service.SYSTEM_CUSTOM,custom);
         return element;
     }
-    return jQuery();
+    return jQuery("<div></div>");
 });
 
 /**

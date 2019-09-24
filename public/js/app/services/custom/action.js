@@ -5,6 +5,3 @@
  * onclick and onchange events or by the data-action attribute on a submit button.
  */
 
-window.Service.Action.AddMethod("ErrorHandler",function(j,d,e){
-
-});

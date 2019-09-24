@@ -65,6 +65,7 @@ window.Service = function(){
         Data                                : null,
         Action                              : null,
         ErrorHandler                        : null,
+        SuccessHandler                      : null,
         NotificationHandler                 : null,
         ServerRequest                       : null,
         LaunchModal                         : null,
@@ -83,6 +84,7 @@ window.Service = function(){
         Transform                           : null,
         ExecuteCustom                       : null,
         ExecuteSubmitTransformation         : null,
+        ReloadPanel                         : null,
         ToasterNotification                 : null,
         AlertNotification                   : null,
         AddProperty                         : addProperty,
@@ -107,7 +109,8 @@ window.Service = function(){
         SYSTEM_LOOP                         : "loop",
         SYSTEM_BIND_LOOP                    : "bind-loop",
         SYSTEM_SUCCESS_HANDLER              : "success-handler",
-        SYSTEM_ERROR_HANDLER                : "error-handler"
+        SYSTEM_ERROR_HANDLER                : "error-handler",
+        SYSTEM_LOAD_TYPE                    : "load-type"
     };
 
     return Response;
