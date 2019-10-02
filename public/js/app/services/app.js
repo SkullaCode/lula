@@ -90,10 +90,10 @@ Controller.AddProperty("FormSubmit",function(elem){
     let successHandler = Service.SubmitButton.data(Service.SYSTEM_SUCCESS_HANDLER);
     let errorHandler = Service.SubmitButton.data(Service.SYSTEM_ERROR_HANDLER);
     if(typeof successHandler !== "undefined" && Controller.hasOwnProperty(successHandler)){
-        success = Controller[Service.SubmitButton.data(Service.SYSTEM_SUCCESS_HANDLER)];
+        success = Controller[successHandler];
     }
     if(typeof errorHandler !== "undefined" && Controller.hasOwnProperty(errorHandler)){
-        error = Controller[Service.SubmitButton.data(Service.SYSTEM_ERROR_HANDLER)];
+        error = Controller[errorHandler];
     }
 
     //determine how the form submission should be processed

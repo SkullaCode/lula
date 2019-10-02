@@ -59,9 +59,9 @@ Service.AddProperty("ErrorHandler",function(result){
     switch(result.request.status){
         case 500: {
             Service.NotificationHandler({
-                success: "error",
+                status: "error",
                 message: result.message,
-                data: result.request.responseJSON
+                data: message
             });
             break;
         }
@@ -75,11 +75,20 @@ Service.AddProperty("ErrorHandler",function(result){
         }
         case 404:{
             Service.NotificationHandler({
-                success: "error",
+                status: "error",
                 message: result.message,
-                data: result.request.responseJSON
+                data: message
             });
             break;
+        }
+        default:{
+            Service.NotificationHandler({
+                status:"error",
+                message: "Oops!",
+                data:{
+                    Code:"Something went wrong on the server"
+                }
+            });
         }
     }
 });
@@ -176,7 +185,7 @@ Service.AddProperty("FormSubmitSuccessHandler",function(result){
 Service.AddProperty("NotificationHandler",function(result){
         if(result.status === "success"){
             if(typeof Service.ToasterNotification === "function"){
-                Service.ToasterNotification(result.message,result.data);
+                Service.ToasterNotification(result);
             }
             else{
                 alert(result.message);
@@ -184,7 +193,7 @@ Service.AddProperty("NotificationHandler",function(result){
         }
         else{
             if(typeof Service.AlertNotification === "function"){
-                Service.AlertNotification(result.message,result.data);
+                Service.AlertNotification(result);
             }
             else{
                 alert(result.message)
@@ -234,46 +243,53 @@ Service.AddProperty("ServerRequest",function(requirements){
         Service.SubmitButton.prop("disabled",true);
     }
 
+    const successFunction = function(data,status,jqXHR){
+        //enable disabled elements
+        if(Service.LoadedForm !== null){
+            Service.LoadedForm.find('input,select,textarea').prop("disabled",false);
+        }
+        if(Service.SubmitButton !== null){
+            Service.SubmitButton.prop("disabled",false);
+        }
+        //check if reload header is set and reload the page
+        //if it is
+        if(jqXHR.getResponseHeader("X-Reload")){
+            location.reload();
+            return;
+        }
+        //check if the redirect header is set and redirect
+        //the page if it is
+        if(jqXHR.getResponseHeader("X-Redirect")){
+            location.href = jqXHR.getResponseHeader("X-Redirect");
+            return;
+        }
+        let res = {};
+        //ensure data is in JSON format
+        if(typeof data === 'string' && data.length > 0){
+            try{
+                data = JSON.parse(data);
+            }
+            catch(e){
+
+            }
+        }
+        res.status = status;
+        res.message = jqXHR.statusText;
+        res.data = data;
+        //execute the success callback with results received.
+        requirements.success(res);
+    };
+
     let ajax_params = {
         url 		: requirements.site,
         type 		: requirements.request,
-        success 	: function(data,status,jqXHR){
-            //enable disabled elements
-            if(Service.LoadedForm !== null){
-                Service.LoadedForm.find('input,select,textarea').prop("disabled",false);
-            }
-            if(Service.SubmitButton !== null){
-                Service.SubmitButton.prop("disabled",false);
-            }
-            //check if reload header is set and reload the page
-            //if it is
-            if(jqXHR.getResponseHeader("X-Reload")){
-                location.reload();
-                return;
-            }
-            //check if the redirect header is set and redirect
-            //the page if it is
-            if(jqXHR.getResponseHeader("X-Redirect")){
-                location.href = jqXHR.getResponseHeader("X-Redirect");
-                return;
-            }
-            let res = {};
-            //ensure data is in JSON format
-            if(typeof data === 'string' && data.length > 0){
-                try{
-                    data = JSON.parse(data);
-                }
-                catch(e){
-
-                }
-            }
-            res.status = status;
-            res.message = jqXHR.statusText;
-            res.data = data;
-            //execute the success callback with results received.
-            requirements.success(res);
-        },
+        success 	: successFunction,
         error       : function(request, status, error){
+            //jQuery sometimes throws a parse error but the response is successful
+            if(request.status === 200){
+                successFunction("","success",request);
+                return;
+            }
             //enable disabled elements
             if(Service.LoadedForm !== null){
                 Service.LoadedForm.find('input,select,textarea').prop("disabled",false);
@@ -788,6 +804,7 @@ Service.AddProperty("SelectListBuilder",function(elem,list){
 Service.AddProperty("FindElement",function(name){
     let templateContent = jQuery('template').prop('content');
     templateContent = jQuery(templateContent);
+    if(name.substring(0,1) !== "#") name = `#${name}`;
     let item = templateContent.find(name);
     if(item.length > 0){
         let clone = item.clone();
