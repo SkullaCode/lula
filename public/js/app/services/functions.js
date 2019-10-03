@@ -49,20 +49,25 @@ Service.AddProperty("ErrorHandler",function(result){
         notificationType = Service.ActionButton.data(Service.SYSTEM_NOTIFICATION_ON_ERROR);
     }
     Service.ActionButton = null;
-
-    let message = {
-        Code: result.request.statusText,
-        Entity: "Application",
-        notificationType: notificationType
-    };
-    if(result.request.responseText.length > 0)
-        try{
-            message = JSON.parse(result.request.responseText);
-        }
-    catch(e){
-
+    let message = {};
+    if(typeof Service.ErrorDataHandler === "function"){
+        message = Service.ErrorDataHandler(result.request);
     }
+    else{
+        message = {
+            Code: result.request.statusText,
+            Entity: "Application",
+            notificationType: notificationType
+        };
+        if(result.request.responseText.length > 0){
+            try{
+                message = JSON.parse(result.request.responseText);
+            }
+            catch(e){
 
+            }
+        }
+    }
 
     //add status codes and how they should be treated here
     switch(result.request.status){
@@ -96,9 +101,7 @@ Service.AddProperty("ErrorHandler",function(result){
             Service.NotificationHandler({
                 status:"error",
                 message: "Oops!",
-                data:{
-                    Code:"Something went wrong on the server"
-                },
+                data: message,
                 notificationType
             });
         }
