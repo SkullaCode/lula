@@ -116,6 +116,14 @@
 <footer class="container-fluid text-center">
     <p>Footer Text</p>
 </footer>
+<script>
+    Service.AlertNotification = function(result){
+        swal(result.message,result.data.message,result.status);
+    };
+    jQuery(function(){
+
+    });
+</script>
 <template>
     <div id="home" data-action="home-data">
         <div>

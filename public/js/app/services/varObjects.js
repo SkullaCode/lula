@@ -110,7 +110,9 @@ window.Service = function(){
         SYSTEM_BIND_LOOP                    : "bind-loop",
         SYSTEM_SUCCESS_HANDLER              : "success-handler",
         SYSTEM_ERROR_HANDLER                : "error-handler",
-        SYSTEM_LOAD_TYPE                    : "load-type"
+        SYSTEM_LOAD_TYPE                    : "load-type",
+        SYSTEM_NOTIFICATION_ON_SUCCESS      : "notif-on-success",
+        SYSTEM_NOTIFICATION_ON_ERROR        : "notif-on-error"
     };
 
     return Response;

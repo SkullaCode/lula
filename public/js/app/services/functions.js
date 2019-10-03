@@ -5,6 +5,7 @@
  * which return 400 or 500 level status codes
  */
 Service.AddProperty("ErrorHandler",function(result){
+    let notificationType = "alert";
     if(Service.LoadedForm !== null){
         Service.LoadedForm.find('input,select,textarea,button')
             .each(function(){
@@ -24,6 +25,10 @@ Service.AddProperty("ErrorHandler",function(result){
                 }
             });
 
+        if(typeof Service.SubmitButton.data(Service.SYSTEM_NOTIFICATION_ON_ERROR) !== "undefined"){
+            notificationType = Service.SubmitButton.data(Service.SYSTEM_NOTIFICATION_ON_ERROR);
+        }
+
         //check if a complete action was specified and execute it
         /*let completeAction = Service.LoadedForm.data(Service.SYSTEM_COMPLETE);
         if(typeof completeAction !== "undefined"){
@@ -40,11 +45,15 @@ Service.AddProperty("ErrorHandler",function(result){
         Service.LoadedForm = null;
         Service.SubmitButton = null;
     }
+    if(typeof Service.ActionButton.data(Service.SYSTEM_NOTIFICATION_ON_ERROR) !== "undefined"){
+        notificationType = Service.ActionButton.data(Service.SYSTEM_NOTIFICATION_ON_ERROR);
+    }
     Service.ActionButton = null;
 
     let message = {
         Code: result.request.statusText,
-        Entity: "Application"
+        Entity: "Application",
+        notificationType: notificationType
     };
     if(result.request.responseText.length > 0)
         try{
@@ -61,7 +70,8 @@ Service.AddProperty("ErrorHandler",function(result){
             Service.NotificationHandler({
                 status: "error",
                 message: result.message,
-                data: message
+                data: message,
+                notificationType
             });
             break;
         }
@@ -77,7 +87,8 @@ Service.AddProperty("ErrorHandler",function(result){
             Service.NotificationHandler({
                 status: "error",
                 message: result.message,
-                data: message
+                data: message,
+                notificationType
             });
             break;
         }
@@ -87,7 +98,8 @@ Service.AddProperty("ErrorHandler",function(result){
                 message: "Oops!",
                 data:{
                     Code:"Something went wrong on the server"
-                }
+                },
+                notificationType
             });
         }
     }
@@ -103,6 +115,7 @@ Service.AddProperty("ErrorHandler",function(result){
 Service.AddProperty("SuccessHandler",function(result){
 
     //trigger notification event
+    result.notificationType = Service.ActionButton.data(Service.SYSTEM_NOTIFICATION_ON_SUCCESS) || "toaster";
     Service.NotificationHandler(result);
 
     //check if a complete action was specified and execute it
@@ -165,7 +178,9 @@ Service.AddProperty("FormSubmitSuccessHandler",function(result){
             }
         });
     }
+
     //trigger notification event
+    result.notificationType = Service.SubmitButton.data(Service.SYSTEM_NOTIFICATION_ON_SUCCESS) || "toaster";
     Service.NotificationHandler(result);
 
     //close the modal if directed to do so
@@ -183,22 +198,44 @@ Service.AddProperty("FormSubmitSuccessHandler",function(result){
  * @param result object containing notification parameters
  */
 Service.AddProperty("NotificationHandler",function(result){
-        if(result.status === "success"){
-            if(typeof Service.ToasterNotification === "function"){
-                Service.ToasterNotification(result);
-            }
-            else{
-                alert(result.message);
-            }
-        }
-        else{
+    switch(result.notificationType){
+        case "alert":{
             if(typeof Service.AlertNotification === "function"){
                 Service.AlertNotification(result);
             }
             else{
                 alert(result.message)
             }
+            break;
         }
+        case "toaster":{
+            if(typeof Service.ToasterNotification === "function"){
+                Service.ToasterNotification(result);
+            }
+            else{
+                alert(result.message);
+            }
+            break;
+        }
+        default:{
+            if(result.status === "success"){
+                if(typeof Service.ToasterNotification === "function"){
+                    Service.ToasterNotification(result);
+                }
+                else{
+                    alert(result.message);
+                }
+            }
+            else{
+                if(typeof Service.AlertNotification === "function"){
+                    Service.AlertNotification(result);
+                }
+                else{
+                    alert(result.message)
+                }
+            }
+        }
+    }
 });
 
 /**
