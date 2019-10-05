@@ -23,7 +23,6 @@
     <script src="public/js/app/services/custom/action.js"></script>
     <script src="public/js/app/services/custom/custom.js"></script>
     <script src="public/js/app/services/custom/data.js"></script>
-    <script src="public/js/app/services/custom/domEvents.js"></script>
     <script src="public/js/app/services/custom/modification.js"></script>
     <script src="public/js/app/services/custom/submitTransformation.js"></script>
     <script src="public/js/app/services/custom/transformation.js"></script>
@@ -121,7 +120,9 @@
         swal(result.message,result.data.message,result.status);
     };
     jQuery(function(){
-
+        //bootstrap the system
+        Service.Data.Bootstrap();
+        Service.Transformation.Bootstrap();
     });
 </script>
 <template>
