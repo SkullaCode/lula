@@ -154,6 +154,7 @@ window.Service = function(){
         SYSTEM_PROPERTY                     : "property",
         SYSTEM_TARGET                       : "target",
         SYSTEM_COMPLETE                     : "complete",
+        SYSTEM_HEADERS                      : "headers",
         SYSTEM_ACTION                       : "action",
         SYSTEM_CUSTOM                       : "custom",
         SYSTEM_URL                          : "href",

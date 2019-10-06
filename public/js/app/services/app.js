@@ -14,11 +14,13 @@ Controller.AddProperty("FormSubmit",function(elem){
     let target = Service.SubmitButton.data(Service.SYSTEM_ACTION);
     let custom = Service.SubmitButton.data(Service.SYSTEM_CUSTOM);
     let complete = Service.SubmitButton.data(Service.SYSTEM_COMPLETE);
+    let requestHeaders = Service.SubmitButton.data(Service.SYSTEM_HEADERS);
     let data = [];
     let site_url = "";
     let method = "";
     let params = {};
     let hasFile = false;
+    let headers = [];
 
     //load the form from target specified. if not
     //load the parent form element
@@ -33,6 +35,16 @@ Controller.AddProperty("FormSubmit",function(elem){
     //if a complete function is defined add it to the loaded form
     if(typeof complete !== "undefined"){
         Service.LoadedForm.data(Service.SYSTEM_COMPLETE,Service.SubmitButton.data(Service.SYSTEM_COMPLETE));
+    }
+
+    //if headers function is defined execute it and get headers for request
+    if(typeof requestHeaders !== "undefined"){
+        if(Controller.hasOwnProperty(requestHeaders)){
+            headers = Controller[requestHeaders]();
+        }
+        else if(Service.Custom.hasOwnProperty(requestHeaders)){
+            headers = Service.Custom[requestHeaders]();
+        }
     }
 
     // if LoadedForm is not specified, terminate the action
@@ -101,20 +113,22 @@ Controller.AddProperty("FormSubmit",function(elem){
     //otherwise we use the default server request
     let ex = Service.Action[target];
     if(typeof ex !== "undefined") ex({
+        params,
+        success,
+        error,
+        hasFile,
+        headers,
         site: site_url,
-        params: params,
-        request: method,
-        success: success,
-        error: error,
-        hasFile: hasFile
+        request: method
     });
     else Service.ServerRequest({
+        params,
+        success,
+        error,
+        hasFile,
+        headers,
         site: site_url,
-        params: params,
-        request: method,
-        success: success,
-        error: error,
-        hasFile: hasFile,
+        request: method
     });
 });
 
@@ -246,10 +260,4 @@ Controller.AddProperty("PanelSelect",function(elem){
  */
 Controller.AddProperty("ReloadPanel",function(){
     Service.LoadPanel(Service.LoadedPanel);
-});
-
-jQuery(function(){
-    //bootstrap the system
-    Service.Data.Bootstrap();
-    Service.Transformation.Bootstrap();
 });
