@@ -316,6 +316,7 @@ Service.AddProperty("ServerRequest",function(requirements){
         res.status = status;
         res.message = jqXHR.statusText;
         res.data = data;
+        res.request = jqXHR;
         //execute the success callback with results received.
         requirements.success(res);
     };
