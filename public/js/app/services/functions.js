@@ -45,10 +45,12 @@ Service.AddProperty("ErrorHandler",function(result){
         Service.LoadedForm = null;
         Service.SubmitButton = null;
     }
-    if(typeof Service.ActionButton.data(Service.SYSTEM_NOTIFICATION_ON_ERROR) !== "undefined"){
-        notificationType = Service.ActionButton.data(Service.SYSTEM_NOTIFICATION_ON_ERROR);
+    else{
+        if(typeof Service.ActionButton.data(Service.SYSTEM_NOTIFICATION_ON_ERROR) !== "undefined"){
+            notificationType = Service.ActionButton.data(Service.SYSTEM_NOTIFICATION_ON_ERROR);
+        }
+        Service.ActionButton = null;
     }
-    Service.ActionButton = null;
     let message = {};
     if(typeof Service.ErrorDataHandler === "function"){
         message = Service.ErrorDataHandler(result.request);
@@ -218,6 +220,9 @@ Service.AddProperty("NotificationHandler",function(result){
             else{
                 alert(result.message);
             }
+            break;
+        }
+        case "none":{
             break;
         }
         default:{
