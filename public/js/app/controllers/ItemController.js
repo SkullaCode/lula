@@ -1,7 +1,7 @@
 Controller.Init = function () {
     Service.ModelData.Listing = {};
 
-    Service.Modification.AddMethod("ColorRed",function(component){
+    Service.Modification.AddMethod("RedHeading",function(component){
         let header = jQuery(component).find("h1");
         header.css("color","red");
     });
@@ -72,14 +72,18 @@ Controller.Init = function () {
             Gender: 1
         };
         const id = component.data(Service.SYSTEM_ID);
+        component.find(".modal-body").attr("id","formSubmit");
         if(typeof id !== "undefined"){
             data[12].ModalTitle = "New Modal";
-            const form = Service.FindElement("#form");
-            form.attr("id","formSubmit");
+            const form = Service.FindElement("form");
             Service.Bind(form,data[id]);
             Service.Bind(component,data[id]);
-            component.find(".modal-body").append(form);
+            component.find("#modal-form").append(form);
         }
+        const image = Service.FindElement("file-select");
+        image.find("img").css("max-width","250px");
+        image.find("input[type=file]").prop("multiple",true);
+        component.find("#modal-image").append(image);
     });
 
     Service.Transformation.AddMethod("capitalize",function(component){

@@ -54,13 +54,14 @@ Controller.AddProperty("FormSubmit",function(elem){
     }
 
     //retrieve form fields and submission data from loaded form
+    //exclude file input from search...handled separately below
     if(Service.LoadedForm.is("form")){
         data = jQuery(Service.LoadedForm.serializeArray());
         site_url = Service.LoadedForm[0].action;
         method = Service.LoadedForm[0].method;
     }
     else{
-        Service.LoadedForm.find("input,select,textarea").each(function(){
+        Service.LoadedForm.find("input[type!=file],select,textarea").each(function(){
             data.push({
                 name: this.name,
                 value: this.value
@@ -77,10 +78,22 @@ Controller.AddProperty("FormSubmit",function(elem){
     //using FormData object, or just use an object
     const file = Service.LoadedForm.find("input[type='file']");
     if(file.length > 0){
+        //let the server request know a file is present
+        //so it can set appropriate headers
         hasFile = true;
         params = new FormData();
         jQuery(file).each(function(e){
-            params.append(file[e].name,file[e].files);
+            //determine if multiple files are selected and add
+            //each of them to the payload
+            if(file[e].files.length > 1){
+                for(let i=0; i<file[e].files.length; i++){
+                    params.append(`${file[e].name}[]`,file[e].files[i]);
+                }
+            }
+            else{
+                params.append(file[e].name,file[e].files[0]);
+            }
+
         });
         jQuery.each(data,function(){
             params.append(this.name,this.value);

@@ -93,7 +93,7 @@ Service.AddProperty("ErrorHandler",function(result){
         case 404:{
             Service.NotificationHandler({
                 status: "error",
-                message: result.message,
+                message: "Oops!",
                 data: message,
                 notificationType
             });
@@ -800,28 +800,25 @@ Service.AddProperty("ImagePreview",function(input, target) {
  * @param target location where it should be placed
  */
 Service.AddProperty("LoadPanel",function(elem,target=null){
-    const clone = elem.clone();
-    jQuery.each(elem.data(),function(key,val){
-        clone.data(key,val);
-    });
     if(typeof elem !== "undefined" && typeof elem === "object"){
         let action = elem.data(Service.SYSTEM_ACTION);
-        let func = Service.Data[action];
-        if(typeof func !== "undefined") func(elem);
+        if(Service.Data.hasOwnProperty(action)) Service.Data[action](elem);
         else Service.Data[Service.SYSTEM_DEFAULT_PANEL_DATA](elem);
 
         // we have to place panel on the DOM before we load it.....
         // idk if its a javascript thing or jQuery thing
         Service.ContainerPanel = jQuery("#container-panel");
         Service.ContainerPanel.empty().append(elem);
-        let elem_id = (target == null) ? jQuery(`#${MainContainer}`) : jQuery(`#${target}`);
+        let elem_id = (target === null) ? jQuery(`#${MainContainer}`) : jQuery(`#${target}`);
         elem_id.css("display","none");
         elem_id.empty();
         elem_id.html(elem).fadeIn("slow");
         Service.ContainerPanel.empty();
         Service.ContainerPanel = null;
-        Service.LoadedPanel = clone;
+        Service.LoadedPanel = elem;
+        return true;
     }
+    return false;
 });
 
 /**
@@ -880,9 +877,11 @@ Service.AddProperty("FindElement",function(name){
 Service.AddProperty("ExecuteCustom",function(action,component){
     action = action.split("|");
     action.forEach(function(item){
-        let func = Service.Modification[item];
-        if(typeof func !== "undefined"){
-            func(component);
+        if(Service.Modification.hasOwnProperty(item)){
+            Service.Modification[item](component);
+        }
+        else if(Controller.hasOwnProperty(item)){
+            Controller[item](component);
         }
     });
 });
@@ -898,9 +897,11 @@ Service.AddProperty("ExecuteCustom",function(action,component){
 Service.AddProperty("Transform",function(action,component){
     action = action.split("|");
     action.forEach(function(item){
-        let func = Service.Transformation[item];
-        if(typeof func !== "undefined"){
-            component = func(component);
+        if(Service.Transformation.hasOwnProperty(item)){
+            component = Service.Transformation[item](component);
+        }
+        else if(Controller.hasOwnProperty(item)){
+            component = Controller[item](component);
         }
     });
     return component;
@@ -918,9 +919,8 @@ Service.AddProperty("Transform",function(action,component){
 Service.AddProperty("ExecuteSubmitTransformation",function(action,component,params){
     action = action.split("|");
     action.forEach(function(item){
-        let func = Service.SubmitTransformation[item];
-        if(typeof func !== "undefined"){
-            params = func(component,params);
+        if(Service.SubmitTransformation.hasOwnProperty(item)){
+            params = Service.SubmitTransformation[item](component,params);
         }
     });
     return params;

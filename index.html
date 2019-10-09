@@ -80,7 +80,7 @@
         <div class="collapse navbar-collapse" id="myNavbar">
             <ul class="nav navbar-nav">
                 <li class="active"><a data-action="home" onclick="Controller.PanelSelect(this)">Home</a></li>
-                <li><a data-action="about" data-custom="ColorRed|Capitalize" onclick="Controller.PanelSelect(this)">About</a></li>
+                <li><a data-action="about" data-custom="RedHeading|Capitalize" onclick="Controller.PanelSelect(this)">About</a></li>
                 <li><a href="projects.html">Projects</a></li>
                 <li><a data-action="contact" onclick="Controller.PanelSelect(this)">Contact</a></li>
             </ul>
@@ -97,6 +97,7 @@
             <p><a data-action="datatable" data-target="SmallTarget" onclick="Controller.PanelSelect(this)">Launch DataTable</a></p>
             <p><a data-action="modal" data-type="add" data-mix="gre" onclick="Controller.ModalSelect(this)">Launch Modal</a></p>
             <p><a data-action="modal" data-id="12" onclick="Controller.ModalSelect(this)">Launch Modal With Data</a></p>
+            <p><a data-action="file-select" data-target="SmallTarget" onclick="Controller.PanelSelect(this)">Image Preview</a></p>
         </div>
         <div id="MainContainer" data-action="home" class="col-sm-8 text-left">
             <h1>Loading......</h1>
@@ -117,7 +118,7 @@
 </footer>
 <script>
     Service.AlertNotification = function(result){
-        swal(result.message,result.data.message,result.status);
+        swal(result.message,result.data.Code,result.status);
     };
     jQuery(function(){
         //bootstrap the system
@@ -192,7 +193,12 @@
                         <button type="button" class="close" data-dismiss="modal">&times;</button>
                         <h4 class="modal-title bind" id="ModalTitle"></h4>
                     </div>
-                    <div class="modal-body"></div>
+                    <div class="modal-body">
+                        <div class="row">
+                            <div class="col-xs-6" id="modal-form"></div>
+                            <div class="col-xs-6" id="modal-image"></div>
+                        </div>
+                    </div>
                     <div class="modal-footer">
                         <button
                                 type="button"
@@ -207,12 +213,23 @@
                                 class="btn btn-success"
                                 data-action="#formSubmit"
                                 data-method="post"
+                                data-href="/form_submit.php"
+                                data-success-handler="CustomSuccessHandler"
+                                data-error-handler="CustomErrorHandler"
+                                data-complete="CustomCompleteHandler"
+                                data-custom="TransformFormStage1|transform-form-stage-2"
+                                onclick="Controller.FormSubmit(this)"
+                        >Submit Success</button>
+                        <button
+                                type="button"
+                                class="btn btn-danger"
+                                data-action="#formSubmit"
+                                data-method="post"
                                 data-href="/form_submit.html"
                                 data-success-handler="CustomSuccessHandler"
                                 data-error-handler="CustomErrorHandler"
-                                data-custom="TransformFormStage1|transform-form-stage-2"
                                 onclick="Controller.FormSubmit(this)"
-                        >Submit Custom</button>
+                        >Submit Fail</button>
                         <button
                                 type="button"
                                 class="btn btn-default"
@@ -224,7 +241,11 @@
         </div>
     </div>
     <div id="file-select">
-        <div class="file-upload"></div>
+        <div class="file-upload">
+            <img src="" style="max-width: 100px; max-height: inherit;"/>
+            <input class="hidden" type="file" name="myFile">
+            <input type="button" class="btn btn-primary btn-sm" value="Select File" onclick="Controller.FileSelect(this)" />
+        </div>
     </div>
 </template>
 </body>
