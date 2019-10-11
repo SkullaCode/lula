@@ -206,7 +206,7 @@ Controller.AddProperty("ModalSelect",function(elem){
     //if a modal is already loaded do not execute
     if(Service.LoadedModal === null){
         let action = Service.ActionButton.data(Service.SYSTEM_ACTION);
-        Service.LoadedModal = Service.FindElement(`#${action}`);
+        Service.LoadedModal = Service.FindElement(action);
         //place modal on the DOM
         const modalContainer = jQuery(ModalContainer);
         modalContainer.empty().append(Service.LoadedModal);
@@ -247,7 +247,7 @@ Controller.AddProperty("PanelSelect",function(elem){
     //make action button aware of loaded type
     Service.ActionButton.data(Service.SYSTEM_LOAD_TYPE,"panel");
     //locate panel
-    const panel = Service.FindElement(`#${Service.ActionButton.data(Service.SYSTEM_ACTION)}`);
+    const panel = Service.FindElement(Service.ActionButton.data(Service.SYSTEM_ACTION));
     //update modal attributes
     const filterList = [Service.SYSTEM_ACTION,Service.SYSTEM_CUSTOM,Service.SYSTEM_TARGET];
     jQuery.each(Service.ActionButton.data(),function(key,value){

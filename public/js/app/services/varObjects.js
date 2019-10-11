@@ -3,7 +3,7 @@
  * Defines the main container for panel switching
  * @type {string}
  */
-const MainContainer         = "MainContainer";
+let MainContainer         = "MainContainer";
 
 /**
  * -- ModalContainer --
@@ -11,7 +11,7 @@ const MainContainer         = "MainContainer";
  * in when launched
  * @type {string}
  */
-const ModalContainer        = "modal-container";
+let ModalContainer        = "modal-container";
 
 /**
  * -- DefaultModalListing --
@@ -20,7 +20,7 @@ const ModalContainer        = "modal-container";
  * is specified.
  * @type {string}
  */
-const DefaultModalListing   = "static-listing-modal";
+let DefaultModalListing   = "static-listing-modal";
 
 /**
  * -- DefaultPanelListing --
@@ -29,7 +29,7 @@ const DefaultModalListing   = "static-listing-modal";
  * is specified.
  * @type {string}
  */
-const DefaultPanelListing   = "static-listing-panel";
+let DefaultPanelListing   = "static-listing-panel";
 
 /**
  * -- DefaultFormListing --
@@ -38,7 +38,7 @@ const DefaultPanelListing   = "static-listing-panel";
  * is specified.
  * @type {string}
  */
-const DefaultFormListing    = "static-listing-form";
+let DefaultFormListing    = "static-listing-form";
 
 /**
  * -- DefaultListingName --
@@ -47,7 +47,7 @@ const DefaultFormListing    = "static-listing-form";
  * server.
  * @type {string}
  */
-const DefaultListingName    = "model-list";
+let DefaultListingName    = "model-list";
 
 /**
  * -- Controller --
@@ -140,6 +140,7 @@ window.Service = function(){
         ImagePreview                        : null,
         LoadPanel                           : null,
         LoadLayout                          : null,
+        LoadPanelTransition                 : null,
         SelectListBuilder                   : null,
         FindElement                         : null,
         Transform                           : null,

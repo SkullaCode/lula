@@ -786,16 +786,14 @@ Service.AddProperty("LoadPanel",function(elem,target=null){
     if(typeof elem !== "undefined" && typeof elem === "object"){
         let action = elem.data(Service.SYSTEM_ACTION);
         if(Service.Data.hasOwnProperty(action)) Service.Data[action](elem);
-        else Service.Data[Service.SYSTEM_DEFAULT_PANEL_DATA](elem);
+        else if (Service.Data.hasOwnProperty(Service.SYSTEM_DEFAULT_PANEL_DATA)) Service.Data[Service.SYSTEM_DEFAULT_PANEL_DATA](elem);
 
         // we have to place panel on the DOM before we load it.....
         // idk if its a javascript thing or jQuery thing
         Service.ContainerPanel = jQuery("#container-panel");
         Service.ContainerPanel.empty().append(elem);
         let elem_id = (target === null) ? jQuery(`#${MainContainer}`) : jQuery(`#${target}`);
-        elem_id.css("display","none");
-        elem_id.empty();
-        elem_id.html(elem).fadeIn("slow");
+        Service.LoadPanelTransition(elem_id,elem);
         Service.ContainerPanel.empty();
         Service.ContainerPanel = null;
         Service.LoadedPanel = elem;
@@ -943,4 +941,15 @@ Service.AddProperty("LoadingStateOff",function(){
     if(Service.SubmitButton !== null){
         Service.SubmitButton.prop("disabled",false);
     }
+});
+
+/**
+ * -- Load Panel Transition
+ * this function defines the process of placing the panel
+ * within the specified container
+ */
+Service.AddProperty("LoadPanelTransition",function(container,panel){
+    container.css("display","none");
+    container.empty();
+    container.html(panel).fadeIn("slow");
 });
