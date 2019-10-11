@@ -277,25 +277,13 @@ Service.AddProperty("ServerRequest",function(requirements){
     if(requirements.params === null){
         requirements.params = {};
     }
-    //disable form fields so that they cannot be edited
-    //while submission is taking place
-    if(Service.LoadedForm !== null){
-        Service.LoadedForm.find('input,select,textarea').prop("disabled",true);
-    }
-    //disable the button that triggered the action so that request cannot
-    //be duplicated.
-    if(Service.SubmitButton !== null){
-        Service.SubmitButton.prop("disabled",true);
-    }
+    //disable form input and controls while request is
+    //processed by the server
+    Service.LoadingStateOn();
 
     const successFunction = function(data,status,jqXHR){
-        //enable disabled elements
-        if(Service.LoadedForm !== null){
-            Service.LoadedForm.find('input,select,textarea').prop("disabled",false);
-        }
-        if(Service.SubmitButton !== null){
-            Service.SubmitButton.prop("disabled",false);
-        }
+       //enable disabled form controls
+        Service.LoadingStateOff();
         //check if reload header is set and reload the page
         //if it is
         if(jqXHR.getResponseHeader("X-Reload")){
@@ -337,12 +325,7 @@ Service.AddProperty("ServerRequest",function(requirements){
                 return;
             }
             //enable disabled elements
-            if(Service.LoadedForm !== null){
-                Service.LoadedForm.find('input,select,textarea').prop("disabled",false);
-            }
-            if(Service.SubmitButton !== null){
-                Service.SubmitButton.prop("disabled",false);
-            }
+           Service.LoadingStateOff();
             requirements.error({
                 request, status, message: error
             });
@@ -924,4 +907,40 @@ Service.AddProperty("ExecuteSubmitTransformation",function(action,component,para
         }
     });
     return params;
+});
+
+/**
+ * -- Loading State On --
+ * this function defines what happens when a request
+ * is being sent to the server. It should be primarily
+ * used to disable controls so that multiple requests
+ * cannot be sent at the same time
+ */
+Service.AddProperty("LoadingStateOn",function(){
+    //disable form fields so that they cannot be edited
+    //while submission is taking place
+    if(Service.LoadedForm !== null){
+        Service.LoadedForm.find('input,select,textarea').prop("disabled",true);
+    }
+    //disable the button that triggered the action so that request cannot
+    //be duplicated.
+    if(Service.SubmitButton !== null){
+        Service.SubmitButton.prop("disabled",true);
+    }
+});
+
+/**
+ * -- Loading State Off --
+ * this function defines what should happen when
+ * a request is executed by the server and a response
+ * received
+ */
+Service.AddProperty("LoadingStateOff",function(){
+    //enable disabled elements
+    if(Service.LoadedForm !== null){
+        Service.LoadedForm.find('input,select,textarea').prop("disabled",false);
+    }
+    if(Service.SubmitButton !== null){
+        Service.SubmitButton.prop("disabled",false);
+    }
 });

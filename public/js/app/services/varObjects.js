@@ -148,6 +148,8 @@ window.Service = function(){
         ReloadPanel                         : null,
         ToasterNotification                 : null,
         AlertNotification                   : null,
+        LoadingStateOn                      : null,
+        LoadingStateOff                     : null,
         AddProperty                         : addProperty,
         AddMethod                           : addMethod,
         SYSTEM_ID                           : "id",

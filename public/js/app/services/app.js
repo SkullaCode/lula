@@ -86,8 +86,13 @@ Controller.AddProperty("FormSubmit",function(elem){
             //determine if multiple files are selected and add
             //each of them to the payload
             if(file[e].files.length > 1){
+                let fileName = file[e].name;
+                //determine if file name is array or not
+                if(fileName.substring(fileName.length -1,fileName.length) !== "]"){
+                    fileName = `${file[e].name}[]`;
+                }
                 for(let i=0; i<file[e].files.length; i++){
-                    params.append(`${file[e].name}[]`,file[e].files[i]);
+                    params.append(fileName,file[e].files[i]);
                 }
             }
             else{
