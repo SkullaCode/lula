@@ -91,7 +91,10 @@ window.Service = function(){
     let LoadedModal         = null;
     let LoadedPanel         = null;
     let LoadedForm          = null;
-    let SubmitButton        = null;
+    let RequestInProgress   = null;
+    let PanelLoading        = null;
+    let ModalLoading        = null;
+    let ActionLoading       = null;
     let ActionButton        = null;
     let ModelData           = [];
     let MetaData            = [];
@@ -111,7 +114,10 @@ window.Service = function(){
         LoadedModal,
         LoadedPanel,
         LoadedForm,
-        SubmitButton,
+        RequestInProgress,
+        PanelLoading,
+        ModalLoading,
+        ActionLoading,
         ActionButton,
         ModelData,
         MetaData,

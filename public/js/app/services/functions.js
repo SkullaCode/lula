@@ -6,6 +6,7 @@
  */
 Service.AddProperty("ErrorHandler",function(result){
     let notificationType = "alert";
+    //manipulate form if present
     if(Service.LoadedForm !== null){
         Service.LoadedForm.find('input,select,textarea,button')
             .each(function(){
@@ -24,33 +25,16 @@ Service.AddProperty("ErrorHandler",function(result){
                     }
                 }
             });
-
-        if(typeof Service.SubmitButton.data(Service.SYSTEM_NOTIFICATION_ON_ERROR) !== "undefined"){
-            notificationType = Service.SubmitButton.data(Service.SYSTEM_NOTIFICATION_ON_ERROR);
-        }
-
-        //check if a complete action was specified and execute it
-        /*let completeAction = Service.LoadedForm.data(Service.SYSTEM_COMPLETE);
-        if(typeof completeAction !== "undefined"){
-            completeAction = completeAction.split("|");
-            completeAction.forEach(function(item){
-                if(Controller.hasOwnProperty(item)){
-                    Controller[item](result);
-                }
-                else if(Service.Custom.hasOwnProperty(item)){
-                    Service.Custom[item](result);
-                }
-            });
-        }*/
-        Service.LoadedForm = null;
-        Service.SubmitButton = null;
     }
-    else{
-        if(typeof Service.ActionButton.data(Service.SYSTEM_NOTIFICATION_ON_ERROR) !== "undefined"){
-            notificationType = Service.ActionButton.data(Service.SYSTEM_NOTIFICATION_ON_ERROR);
-        }
-        Service.ActionButton = null;
+    //set custom notification type if present
+    if(typeof Service.ActionButton.data(Service.SYSTEM_NOTIFICATION_ON_ERROR) !== "undefined"){
+        notificationType = Service.ActionButton.data(Service.SYSTEM_NOTIFICATION_ON_ERROR);
     }
+    Service.LoadedForm = null;
+    Service.ActionButton = null;
+
+    //define and format message from server or use default
+    //implementation
     let message = {};
     if(typeof Service.ErrorDataHandler === "function"){
         message = Service.ErrorDataHandler(result.request);
@@ -123,6 +107,10 @@ Service.AddProperty("SuccessHandler",function(result){
     result.notificationType = Service.ActionButton.data(Service.SYSTEM_NOTIFICATION_ON_SUCCESS) || "toaster";
     Service.NotificationHandler(result);
 
+    //close the modal if directed to do so
+    if(Service.ActionButton.hasClass(Service.SYSTEM_CLOSE_ON_COMPLETE))
+        if (Service.LoadedModal !== null) Service.LoadedModal.modal('hide');
+
     //check if a complete action was specified and execute it
     let completeAction = Service.ActionButton.data(Service.SYSTEM_COMPLETE);
     if(typeof completeAction !== "undefined"){
@@ -137,10 +125,6 @@ Service.AddProperty("SuccessHandler",function(result){
         });
     }
 
-    //close the modal if directed to do so
-    if(Service.ActionButton.hasClass(Service.SYSTEM_CLOSE_ON_COMPLETE)){
-        if (Service.LoadedModal !== null) Service.LoadedModal.modal('hide');
-    }
     Service.ActionButton = null;
 });
 
@@ -152,26 +136,37 @@ Service.AddProperty("SuccessHandler",function(result){
  * @param result object containing success handler parameters
  */
 Service.AddProperty("FormSubmitSuccessHandler",function(result){
-    Service.LoadedForm.find('input,select,textarea,button')
-        .each(function(){
-            //find elements that have the class 'clear-success' which
-            //indicates they should be cleared and clear them.
-            let elem = jQuery(this);
-            if(elem.hasClass(Service.SYSTEM_CLEAR_SUCCESS)){
-                if(elem.prop("type") === "select-one"){
-                    elem.prop("selectedIndex",0);
+    //manipulate form if present
+    if(Service.LoadedForm !== null){
+        Service.LoadedForm.find('input,select,textarea,button')
+            .each(function(){
+                //find elements that have the class 'clear-success' which
+                //indicates they should be cleared and clear them.
+                let elem = jQuery(this);
+                if(elem.hasClass(Service.SYSTEM_CLEAR_SUCCESS)){
+                    if(elem.prop("type") === "select-one"){
+                        elem.prop("selectedIndex",0);
+                    }
+                    else if(elem.is("input")){
+                        elem.val("");
+                    }
+                    else if(elem.is("textarea")){
+                        elem.val("");
+                    }
                 }
-                else if(elem.is("input")){
-                    elem.val("");
-                }
-                else if(elem.is("textarea")){
-                    elem.val("");
-                }
-            }
-        });
+            });
+    }
+
+    //trigger notification event
+    result.notificationType = Service.ActionButton.data(Service.SYSTEM_NOTIFICATION_ON_SUCCESS) || "toaster";
+    Service.NotificationHandler(result);
+
+    //close the modal if directed to do so
+    if(Service.ActionButton.hasClass(Service.SYSTEM_CLOSE_ON_COMPLETE))
+        if (Service.LoadedModal !== null) Service.LoadedModal.modal('hide');
 
     //check if a complete action was specified and execute it
-    let completeAction = Service.LoadedForm.data(Service.SYSTEM_COMPLETE);
+    let completeAction = Service.ActionButton.data(Service.SYSTEM_COMPLETE);
     if(typeof completeAction !== "undefined"){
         completeAction = completeAction.split("|");
         completeAction.forEach(function(item){
@@ -184,16 +179,7 @@ Service.AddProperty("FormSubmitSuccessHandler",function(result){
         });
     }
 
-    //trigger notification event
-    result.notificationType = Service.SubmitButton.data(Service.SYSTEM_NOTIFICATION_ON_SUCCESS) || "toaster";
-    Service.NotificationHandler(result);
-
-    //close the modal if directed to do so
-    if(Service.SubmitButton.hasClass(Service.SYSTEM_CLOSE_ON_COMPLETE)){
-        if (Service.LoadedModal !== null) Service.LoadedModal.modal('hide');
-    }
-    Service.LoadedForm = null;
-    Service.SubmitButton = null;
+    Service.ActionButton = null;
 });
 
 /**
@@ -253,6 +239,9 @@ Service.AddProperty("NotificationHandler",function(result){
  * @param requirements object containing request parameters
  */
 Service.AddProperty("ServerRequest",function(requirements){
+    //todo delay execution if a request is on the wire....and then execute
+    if(Service.RequestInProgress) return false;
+
     //ensure there is a request type
     requirements.request = (typeof requirements.request === "undefined" || requirements.request === null || !requirements.request)
         ? 'POST'
@@ -280,10 +269,12 @@ Service.AddProperty("ServerRequest",function(requirements){
     //disable form input and controls while request is
     //processed by the server
     Service.LoadingStateOn();
+    Service.RequestInProgress = true;
 
     const successFunction = function(data,status,jqXHR){
        //enable disabled form controls
         Service.LoadingStateOff();
+        Service.RequestInProgress = false;
         //check if reload header is set and reload the page
         //if it is
         if(jqXHR.getResponseHeader("X-Reload")){
@@ -326,6 +317,7 @@ Service.AddProperty("ServerRequest",function(requirements){
             }
             //enable disabled elements
            Service.LoadingStateOff();
+            Service.RequestInProgress = false;
             requirements.error({
                 request, status, message: error
             });
@@ -369,7 +361,7 @@ Service.AddProperty("LaunchModal",function(){
         else Service.Data[DefaultModalListing](Service.LoadedModal);
     }
     Service.LoadedModal.on('hide.bs.modal',function(e){
-        if(Service.SubmitButton !== null){
+        if(Service.RequestInProgress){
             e.preventDefault();
             e.stopImmediatePropagation();
             return false;
@@ -379,12 +371,11 @@ Service.AddProperty("LaunchModal",function(){
         //todo determine if a request
         // is in progress and only remove after
         // it is complete
-
-        Service.LoadedModal.remove();
-        Service.LoadedModal = null;
-        Service.SubmitButton = null;
-        Service.Data.Store = {};
-        jQuery(`.${ModalContainer}`).empty();
+        if(!Service.RequestInProgress){
+            Service.LoadedModal.remove();
+            Service.LoadedModal = null;
+            jQuery(`.${ModalContainer}`).empty();
+        }
     });
 });
 
@@ -811,10 +802,10 @@ Service.AddProperty("LoadPanel",function(elem,target=null){
  * @param elem select list element
  * @param list array of objects to construct options
  */
-Service.AddProperty("SelectListBuilder",function(elem,list){
-    elem.empty();
+Service.AddProperty("SelectListBuilder",function(elem,list, emptyList = true){
+    if(emptyList) elem.empty();
     jQuery.each(list, function () {
-        elem.append(`<option data-value="${this.Value}" value="${this.Value}+"> ${this.Text} </option>`);
+        elem.append(`<option data-value="${this.Value}" value="${this.Value}"> ${this.Text} </option>`);
     });
 });
 
@@ -828,10 +819,15 @@ Service.AddProperty("SelectListBuilder",function(elem,list){
 Service.AddProperty("FindElement",function(name){
     let templateContent = jQuery('template').prop('content');
     templateContent = jQuery(templateContent);
+    //add hash tag if not present. element lookup is always by id
     if(name.substring(0,1) !== "#") name = `#${name}`;
     let item = templateContent.find(name);
     if(item.length > 0){
-        let clone = item.clone();
+        /**
+         * todo cloning the first item in the list... need to ensure
+         * that highest order divs are selected
+         **/
+        let clone = jQuery(item[0]).clone();
         const action = clone.data(Service.SYSTEM_ACTION);
         const custom = clone.data(Service.SYSTEM_CUSTOM);
         let element = jQuery(clone.html());
@@ -858,7 +854,10 @@ Service.AddProperty("FindElement",function(name){
 Service.AddProperty("ExecuteCustom",function(action,component){
     action = action.split("|");
     action.forEach(function(item){
-        if(Service.Modification.hasOwnProperty(item)){
+        if(Service.Custom.hasOwnProperty(item)){
+            Service.Custom[item](component);
+        }
+        else if(Service.Modification.hasOwnProperty(item)){
             Service.Modification[item](component);
         }
         else if(Controller.hasOwnProperty(item)){
@@ -922,8 +921,8 @@ Service.AddProperty("LoadingStateOn",function(){
     }
     //disable the button that triggered the action so that request cannot
     //be duplicated.
-    if(Service.SubmitButton !== null){
-        Service.SubmitButton.prop("disabled",true);
+    if(Service.ActionButton !== null){
+        Service.ActionButton.prop("disabled",true);
     }
 });
 
@@ -938,8 +937,8 @@ Service.AddProperty("LoadingStateOff",function(){
     if(Service.LoadedForm !== null){
         Service.LoadedForm.find('input,select,textarea').prop("disabled",false);
     }
-    if(Service.SubmitButton !== null){
-        Service.SubmitButton.prop("disabled",false);
+    if(Service.ActionButton !== null){
+        Service.ActionButton.prop("disabled",false);
     }
 });
 

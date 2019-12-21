@@ -9,12 +9,13 @@
  */
 Controller.AddProperty("FormSubmit",function(elem){
     //exit if another submission is in progress
-    if(Service.SubmitButton !== null) return false;
-    Service.SubmitButton = jQuery(elem);
-    let target = Service.SubmitButton.data(Service.SYSTEM_ACTION);
-    let custom = Service.SubmitButton.data(Service.SYSTEM_CUSTOM);
-    let complete = Service.SubmitButton.data(Service.SYSTEM_COMPLETE);
-    let requestHeaders = Service.SubmitButton.data(Service.SYSTEM_HEADERS);
+    if(Service.ActionLoading) return false;
+    Service.ActionButton = jQuery(elem);
+    Service.ActionLoading = true;
+    let target = Service.ActionButton.data(Service.SYSTEM_ACTION);
+    let custom = Service.ActionButton.data(Service.SYSTEM_CUSTOM);
+    let complete = Service.ActionButton.data(Service.SYSTEM_COMPLETE);
+    let requestHeaders = Service.ActionButton.data(Service.SYSTEM_HEADERS);
     let data = [];
     let site_url = "";
     let method = "";
@@ -26,15 +27,17 @@ Controller.AddProperty("FormSubmit",function(elem){
     //load the parent form element
     if(typeof target === "undefined"){
        target = "";
-        Service.LoadedForm = jQuery(Service.SubmitButton.parents('form'));
+        Service.LoadedForm = jQuery(Service.ActionButton.parents('form'));
     }
     else{
-        Service.LoadedForm = jQuery(document).find(target);
+        target = jQuery(document).find(target);
+        const form = target.find("form");
+        Service.LoadedForm = (form.length > 0) ? form : target;
     }
 
     //if a complete function is defined add it to the loaded form
     if(typeof complete !== "undefined"){
-        Service.LoadedForm.data(Service.SYSTEM_COMPLETE,Service.SubmitButton.data(Service.SYSTEM_COMPLETE));
+        Service.LoadedForm.data(Service.SYSTEM_COMPLETE,Service.ActionButton.data(Service.SYSTEM_COMPLETE));
     }
 
     //if headers function is defined execute it and get headers for request
@@ -49,7 +52,7 @@ Controller.AddProperty("FormSubmit",function(elem){
 
     // if LoadedForm is not specified, terminate the action
     if(Service.LoadedForm.length <= 0){
-        Service.SubmitButton = null;
+        Service.ActionButton = null;
         return false;
     }
 
@@ -67,8 +70,8 @@ Controller.AddProperty("FormSubmit",function(elem){
                 value: this.value
             });
         });
-        site_url = Service.SubmitButton.data(Service.SYSTEM_URL);
-        method = Service.SubmitButton.data(Service.SYSTEM_METHOD);
+        site_url = Service.ActionButton.data(Service.SYSTEM_URL);
+        method = Service.ActionButton.data(Service.SYSTEM_METHOD);
     }
 
     if(typeof site_url === "undefined") return false;
@@ -117,8 +120,8 @@ Controller.AddProperty("FormSubmit",function(elem){
     //defaults are chosen by default obviously
     let success = Service.FormSubmitSuccessHandler;
     let error = Service.ErrorHandler;
-    let successHandler = Service.SubmitButton.data(Service.SYSTEM_SUCCESS_HANDLER);
-    let errorHandler = Service.SubmitButton.data(Service.SYSTEM_ERROR_HANDLER);
+    let successHandler = Service.ActionButton.data(Service.SYSTEM_SUCCESS_HANDLER);
+    let errorHandler = Service.ActionButton.data(Service.SYSTEM_ERROR_HANDLER);
     if(typeof successHandler !== "undefined" && Controller.hasOwnProperty(successHandler)){
         success = Controller[successHandler];
     }
@@ -148,6 +151,7 @@ Controller.AddProperty("FormSubmit",function(elem){
         site: site_url,
         request: method
     });
+    Service.ActionLoading = false;
 });
 
 /**
@@ -160,8 +164,9 @@ Controller.AddProperty("FormSubmit",function(elem){
  */
 Controller.AddProperty("FileSelect",function(elem){
     //if there is a triggered action do not execute
-    if(Service.ActionButton !== null) return false;
+    if(Service.ActionLoading) return false;
     Service.ActionButton = jQuery(elem);
+    Service.ActionLoading = true;
     let target = Service.ActionButton.data(Service.SYSTEM_ACTION);
     let custom = Service.ActionButton.data(Service.SYSTEM_CUSTOM);
     //load the form associated with the file
@@ -183,8 +188,7 @@ Controller.AddProperty("FileSelect",function(elem){
     if(typeof custom !== "undefined"){
         Service.ExecuteCustom(custom,form);
     }
-    //enable other actions when complete
-    Service.ActionButton = null;
+    Service.ActionLoading = false;
 });
 
 /**
@@ -199,8 +203,9 @@ Controller.AddProperty("FileSelect",function(elem){
  */
 Controller.AddProperty("ModalSelect",function(elem){
     //if there is a triggered action do not execute
-    if(Service.ActionButton !== null) return false;
+   if(Service.ModalLoading) return false;
     Service.ActionButton = jQuery(elem);
+    Service.ModalLoading = true;
     //make action button aware of loaded type
     Service.ActionButton.data(Service.SYSTEM_LOAD_TYPE,"modal");
     //if a modal is already loaded do not execute
@@ -228,7 +233,7 @@ Controller.AddProperty("ModalSelect",function(elem){
         // launch modal
         Service.LaunchModal();
     }
-    Service.ActionButton = null;
+    Service.ModalLoading = false;
 });
 
 /**
@@ -242,8 +247,9 @@ Controller.AddProperty("ModalSelect",function(elem){
  */
 Controller.AddProperty("PanelSelect",function(elem){
     //if there is a triggered action do not execute
-    if(Service.ActionButton !== null) return false;
+    if(Service.PanelLoading) return false;
     Service.ActionButton = jQuery(elem);
+    Service.PanelLoading = true;
     //make action button aware of loaded type
     Service.ActionButton.data(Service.SYSTEM_LOAD_TYPE,"panel");
     //locate panel
@@ -269,7 +275,7 @@ Controller.AddProperty("PanelSelect",function(elem){
     if(typeof custom !== "undefined"){
         Service.ExecuteCustom(custom,Service.LoadedPanel);
     }
-    Service.ActionButton = null;
+    Service.PanelLoading = false;
 });
 
 /**
