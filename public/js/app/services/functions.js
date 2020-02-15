@@ -339,10 +339,8 @@ Service.AddProperty("ServerRequest",function(requirements){
     if(requestTypes.indexOf(requirements.request.toUpperCase()) >= 0){
         ajax_params.data = requirements.params;
     }
-    if(requirements.hasFile){
-        ajax_params.processData = false;
-        ajax_params.contentType = false;
-    }
+    ajax_params.processData = false;
+    ajax_params.contentType = false;
     jQuery.ajax(ajax_params);
 });
 

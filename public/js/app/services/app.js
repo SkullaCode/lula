@@ -16,10 +16,9 @@ Controller.AddProperty("FormSubmit",function(elem){
     let custom = Service.ActionButton.data(Service.SYSTEM_CUSTOM);
     let complete = Service.ActionButton.data(Service.SYSTEM_COMPLETE);
     let requestHeaders = Service.ActionButton.data(Service.SYSTEM_HEADERS);
-    let data = [];
     let site_url = "";
     let method = "";
-    let params = {};
+    let params = new FormData();
     let hasFile = false;
     let headers = [];
 
@@ -59,16 +58,16 @@ Controller.AddProperty("FormSubmit",function(elem){
     //retrieve form fields and submission data from loaded form
     //exclude file input from search...handled separately below
     if(Service.LoadedForm.is("form")){
-        data = jQuery(Service.LoadedForm.serializeArray());
+        const data = jQuery(Service.LoadedForm.serializeArray());
+        jQuery.each(data,function(){
+            params.append(this.name,this.value);
+        });
         site_url = Service.LoadedForm[0].action;
         method = Service.LoadedForm[0].method;
     }
     else{
         Service.LoadedForm.find("input[type!=file],select,textarea").each(function(){
-            data.push({
-                name: this.name,
-                value: this.value
-            });
+            params.append(this.name,this.value);
         });
         site_url = Service.ActionButton.data(Service.SYSTEM_URL);
         method = Service.ActionButton.data(Service.SYSTEM_METHOD);
@@ -84,7 +83,6 @@ Controller.AddProperty("FormSubmit",function(elem){
         //let the server request know a file is present
         //so it can set appropriate headers
         hasFile = true;
-        params = new FormData();
         jQuery(file).each(function(e){
             //determine if multiple files are selected and add
             //each of them to the payload
@@ -101,14 +99,6 @@ Controller.AddProperty("FormSubmit",function(elem){
             else{
                 params.append(file[e].name,file[e].files[0]);
             }
-
-        });
-        jQuery.each(data,function(){
-            params.append(this.name,this.value);
-        });
-    }else{
-        jQuery.each(data,function(){
-            params[this.name] = this.value;
         });
     }
 
