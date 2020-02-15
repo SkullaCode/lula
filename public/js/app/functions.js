@@ -119,8 +119,8 @@ Service.AddProperty("SuccessHandler",function(result){
             if(Controller.hasOwnProperty(item)){
                 Controller[item](result);
             }
-            else if(Service.Custom.hasOwnProperty(item)){
-                Service.Custom[item](result);
+            else if(Service.hasOwnProperty(item)){
+                Service[item](result);
             }
         });
     }
@@ -173,12 +173,11 @@ Service.AddProperty("FormSubmitSuccessHandler",function(result){
             if(Controller.hasOwnProperty(item)){
                 Controller[item](result);
             }
-            else if(Service.Custom.hasOwnProperty(item)){
-                Service.Custom[item](result);
+            else if(Service.hasOwnProperty(item)){
+                Service[item](result);
             }
         });
     }
-
     Service.ActionButton = null;
 });
 
@@ -265,6 +264,16 @@ Service.AddProperty("ServerRequest",function(requirements){
     //without a body
     if(requirements.params === null){
         requirements.params = {};
+    }
+
+    //ensure request data is FormData
+    //todo fix if conditional
+    if (typeof requirements.params !== FormData) {
+        const p = new FormData();
+        jQuery.each(requirements.params, function (name,value) {
+            p.append(name, value);
+        });
+        requirements.params = p;
     }
     //disable form input and controls while request is
     //processed by the server
@@ -356,7 +365,6 @@ Service.AddProperty("LaunchModal",function(){
     if(typeof action === "string"){
         let func = Service.Data[action];
         if(typeof func !== "undefined") func(Service.LoadedModal);
-        else Service.Data[DefaultModalListing](Service.LoadedModal);
     }
     Service.LoadedModal.on('hide.bs.modal',function(e){
         if(Service.RequestInProgress){
@@ -380,7 +388,7 @@ Service.AddProperty("LaunchModal",function(){
 /**
  * -- Bind --
  * this function is responsible for binding the data
- * in 'Service.ModelData' to the elements of the desired
+ * provided to the elements of the desired
  * component. only components with the class 'bind'
  * or 'bind-loop' are handled by this function. Binding
  * is done using the id property.
@@ -775,7 +783,6 @@ Service.AddProperty("LoadPanel",function(elem,target=null){
     if(typeof elem !== "undefined" && typeof elem === "object"){
         let action = elem.data(Service.SYSTEM_ACTION);
         if(Service.Data.hasOwnProperty(action)) Service.Data[action](elem);
-        else if (Service.Data.hasOwnProperty(Service.SYSTEM_DEFAULT_PANEL_DATA)) Service.Data[Service.SYSTEM_DEFAULT_PANEL_DATA](elem);
 
         // we have to place panel on the DOM before we load it.....
         // idk if its a javascript thing or jQuery thing
@@ -852,14 +859,14 @@ Service.AddProperty("FindElement",function(name){
 Service.AddProperty("ExecuteCustom",function(action,component){
     action = action.split("|");
     action.forEach(function(item){
-        if(Service.Custom.hasOwnProperty(item)){
-            Service.Custom[item](component);
+        if(Controller.hasOwnProperty(item)){
+            Controller[item](component);
         }
         else if(Service.Modification.hasOwnProperty(item)){
             Service.Modification[item](component);
         }
-        else if(Controller.hasOwnProperty(item)){
-            Controller[item](component);
+        else if(Service.hasOwnProperty(item)){
+            Service[item](component);
         }
     });
 });
@@ -875,11 +882,14 @@ Service.AddProperty("ExecuteCustom",function(action,component){
 Service.AddProperty("Transform",function(action,component){
     action = action.split("|");
     action.forEach(function(item){
-        if(Service.Transformation.hasOwnProperty(item)){
+        if(Controller.hasOwnProperty(item)){
+            component = Controller[item](component);
+        }
+        else if(Service.Transformation.hasOwnProperty(item)){
             component = Service.Transformation[item](component);
         }
-        else if(Controller.hasOwnProperty(item)){
-            component = Controller[item](component);
+        else if(Service.hasOwnProperty(item)){
+            component = Service[item](component);
         }
     });
     return component;
@@ -897,8 +907,14 @@ Service.AddProperty("Transform",function(action,component){
 Service.AddProperty("ExecuteSubmitTransformation",function(action,component,params){
     action = action.split("|");
     action.forEach(function(item){
-        if(Service.SubmitTransformation.hasOwnProperty(item)){
+        if(Controller.hasOwnProperty(item)){
+            component = Controller[item](component);
+        }
+        else if(Service.SubmitTransformation.hasOwnProperty(item)){
             params = Service.SubmitTransformation[item](component,params);
+        }
+        else if(Service.hasOwnProperty(item)){
+            params = Service[item](component,params);
         }
     });
     return params;

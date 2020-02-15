@@ -6,3 +6,14 @@
  * use the pipe (|) character to separate them.
 */
 
+Service.Modification.AddMethod("RedHeading",function(component){
+    let header = jQuery(component).find("h1");
+    header.css("color","red");
+});
+
+Service.Modification.Capitalize = function(component){
+    let header = jQuery(component).find("h1");
+    header.css("font-weight","bolder");
+    header.css("font-variant-caps","all-petite-caps");
+};
+

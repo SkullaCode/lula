@@ -14,42 +14,6 @@ let MainContainer         = "MainContainer";
 let ModalContainer        = "modal-container";
 
 /**
- * -- DefaultModalListing --
- * Defines the default action to execute during
- * data binding when launching a modal if none
- * is specified.
- * @type {string}
- */
-let DefaultModalListing   = "static-listing-modal";
-
-/**
- * -- DefaultPanelListing --
- * Defines the default action to execute during
- * data binding when launching a panel if none
- * is specified.
- * @type {string}
- */
-let DefaultPanelListing   = "static-listing-panel";
-
-/**
- * -- DefaultFormListing --
- * Defines the default action to execute during
- * data binding when launching a form if none
- * is specified.
- * @type {string}
- */
-let DefaultFormListing    = "static-listing-form";
-
-/**
- * -- DefaultListingName --
- * Defines the name of the default storage container
- * for loaded model properties retrieved from the
- * server.
- * @type {string}
- */
-let DefaultListingName    = "model-list";
-
-/**
  * -- Controller --
  * Contains all the custom logic for the current page
  * this is just the definition, the programmer will
@@ -124,7 +88,6 @@ window.Service = function(){
         ContainerPanel,
         APIUrl,
         LoadingComplete,
-        Custom                              : null,
         Modification                        : null,
         SubmitTransformation                : null,
         Transformation                      : null,
@@ -172,7 +135,6 @@ window.Service = function(){
         SYSTEM_CLEAR_ERROR                  : "clear-error",
         SYSTEM_CLEAR_SUCCESS                : "clear-success",
         SYSTEM_CLOSE_ON_COMPLETE            : "close-on-complete",
-        SYSTEM_DEFAULT_PANEL_DATA           : "static-listing-panel",
         SYSTEM_LIST                         : "list",
         SYSTEM_BIND                         : "bind",
         SYSTEM_BIND_VALUE                   : "bind-value",
@@ -188,25 +150,6 @@ window.Service = function(){
 
     return Response;
 }();
-
-/**
- * -- Custom --
- * Add a method to the custom executor if it will be used by an inline 'onclick' or 'onchange'
- * action. also if custom javascript events are defined, the implementation logic can be placed
- * in a custom executor as well.
- */
-window.Service.AddProperty('Custom',function(){
-
-    let addMethod = function(name,f){
-        Response[name] = f;
-    };
-
-    let Response = {
-        AddMethod: addMethod
-    };
-
-    return Response;
-}());
 
 /**
  * -- Modification --

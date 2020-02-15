@@ -11,23 +11,23 @@
     <link rel="stylesheet" href="public/css/vanillatoasts.css">
     <link rel="stylesheet" href="public/css/sweetalert.css">
     <link rel="stylesheet" href="public/css/site.css">
-    <script src="public/js/jquery.min.js"></script>
-    <script src="public/js/bootstrap.min.js"></script>
-    <script src="public/js/datatables.min.js"></script>
-   <script src="public/js/dataTables.bootstrap.min.js"></script>
-    <!-- <script src="public/js/dataTables.responsive.js"></script>-->
-    <script src="public/js/vanillatoasts.js"></script>
-    <script src="public/js/sweetalert.min.js"></script>
-    <script src="public/js/app/services/varObjects.js"></script>
-    <script src="public/js/app/services/functions.js"></script>
-    <script src="public/js/app/services/custom/action.js"></script>
-    <script src="public/js/app/services/custom/custom.js"></script>
-    <script src="public/js/app/services/custom/data.js"></script>
-    <script src="public/js/app/services/custom/modification.js"></script>
-    <script src="public/js/app/services/custom/submitTransformation.js"></script>
-    <script src="public/js/app/services/custom/transformation.js"></script>
-    <script src="public/js/app/services/app.js"></script>
-    <script src="public/js/app/controllers/ItemController.js"></script>
+    <script src="public/js/plugins/jquery.min.js"></script>
+    <script src="public/js/plugins/bootstrap.min.js"></script>
+    <script src="public/js/plugins/datatables.min.js"></script>
+   <script src="public/js/plugins/dataTables.bootstrap.min.js"></script>
+    <!-- <script src="public/js/plugins/dataTables.responsive.js"></script>-->
+    <script src="public/js/plugins/vanillatoasts.js"></script>
+    <script src="public/js/plugins/sweetalert.min.js"></script>
+    <script src="public/js/app/varObjects.js"></script>
+    <script src="public/js/app/functions.js"></script>
+    <script src="public/js/app/services/action.js"></script>
+    <script src="public/js/app/services/data.js"></script>
+    <script src="public/js/app/services/modification.js"></script>
+    <script src="public/js/app/services/submitTransformation.js"></script>
+    <script src="public/js/app/services/transformation.js"></script>
+    <script src="public/js/app/app.js"></script>
+    <script src="public/js/custom.js"></script>
+    <script src="public/js/controllers/ItemController.js"></script>
 </head>
 <style>
     /* Remove the navbar's default margin-bottom and rounded borders */
@@ -116,16 +116,6 @@
 <footer class="container-fluid text-center">
     <p>Footer Text</p>
 </footer>
-<script>
-    Service.AlertNotification = function(result){
-        swal(result.message,result.data.Code,result.status);
-    };
-    jQuery(function(){
-        //bootstrap the system
-        Service.Data.Bootstrap();
-        Service.Transformation.Bootstrap();
-    });
-</script>
 <template>
     <div id="home" data-action="home-data">
         <div>

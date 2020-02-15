@@ -1,0 +1,18 @@
+Controller.Init = function () {
+    Service.ModelData.Listing = {};
+};
+
+Controller.CustomSuccessHandler = function(result){
+    alert("Custom success handler was fired");
+    Service.FormSubmitSuccessHandler(result);
+};
+
+Controller.CustomErrorHandler = function(e){
+    alert("Custom error handler was fired");
+    Service.ErrorHandler(e);
+};
+
+jQuery(function(){
+    window.Controller.Init();
+});
+

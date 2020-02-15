@@ -19,7 +19,6 @@ Controller.AddProperty("FormSubmit",function(elem){
     let site_url = "";
     let method = "";
     let params = new FormData();
-    let hasFile = false;
     let headers = [];
 
     //load the form from target specified. if not
@@ -44,8 +43,8 @@ Controller.AddProperty("FormSubmit",function(elem){
         if(Controller.hasOwnProperty(requestHeaders)){
             headers = Controller[requestHeaders]();
         }
-        else if(Service.Custom.hasOwnProperty(requestHeaders)){
-            headers = Service.Custom[requestHeaders]();
+        else if(Service.hasOwnProperty(requestHeaders)){
+            headers = Service[requestHeaders]();
         }
     }
 
@@ -74,15 +73,12 @@ Controller.AddProperty("FormSubmit",function(elem){
     }
 
     if(typeof site_url === "undefined") return false;
-    if(typeof method === "undefined") method = "GET";
+    if(typeof method === "undefined") method = "POST";
 
     //determine if the form has a file, and if so serialize
     //using FormData object, or just use an object
     const file = Service.LoadedForm.find("input[type='file']");
     if(file.length > 0){
-        //let the server request know a file is present
-        //so it can set appropriate headers
-        hasFile = true;
         jQuery(file).each(function(e){
             //determine if multiple files are selected and add
             //each of them to the payload
@@ -127,7 +123,6 @@ Controller.AddProperty("FormSubmit",function(elem){
         params,
         success,
         error,
-        hasFile,
         headers,
         site: site_url,
         request: method
@@ -136,7 +131,6 @@ Controller.AddProperty("FormSubmit",function(elem){
         params,
         success,
         error,
-        hasFile,
         headers,
         site: site_url,
         request: method
