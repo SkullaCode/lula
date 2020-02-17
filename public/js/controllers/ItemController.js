@@ -12,6 +12,10 @@ Controller.CustomErrorHandler = function(e){
     Service.ErrorHandler(e);
 };
 
+Controller.PreFormSubmitEvent = function(formData){
+  alert("Pre form execution event handler was fired");
+};
+
 jQuery(function(){
     window.Controller.Init();
 });

@@ -12,9 +12,11 @@ Controller.AddProperty("FormSubmit",function(elem){
     if(Service.ActionLoading) return false;
     Service.ActionButton = jQuery(elem);
     Service.ActionLoading = true;
+    Service.CanSubmitForm = true;
     let target = Service.ActionButton.data(Service.SYSTEM_ACTION);
     let custom = Service.ActionButton.data(Service.SYSTEM_CUSTOM);
     let complete = Service.ActionButton.data(Service.SYSTEM_COMPLETE);
+    let pre = Service.ActionButton.data(Service.SYSTEM_PRE_FORM_EXECUTION);
     let requestHeaders = Service.ActionButton.data(Service.SYSTEM_HEADERS);
     let site_url = "";
     let method = "";
@@ -98,6 +100,19 @@ Controller.AddProperty("FormSubmit",function(elem){
         });
     }
 
+    //determine if there are pre execution events
+    if(typeof pre !== "undefined"){
+        pre = pre.split("|");
+        pre.forEach(function(item){
+            if(Controller.hasOwnProperty(item)){
+                Controller[item](params);
+            }
+            else if(Service.hasOwnProperty(item)){
+                Service[item](params);
+            }
+        });
+    }
+
     //determine if there are submit transformations and execute them
     if(typeof custom !== "undefined")
         params = Service.ExecuteSubmitTransformation(custom,Service.LoadedForm,params);
@@ -113,6 +128,11 @@ Controller.AddProperty("FormSubmit",function(elem){
     }
     if(typeof errorHandler !== "undefined" && Controller.hasOwnProperty(errorHandler)){
         error = Controller[errorHandler];
+    }
+
+    if(Service.CanSubmitForm === false){
+        Service.ActionButton = null;
+        return false;
     }
 
     //determine how the form submission should be processed
