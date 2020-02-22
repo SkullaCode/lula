@@ -6,6 +6,10 @@
  * of the page can be placed.
  */
 
+//overriding the title for application
+//Service.Title = "Default Application";
+
+
 //defining a default alert notification handler
 Service.AlertNotification = function(result){
     swal(result.message,result.data.Code,result.status);

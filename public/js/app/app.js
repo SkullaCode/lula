@@ -22,6 +22,7 @@ Controller.AddProperty("FormSubmit",function(elem){
     let method = "";
     let params = new FormData();
     let headers = [];
+    let data = [];
 
     //load the form from target specified. if not
     //load the parent form element
@@ -30,9 +31,20 @@ Controller.AddProperty("FormSubmit",function(elem){
         Service.LoadedForm = jQuery(Service.ActionButton.parents('form'));
     }
     else{
+        if (target.substring(0, 1) !== "#") target = `#${target}`;
         target = jQuery(document).find(target);
-        const form = target.find("form");
-        Service.LoadedForm = (form.length > 0) ? form : target;
+        let form = target.find("form");
+        if (form.length > 0) {
+            Service.LoadedForm = form;
+        } else {
+            form = jQuery("<form></form>",
+                {
+                    action: Service.ActionButton.data(Service.SYSTEM_URL),
+                    method: Service.ActionButton.data(Service.SYSTEM_METHOD)
+                });
+            form.append(target);
+            Service.LoadedForm = form;
+        }
     }
 
     //if a complete function is defined add it to the loaded form
@@ -58,24 +70,16 @@ Controller.AddProperty("FormSubmit",function(elem){
 
     //retrieve form fields and submission data from loaded form
     //exclude file input from search...handled separately below
-    if(Service.LoadedForm.is("form")){
-        const data = jQuery(Service.LoadedForm.serializeArray());
-        jQuery.each(data,function(){
-            params.append(this.name,this.value);
-        });
-        site_url = Service.LoadedForm[0].action;
-        method = Service.LoadedForm[0].method;
-    }
-    else{
-        Service.LoadedForm.find("input[type!=file],select,textarea").each(function(){
-            params.append(this.name,this.value);
-        });
-        site_url = Service.ActionButton.data(Service.SYSTEM_URL);
-        method = Service.ActionButton.data(Service.SYSTEM_METHOD);
-    }
+    data = jQuery(Service.LoadedForm.serializeArray());
+    jQuery.each(data,function(){
+        params.append(this.name,this.value);
+    });
+    site_url = Service.LoadedForm[0].action;
+    method = Service.LoadedForm[0].method;
 
     if(typeof site_url === "undefined") return false;
     if(typeof method === "undefined") method = "POST";
+    method = method.toUpperCase();
 
     //determine if the form has a file, and if so serialize
     //using FormData object, or just use an object
@@ -256,6 +260,8 @@ Controller.AddProperty("PanelSelect",function(elem){
     Service.PanelLoading = true;
     //make action button aware of loaded type
     Service.ActionButton.data(Service.SYSTEM_LOAD_TYPE,"panel");
+    //get history url if defined
+    const history = Service.ActionButton.data(Service.SYSTEM_HISTORY);
     //locate panel
     const panel = Service.FindElement(Service.ActionButton.data(Service.SYSTEM_ACTION));
     //update modal attributes
@@ -267,6 +273,19 @@ Controller.AddProperty("PanelSelect",function(elem){
             panel.data(key,value);
         }
     });
+    //adding panel change to browser history
+    //ignore if jistory data attribute is defined
+    if(typeof history === "undefined"){
+        window.history.pushState({
+            data: Service.ActionButton.data(),
+            panelSelect: true
+        },"");
+        /*window.history.pushState({
+            data: Service.ActionButton.data(),
+            panelSelect: true
+        },"",`#/${Service.ActionButton.data(Service.SYSTEM_ACTION)}`)*/
+    }
+    window.document.title = `${Service.Title} - ${Service.ActionButton.data(Service.SYSTEM_ACTION)}`;
     //load panel unto the DOM
     if(typeof  Service.ActionButton.data(Service.SYSTEM_TARGET) !== "undefined"){
         Service.LoadPanel(panel,Service.ActionButton.data(Service.SYSTEM_TARGET));
@@ -289,3 +308,23 @@ Controller.AddProperty("PanelSelect",function(elem){
 Controller.AddProperty("ReloadPanel",function(){
     Service.LoadPanel(Service.LoadedPanel);
 });
+
+window.onpopstate = function(event){
+    //get page state
+    const state = event.state;
+    if(state !== null){
+        if(state.panelSelect){
+            //create a action link to fire the controller action
+            const link = jQuery("<a>");
+            //add the data attributes recorded in the state
+            jQuery.each(state.data,function(i,e){
+                link.attr(`data-${i}`,e);
+            });
+            //add a history data attribute so the panel
+            //ignores the entry for pushState
+            link.attr("data-history",true);
+            //fire controller action with created anchor tag
+            Controller.PanelSelect(link[0]);
+        }
+    }
+};

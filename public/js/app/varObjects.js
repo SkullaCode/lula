@@ -65,6 +65,7 @@ window.Service = function(){
     let ContainerPanel      = null;
     let APIUrl              = null;
     let LoadingComplete     = false;
+    let Title               = "Javascript UI";
 
     let addProperty = function(name,f){
          Response[name] = f;
@@ -88,6 +89,7 @@ window.Service = function(){
         ContainerPanel,
         APIUrl,
         LoadingComplete,
+        Title,
         Modification                        : null,
         SubmitTransformation                : null,
         Transformation                      : null,
@@ -133,6 +135,7 @@ window.Service = function(){
         SYSTEM_URL                          : "href",
         SYSTEM_METHOD                       : "method",
         SYSTEM_PRE_FORM_EXECUTION           : "pre",
+        SYSTEM_HISTORY                      : "history",
         SYSTEM_FILE_UPLOAD_CONTAINER        : ".file-upload",
         SYSTEM_CLEAR_ERROR                  : "clear-error",
         SYSTEM_CLEAR_SUCCESS                : "clear-success",
