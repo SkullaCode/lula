@@ -274,7 +274,7 @@ Controller.AddProperty("PanelSelect",function(elem){
         }
     });
     //adding panel change to browser history
-    //ignore if jistory data attribute is defined
+    //ignore if history data attribute is defined
     if(typeof history === "undefined"){
         window.history.pushState({
             data: Service.ActionButton.data(),
