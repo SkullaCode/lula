@@ -27,11 +27,9 @@ Service.AddProperty("ErrorHandler",function(result){
             });
     }
     //set custom notification type if present
-    if(typeof Service.ActionButton.data(Service.SYSTEM_NOTIFICATION_ON_ERROR) !== "undefined"){
-        notificationType = Service.ActionButton.data(Service.SYSTEM_NOTIFICATION_ON_ERROR);
+    if(typeof result.actionBtn.data(Service.SYSTEM_NOTIFICATION_ON_ERROR) !== "undefined"){
+        notificationType = result.actionBtn.data(Service.SYSTEM_NOTIFICATION_ON_ERROR);
     }
-    Service.LoadedForm = null;
-    Service.ActionButton = null;
 
     //define and format message from server or use default
     //implementation
@@ -50,7 +48,7 @@ Service.AddProperty("ErrorHandler",function(result){
                 message = JSON.parse(result.request.responseText);
             }
             catch(e){
-
+                message = "An error occurred on the server";
             }
         }
     }
@@ -62,6 +60,7 @@ Service.AddProperty("ErrorHandler",function(result){
                 status: "error",
                 message: result.message,
                 data: message,
+                actionBtn: result.actionBtn,
                 notificationType
             });
             break;
@@ -79,6 +78,7 @@ Service.AddProperty("ErrorHandler",function(result){
                 status: "error",
                 message: "Oops!",
                 data: message,
+                actionBtn: result.actionBtn,
                 notificationType
             });
             break;
@@ -88,6 +88,7 @@ Service.AddProperty("ErrorHandler",function(result){
                 status:"error",
                 message: "Oops!",
                 data: message,
+                actionBtn: result.actionBtn,
                 notificationType
             });
         }
@@ -104,15 +105,11 @@ Service.AddProperty("ErrorHandler",function(result){
 Service.AddProperty("SuccessHandler",function(result){
 
     //trigger notification event
-    result.notificationType = Service.ActionButton.data(Service.SYSTEM_NOTIFICATION_ON_SUCCESS) || "toaster";
+    result.notificationType = result.actionBtn.data(Service.SYSTEM_NOTIFICATION_ON_SUCCESS) || "toaster";
     Service.NotificationHandler(result);
 
-    //close the modal if directed to do so
-    if(Service.ActionButton.hasClass(Service.SYSTEM_CLOSE_ON_COMPLETE))
-        if (Service.LoadedModal !== null) Service.LoadedModal.modal('hide');
-
     //check if a complete action was specified and execute it
-    let completeAction = Service.ActionButton.data(Service.SYSTEM_COMPLETE);
+    let completeAction = result.actionBtn.data(Service.SYSTEM_COMPLETE);
     if(typeof completeAction !== "undefined"){
         completeAction = completeAction.split("|");
         completeAction.forEach(function(item){
@@ -124,8 +121,6 @@ Service.AddProperty("SuccessHandler",function(result){
             }
         });
     }
-
-    Service.ActionButton = null;
 });
 
 /**
@@ -158,15 +153,11 @@ Service.AddProperty("FormSubmitSuccessHandler",function(result){
     }
 
     //trigger notification event
-    result.notificationType = Service.ActionButton.data(Service.SYSTEM_NOTIFICATION_ON_SUCCESS) || "toaster";
+    result.notificationType = result.actionBtn.data(Service.SYSTEM_NOTIFICATION_ON_SUCCESS) || "toaster";
     Service.NotificationHandler(result);
 
-    //close the modal if directed to do so
-    if(Service.ActionButton.hasClass(Service.SYSTEM_CLOSE_ON_COMPLETE))
-        if (Service.LoadedModal !== null) Service.LoadedModal.modal('hide');
-
     //check if a complete action was specified and execute it
-    let completeAction = Service.ActionButton.data(Service.SYSTEM_COMPLETE);
+    let completeAction = result.actionBtn.data(Service.SYSTEM_COMPLETE);
     if(typeof completeAction !== "undefined"){
         completeAction = completeAction.split("|");
         completeAction.forEach(function(item){
@@ -178,7 +169,6 @@ Service.AddProperty("FormSubmitSuccessHandler",function(result){
             }
         });
     }
-    Service.ActionButton = null;
 });
 
 /**
@@ -238,9 +228,6 @@ Service.AddProperty("NotificationHandler",function(result){
  * @param requirements object containing request parameters
  */
 Service.AddProperty("ServerRequest",function(requirements){
-    //todo delay execution if a request is on the wire....and then execute
-    if(Service.RequestInProgress) return false;
-
     //ensure there is a request type
     requirements.request = (typeof requirements.request === "undefined" || requirements.request === null || !requirements.request)
         ? 'POST'
@@ -268,22 +255,20 @@ Service.AddProperty("ServerRequest",function(requirements){
 
     //ensure request data is FormData
     //todo fix if conditional
-    if (typeof requirements.params !== FormData) {
+/*    if (typeof requirements.params !== FormData) {
         const p = new FormData();
         jQuery.each(requirements.params, function (name,value) {
             p.append(name, value);
         });
         requirements.params = p;
-    }
+    }*/
     //disable form input and controls while request is
     //processed by the server
-    Service.LoadingStateOn();
-    Service.RequestInProgress = true;
+    Service.LoadingStateOn(requirements.actionBtn);
 
     const successFunction = function(data,status,jqXHR){
        //enable disabled form controls
-        Service.LoadingStateOff();
-        Service.RequestInProgress = false;
+        Service.LoadingStateOff(requirements.actionBtn);
         //check if reload header is set and reload the page
         //if it is
         if(jqXHR.getResponseHeader("X-Reload")){
@@ -303,15 +288,17 @@ Service.AddProperty("ServerRequest",function(requirements){
                 data = JSON.parse(data);
             }
             catch(e){
-
+                data = {};
             }
         }
         res.status = status;
         res.message = jqXHR.statusText;
         res.data = data;
         res.request = jqXHR;
+        res.actionBtn = requirements.actionBtn;
         //execute the success callback with results received.
         requirements.success(res);
+        Service.ActionLoading = false;
     };
 
     let ajax_params = {
@@ -325,11 +312,14 @@ Service.AddProperty("ServerRequest",function(requirements){
                 return;
             }
             //enable disabled elements
-           Service.LoadingStateOff();
-            Service.RequestInProgress = false;
+           Service.LoadingStateOff(requirements.actionBtn);
             requirements.error({
-                request, status, message: error
+                request,
+                status,
+                message: error,
+                actionBtn: requirements.actionBtn
             });
+            Service.ActionLoading = false;
         },
         //execute specified actions before request is sent
         beforeSend  : function(xhr){
@@ -367,21 +357,12 @@ Service.AddProperty("LaunchModal",function(){
         if(typeof func !== "undefined") func(Service.LoadedModal);
     }
     Service.LoadedModal.on('hide.bs.modal',function(e){
-        if(Service.RequestInProgress){
-            e.preventDefault();
-            e.stopImmediatePropagation();
-            return false;
-        }
+
     });
     Service.LoadedModal.on('hidden.bs.modal',function(){
-        //todo determine if a request
-        // is in progress and only remove after
-        // it is complete
-        if(!Service.RequestInProgress){
-            Service.LoadedModal.remove();
-            Service.LoadedModal = null;
-            jQuery(`.${ModalContainer}`).empty();
-        }
+        Service.LoadedModal.remove();
+        Service.LoadedModal = null;
+        jQuery(`.${ModalContainer}`).empty();
     });
 });
 
@@ -725,11 +706,11 @@ Service.AddProperty("GetProperty",function(id,data){
  * @param elem the element selected
  * @param target the element to update with created select list
  */
-Service.AddProperty("ListUpdate",function(elem,target){
+Service.AddProperty("ListUpdate",function(elem,target,actionBtn){
     if(elem.value.length > 0){
-        Service.ServerRequest(`/${elem.dataset[Service.SYSTEM_URL]}/${elem.value}`,{},"GET",function(result){
+       /* Service.ServerRequest(`/${elem.dataset[Service.SYSTEM_URL]}/${elem.value}`,{},"GET",function(result){
             Service.SelectListBuilder(jQuery(target),result.data);
-        },Service.ErrorHandler);
+        },Service.ErrorHandler);*/
     }
 });
 
@@ -856,17 +837,17 @@ Service.AddProperty("FindElement",function(name){
  * @param action names of the custom actions to execute
  * @param component panel or modal on which to apply custom actions
  */
-Service.AddProperty("ExecuteCustom",function(action,component){
+Service.AddProperty("ExecuteCustom",function(action,component,actionBtn){
     action = action.split("|");
     action.forEach(function(item){
         if(Controller.hasOwnProperty(item)){
-            Controller[item](component);
+            Controller[item](component,actionBtn);
         }
         else if(Service.Modification.hasOwnProperty(item)){
-            Service.Modification[item](component);
+            Service.Modification[item](component,actionBtn);
         }
         else if(Service.hasOwnProperty(item)){
-            Service[item](component);
+            Service[item](component,actionBtn);
         }
     });
 });
@@ -879,17 +860,17 @@ Service.AddProperty("ExecuteCustom",function(action,component){
  * @param action names of the custom actions to execute
  * @param component element on which to apply custom actions
  */
-Service.AddProperty("Transform",function(action,component){
+Service.AddProperty("Transform",function(action,component,actionBtn){
     action = action.split("|");
     action.forEach(function(item){
         if(Controller.hasOwnProperty(item)){
-            component = Controller[item](component);
+            component = Controller[item](component,actionBtn);
         }
         else if(Service.Transformation.hasOwnProperty(item)){
-            component = Service.Transformation[item](component);
+            component = Service.Transformation[item](component,actionBtn);
         }
         else if(Service.hasOwnProperty(item)){
-            component = Service[item](component);
+            component = Service[item](component,actionBtn);
         }
     });
     return component;
@@ -904,17 +885,17 @@ Service.AddProperty("Transform",function(action,component){
  * @param component element on which to apply custom actions
  * @param params current form fields in the request
  */
-Service.AddProperty("ExecuteSubmitTransformation",function(action,component,params){
+Service.AddProperty("ExecuteSubmitTransformation",function(action,component,params,actionBtn){
     action = action.split("|");
     action.forEach(function(item){
         if(Controller.hasOwnProperty(item)){
-            component = Controller[item](component);
+            component = Controller[item](component,params,actionBtn);
         }
         else if(Service.SubmitTransformation.hasOwnProperty(item)){
-            params = Service.SubmitTransformation[item](component,params);
+            params = Service.SubmitTransformation[item](component,params,actionBtn);
         }
         else if(Service.hasOwnProperty(item)){
-            params = Service[item](component,params);
+            params = Service[item](component,params,actionBtn);
         }
     });
     return params;
@@ -927,7 +908,7 @@ Service.AddProperty("ExecuteSubmitTransformation",function(action,component,para
  * used to disable controls so that multiple requests
  * cannot be sent at the same time
  */
-Service.AddProperty("LoadingStateOn",function(){
+Service.AddProperty("LoadingStateOn",function(ActionButton){
     //disable form fields so that they cannot be edited
     //while submission is taking place
     if(Service.LoadedForm !== null){
@@ -935,9 +916,7 @@ Service.AddProperty("LoadingStateOn",function(){
     }
     //disable the button that triggered the action so that request cannot
     //be duplicated.
-    if(Service.ActionButton !== null){
-        Service.ActionButton.prop("disabled",true);
-    }
+    ActionButton.prop("disabled",true);
 });
 
 /**
@@ -946,14 +925,12 @@ Service.AddProperty("LoadingStateOn",function(){
  * a request is executed by the server and a response
  * received
  */
-Service.AddProperty("LoadingStateOff",function(){
+Service.AddProperty("LoadingStateOff",function(ActionButton){
     //enable disabled elements
     if(Service.LoadedForm !== null){
         Service.LoadedForm.find('input,select,textarea').prop("disabled",false);
     }
-    if(Service.ActionButton !== null){
-        Service.ActionButton.prop("disabled",false);
-    }
+    ActionButton.prop("disabled",false);
 });
 
 /**
@@ -961,7 +938,7 @@ Service.AddProperty("LoadingStateOff",function(){
  * this function defines the process of placing the panel
  * within the specified container
  */
-Service.AddProperty("LoadPanelTransition",function(container,panel){
+Service.AddProperty("LoadPanelTransition",function(container,panel,actionBtn = null){
     container.css("display","none");
     container.empty();
     container.html(panel).fadeIn("slow");

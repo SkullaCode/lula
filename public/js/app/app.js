@@ -10,14 +10,14 @@
 Controller.AddProperty("FormSubmit",function(elem){
     //exit if another submission is in progress
     if(Service.ActionLoading) return false;
-    Service.ActionButton = jQuery(elem);
+    const ActionButton = jQuery(elem);
     Service.ActionLoading = true;
     Service.CanSubmitForm = true;
-    let target = Service.ActionButton.data(Service.SYSTEM_ACTION);
-    let custom = Service.ActionButton.data(Service.SYSTEM_CUSTOM);
-    let complete = Service.ActionButton.data(Service.SYSTEM_COMPLETE);
-    let pre = Service.ActionButton.data(Service.SYSTEM_PRE_FORM_EXECUTION);
-    let requestHeaders = Service.ActionButton.data(Service.SYSTEM_HEADERS);
+    let target = ActionButton.data(Service.SYSTEM_ACTION);
+    let custom = ActionButton.data(Service.SYSTEM_CUSTOM);
+    let complete = ActionButton.data(Service.SYSTEM_COMPLETE);
+    let pre = ActionButton.data(Service.SYSTEM_PRE_FORM_EXECUTION);
+    let requestHeaders = ActionButton.data(Service.SYSTEM_HEADERS);
     let site_url = "";
     let method = "";
     let params = new FormData();
@@ -28,7 +28,7 @@ Controller.AddProperty("FormSubmit",function(elem){
     //load the parent form element
     if(typeof target === "undefined"){
        target = "";
-        Service.LoadedForm = jQuery(Service.ActionButton.parents('form'));
+        Service.LoadedForm = jQuery(ActionButton.parents('form'));
     }
     else{
         if (target.substring(0, 1) !== "#") target = `#${target}`;
@@ -39,17 +39,23 @@ Controller.AddProperty("FormSubmit",function(elem){
         } else {
             form = jQuery("<form></form>",
                 {
-                    action: Service.ActionButton.data(Service.SYSTEM_URL),
-                    method: Service.ActionButton.data(Service.SYSTEM_METHOD)
+                    action: ActionButton.data(Service.SYSTEM_URL),
+                    method: ActionButton.data(Service.SYSTEM_METHOD)
                 });
             form.append(target);
             Service.LoadedForm = form;
         }
     }
 
+    // if LoadedForm is not specified, terminate the action
+    if(Service.LoadedForm.length <= 0){
+        Service.ActionLoading = false;
+        return false;
+    }
+
     //if a complete function is defined add it to the loaded form
     if(typeof complete !== "undefined"){
-        Service.LoadedForm.data(Service.SYSTEM_COMPLETE,Service.ActionButton.data(Service.SYSTEM_COMPLETE));
+        Service.LoadedForm.data(Service.SYSTEM_COMPLETE,ActionButton.data(Service.SYSTEM_COMPLETE));
     }
 
     //if headers function is defined execute it and get headers for request
@@ -57,16 +63,9 @@ Controller.AddProperty("FormSubmit",function(elem){
         if(Controller.hasOwnProperty(requestHeaders)){
             headers = Controller[requestHeaders]();
         }
-        else if(Service.hasOwnProperty(requestHeaders)){
-            headers = Service[requestHeaders]();
-        }
     }
 
-    // if LoadedForm is not specified, terminate the action
-    if(Service.LoadedForm.length <= 0){
-        Service.ActionButton = null;
-        return false;
-    }
+
 
     //retrieve form fields and submission data from loaded form
     //exclude file input from search...handled separately below
@@ -111,9 +110,6 @@ Controller.AddProperty("FormSubmit",function(elem){
             if(Controller.hasOwnProperty(item)){
                 Controller[item](params);
             }
-            else if(Service.hasOwnProperty(item)){
-                Service[item](params);
-            }
         });
     }
 
@@ -125,8 +121,8 @@ Controller.AddProperty("FormSubmit",function(elem){
     //defaults are chosen by default obviously
     let success = Service.FormSubmitSuccessHandler;
     let error = Service.ErrorHandler;
-    let successHandler = Service.ActionButton.data(Service.SYSTEM_SUCCESS_HANDLER);
-    let errorHandler = Service.ActionButton.data(Service.SYSTEM_ERROR_HANDLER);
+    let successHandler = ActionButton.data(Service.SYSTEM_SUCCESS_HANDLER);
+    let errorHandler = ActionButton.data(Service.SYSTEM_ERROR_HANDLER);
     if(typeof successHandler !== "undefined" && Controller.hasOwnProperty(successHandler)){
         success = Controller[successHandler];
     }
@@ -135,7 +131,7 @@ Controller.AddProperty("FormSubmit",function(elem){
     }
 
     if(Service.CanSubmitForm === false){
-        Service.ActionButton = null;
+        Service.ActionLoading = false;
         return false;
     }
 
@@ -149,7 +145,8 @@ Controller.AddProperty("FormSubmit",function(elem){
         error,
         headers,
         site: site_url,
-        request: method
+        request: method,
+        actionBtn: ActionButton
     });
     else Service.ServerRequest({
         params,
@@ -157,9 +154,9 @@ Controller.AddProperty("FormSubmit",function(elem){
         error,
         headers,
         site: site_url,
-        request: method
+        request: method,
+        actionBtn: ActionButton
     });
-    Service.ActionLoading = false;
 });
 
 /**
@@ -173,13 +170,13 @@ Controller.AddProperty("FormSubmit",function(elem){
 Controller.AddProperty("FileSelect",function(elem){
     //if there is a triggered action do not execute
     if(Service.ActionLoading) return false;
-    Service.ActionButton = jQuery(elem);
+    const ActionButton = jQuery(elem);
     Service.ActionLoading = true;
-    let target = Service.ActionButton.data(Service.SYSTEM_ACTION);
-    let custom = Service.ActionButton.data(Service.SYSTEM_CUSTOM);
+    let target = ActionButton.data(Service.SYSTEM_ACTION);
+    let custom = ActionButton.data(Service.SYSTEM_CUSTOM);
     //load the form associated with the file
     const form = (typeof target === "undefined")
-        ? jQuery(Service.ActionButton.parents(Service.SYSTEM_FILE_UPLOAD_CONTAINER))
+        ? jQuery(ActionButton.parents(Service.SYSTEM_FILE_UPLOAD_CONTAINER))
         : jQuery(document).find(`#${target}`);
     // find the file input element
     let input = form.find("input[type=file]");
@@ -194,7 +191,7 @@ Controller.AddProperty("FileSelect",function(elem){
     input.change();
     // execute custom code on the form
     if(typeof custom !== "undefined"){
-        Service.ExecuteCustom(custom,form);
+        Service.ExecuteCustom(custom,form,ActionButton);
     }
     Service.ActionLoading = false;
 });
@@ -212,19 +209,48 @@ Controller.AddProperty("FileSelect",function(elem){
 Controller.AddProperty("ModalSelect",function(elem){
     //if there is a triggered action do not execute
    if(Service.ModalLoading) return false;
-    Service.ActionButton = jQuery(elem);
+    const ActionButton = jQuery(elem);
     Service.ModalLoading = true;
     //make action button aware of loaded type
-    Service.ActionButton.data(Service.SYSTEM_LOAD_TYPE,"modal");
+    ActionButton.data(Service.SYSTEM_LOAD_TYPE,"modal");
     //if a modal is already loaded do not execute
     if(Service.LoadedModal === null){
-        let action = Service.ActionButton.data(Service.SYSTEM_ACTION);
+        let action = ActionButton.data(Service.SYSTEM_ACTION);
         Service.LoadedModal = Service.FindElement(action);
+        if (!Service.LoadedModal.hasClass("modal")) {
+            const modalContent = Service.LoadedModal.find(".modal");
+            if (modalContent.length === 1) {
+                Service.LoadedModal = modalContent;
+            } else {
+                let act = Service.LoadedModal.data(Service.SYSTEM_ACTION);
+                if (typeof act !== "string")
+                    act = "";
+                const modalData = Service.LoadedModal.html();
+                Service.LoadedModal = jQuery(
+                    `<div class="modal fade" role="dialog" data-action="${act}">
+                    <div class="modal-dialog">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <button type="button" class="close" data-dismiss="modal">&times;</button>
+                                <h4 class="modal-title"></h4>
+                            </div>
+                            <div class="modal-body">
+                                ${modalData}
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>`
+                );
+            }
+        }
         //place modal on the DOM
         const modalContainer = jQuery(ModalContainer);
         modalContainer.empty().append(Service.LoadedModal);
         //update modal attributes
-        const dataAttributes = Service.ActionButton.data();
+        const dataAttributes = ActionButton.data();
         const filterList = [Service.SYSTEM_ACTION,Service.SYSTEM_CUSTOM];
         jQuery.each(dataAttributes,function(key,value){
             //filter out action and custom attribute
@@ -233,10 +259,10 @@ Controller.AddProperty("ModalSelect",function(elem){
                 Service.LoadedModal.data(key,value);
             }
         });
-        let custom = Service.ActionButton.data(Service.SYSTEM_CUSTOM);
+        let custom = ActionButton.data(Service.SYSTEM_CUSTOM);
         //execute custom changes
         if(typeof custom !== "undefined"){
-            Service.ExecuteCustom(custom,Service.LoadedModal);
+            Service.ExecuteCustom(custom,Service.LoadedModal,ActionButton);
         }
         // launch modal
         Service.LaunchModal();
@@ -256,17 +282,17 @@ Controller.AddProperty("ModalSelect",function(elem){
 Controller.AddProperty("PanelSelect",function(elem){
     //if there is a triggered action do not execute
     if(Service.PanelLoading) return false;
-    Service.ActionButton = jQuery(elem);
+    const ActionButton = jQuery(elem);
     Service.PanelLoading = true;
     //make action button aware of loaded type
-    Service.ActionButton.data(Service.SYSTEM_LOAD_TYPE,"panel");
+    ActionButton.data(Service.SYSTEM_LOAD_TYPE,"panel");
     //get history url if defined
-    const history = Service.ActionButton.data(Service.SYSTEM_HISTORY);
+    const history = ActionButton.data(Service.SYSTEM_HISTORY);
     //locate panel
-    const panel = Service.FindElement(Service.ActionButton.data(Service.SYSTEM_ACTION));
+    const panel = Service.FindElement(ActionButton.data(Service.SYSTEM_ACTION));
     //update modal attributes
     const filterList = [Service.SYSTEM_ACTION,Service.SYSTEM_CUSTOM,Service.SYSTEM_TARGET];
-    jQuery.each(Service.ActionButton.data(),function(key,value){
+    jQuery.each(ActionButton.data(),function(key,value){
         //filter out action and custom attribute
         // these are defined on the panel
         if(jQuery.inArray(key,filterList) === -1){
@@ -277,26 +303,26 @@ Controller.AddProperty("PanelSelect",function(elem){
     //ignore if history data attribute is defined
     if(typeof history === "undefined"){
         window.history.pushState({
-            data: Service.ActionButton.data(),
+            data: ActionButton.data(),
             panelSelect: true
         },"");
         /*window.history.pushState({
-            data: Service.ActionButton.data(),
+            data: ActionButton.data(),
             panelSelect: true
-        },"",`#/${Service.ActionButton.data(Service.SYSTEM_ACTION)}`)*/
+        },"",`#/${ActionButton.data(Service.SYSTEM_ACTION)}`)*/
     }
-    window.document.title = `${Service.Title} - ${Service.ActionButton.data(Service.SYSTEM_ACTION)}`;
+    window.document.title = `${Service.Title} - ${ActionButton.data(Service.SYSTEM_ACTION)}`;
     //load panel unto the DOM
-    if(typeof  Service.ActionButton.data(Service.SYSTEM_TARGET) !== "undefined"){
-        Service.LoadPanel(panel,Service.ActionButton.data(Service.SYSTEM_TARGET));
+    if(typeof  ActionButton.data(Service.SYSTEM_TARGET) !== "undefined"){
+        Service.LoadPanel(panel,ActionButton.data(Service.SYSTEM_TARGET));
     }
     else{
         Service.LoadPanel(panel);
     }
     //execute custom changes
-    let custom = Service.ActionButton.data(Service.SYSTEM_CUSTOM);
+    let custom = ActionButton.data(Service.SYSTEM_CUSTOM);
     if(typeof custom !== "undefined"){
-        Service.ExecuteCustom(custom,Service.LoadedPanel);
+        Service.ExecuteCustom(custom,Service.LoadedPanel,ActionButton);
     }
     Service.PanelLoading = false;
 });

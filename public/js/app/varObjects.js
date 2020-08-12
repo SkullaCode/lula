@@ -55,11 +55,9 @@ window.Service = function(){
     let LoadedModal         = null;
     let LoadedPanel         = null;
     let LoadedForm          = null;
-    let RequestInProgress   = null;
     let PanelLoading        = null;
     let ModalLoading        = null;
     let ActionLoading       = null;
-    let ActionButton        = null;
     let ModelData           = [];
     let MetaData            = [];
     let ContainerPanel      = null;
@@ -79,11 +77,9 @@ window.Service = function(){
         LoadedModal,
         LoadedPanel,
         LoadedForm,
-        RequestInProgress,
         PanelLoading,
         ModalLoading,
         ActionLoading,
-        ActionButton,
         ModelData,
         MetaData,
         ContainerPanel,
@@ -139,7 +135,6 @@ window.Service = function(){
         SYSTEM_FILE_UPLOAD_CONTAINER        : ".file-upload",
         SYSTEM_CLEAR_ERROR                  : "clear-error",
         SYSTEM_CLEAR_SUCCESS                : "clear-success",
-        SYSTEM_CLOSE_ON_COMPLETE            : "close-on-complete",
         SYSTEM_LIST                         : "list",
         SYSTEM_BIND                         : "bind",
         SYSTEM_BIND_VALUE                   : "bind-value",
