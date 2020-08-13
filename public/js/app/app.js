@@ -307,12 +307,13 @@ Controller.AddProperty("PanelSelect",function(elem){
             data: ActionButton.data(),
             panelSelect: true
         },"");
-        /*window.history.pushState({
-            data: ActionButton.data(),
-            panelSelect: true
-        },"",`#/${ActionButton.data(Service.SYSTEM_ACTION)}`)*/
     }
-    window.document.title = `${Service.Title} - ${ActionButton.data(Service.SYSTEM_ACTION)}`;
+
+    //determine and set page title
+    const title = (typeof ActionButton.data(Service.SYSTEM_TITLE) !== "undefined")
+        ? ActionButton.data(Service.SYSTEM_TITLE)
+        : ActionButton.data(Service.SYSTEM_ACTION);
+    window.document.title = `${Service.Title} - ${title}`;
     //load panel unto the DOM
     if(typeof  ActionButton.data(Service.SYSTEM_TARGET) !== "undefined"){
         Service.LoadPanel(panel,ActionButton.data(Service.SYSTEM_TARGET));
