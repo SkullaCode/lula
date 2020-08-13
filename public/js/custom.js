@@ -12,7 +12,7 @@
 
 //defining a default alert notification handler
 Service.AlertNotification = function(result){
-    swal(result.message,result.data.Code,result.status);
+    swal(result.message,"ALERT MESSAGE GOES HERE!",result.status);
 };
 Service.Bootstrap = function(){
     Service.ModelData.List = {};

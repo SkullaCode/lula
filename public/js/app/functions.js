@@ -31,35 +31,17 @@ Service.AddProperty("ErrorHandler",function(result){
         notificationType = result.actionBtn.data(Service.SYSTEM_NOTIFICATION_ON_ERROR);
     }
 
-    //define and format message from server or use default
+    //define and format data from server or use default
     //implementation
-    let message = {};
-    if(typeof Service.ErrorDataHandler === "function"){
-        message = Service.ErrorDataHandler(result.request);
-    }
-    else{
-        message = {
-            Code: result.request.statusText,
-            Entity: "Application",
-            notificationType: notificationType
-        };
-        if(result.request.responseText.length > 0){
-            try{
-                message = JSON.parse(result.request.responseText);
-            }
-            catch(e){
-                message = "An error occurred on the server";
-            }
-        }
-    }
-
+    const data = Service.ErrorDataHandler(result,notificationType);
+    
     //add status codes and how they should be treated here
     switch(result.request.status){
         case 500: {
             Service.NotificationHandler({
                 status: "error",
                 message: result.message,
-                data: message,
+                data,
                 actionBtn: result.actionBtn,
                 notificationType
             });
@@ -77,7 +59,7 @@ Service.AddProperty("ErrorHandler",function(result){
             Service.NotificationHandler({
                 status: "error",
                 message: "Oops!",
-                data: message,
+                data,
                 actionBtn: result.actionBtn,
                 notificationType
             });
@@ -87,7 +69,7 @@ Service.AddProperty("ErrorHandler",function(result){
             Service.NotificationHandler({
                 status:"error",
                 message: "Oops!",
-                data: message,
+                data,
                 actionBtn: result.actionBtn,
                 notificationType
             });
@@ -109,17 +91,13 @@ Service.AddProperty("SuccessHandler",function(result){
     Service.NotificationHandler(result);
 
     //check if a complete action was specified and execute it
-    let completeAction = result.actionBtn.data(Service.SYSTEM_COMPLETE);
-    if(typeof completeAction !== "undefined"){
-        completeAction = completeAction.split("|");
-        completeAction.forEach(function(item){
-            if(Controller.hasOwnProperty(item)){
-                Controller[item](result);
-            }
-            else if(Service.hasOwnProperty(item)){
-                Service[item](result);
-            }
-        });
+    let custom =result.actionBtn.data(Service.SYSTEM_COMPLETE);
+    if(typeof custom !== "undefined"){
+        Service.ExecuteCustom(custom,{
+            panel:Service.LoadedPanel,
+            form:Service.LoadedForm,
+            modal:Service.LoadedModal
+        },result.actionBtn,result);
     }
 });
 
@@ -156,18 +134,13 @@ Service.AddProperty("FormSubmitSuccessHandler",function(result){
     result.notificationType = result.actionBtn.data(Service.SYSTEM_NOTIFICATION_ON_SUCCESS) || "toaster";
     Service.NotificationHandler(result);
 
-    //check if a complete action was specified and execute it
-    let completeAction = result.actionBtn.data(Service.SYSTEM_COMPLETE);
-    if(typeof completeAction !== "undefined"){
-        completeAction = completeAction.split("|");
-        completeAction.forEach(function(item){
-            if(Controller.hasOwnProperty(item)){
-                Controller[item](result);
-            }
-            else if(Service.hasOwnProperty(item)){
-                Service[item](result);
-            }
-        });
+    let custom =result.actionBtn.data(Service.SYSTEM_COMPLETE);
+    if(typeof custom !== "undefined"){
+        Service.ExecuteCustom(custom,{
+            panel:Service.LoadedPanel,
+            form:Service.LoadedForm,
+            modal:Service.LoadedModal
+        },result.actionBtn,result);
     }
 });
 
@@ -405,8 +378,8 @@ Service.AddProperty("Bind",function(component, data){
             if(typeof elem.data(Service.SYSTEM_PROPERTY) !== "undefined"){
                 let property = Service.GetProperty(elem.data(Service.SYSTEM_PROPERTY),data);
                 //determine if a transformation method is present on the element
-                if(typeof elem.data(Service.SYSTEM_ACTION) !== "undefined"){
-                    property = Service.Transform(elem.data(Service.SYSTEM_ACTION),property);
+                if(typeof elem.data(Service.SYSTEM_CUSTOM) !== "undefined"){
+                    property = Service.Transform(elem.data(Service.SYSTEM_CUSTOM),property);
                 }
                 //bind property to element as valid HTML
                 if(elem.hasClass(Service.SYSTEM_BIND_VALUE)){
@@ -446,8 +419,8 @@ Service.AddProperty("Bind",function(component, data){
                             let childElem = jQuery(this);
                             if(typeof childElem.data(Service.SYSTEM_PROPERTY) !== "undefined"){
                                 let property = Service.GetProperty(childElem.data(Service.SYSTEM_PROPERTY),item);
-                                if(typeof childElem.data(Service.SYSTEM_ACTION) !== "undefined"){
-                                    property = Service.Transform(childElem.data(Service.SYSTEM_ACTION),property);
+                                if(typeof childElem.data(Service.SYSTEM_CUSTOM) !== "undefined"){
+                                    property = Service.Transform(childElem.data(Service.SYSTEM_CUSTOM),property);
                                 }
                                 //bind property to element as valid HTML
                                 if(childElem.hasClass(Service.SYSTEM_BIND_VALUE)){
@@ -472,8 +445,8 @@ Service.AddProperty("Bind",function(component, data){
                             }
                             else{
                                 let property = Service.GetProperty(childElem.prop("id"),item);
-                                if(typeof childElem.data(Service.SYSTEM_ACTION) !== "undefined"){
-                                    property = Service.Transform(childElem.data(Service.SYSTEM_ACTION),property);
+                                if(typeof childElem.data(Service.SYSTEM_CUSTOM) !== "undefined"){
+                                    property = Service.Transform(childElem.data(Service.SYSTEM_CUSTOM),property);
                                 }
                                 //bind property to element as valid HTML
                                 if(childElem.hasClass(Service.SYSTEM_BIND_VALUE)){
@@ -502,14 +475,14 @@ Service.AddProperty("Bind",function(component, data){
                     });
                 }
 
-                if(typeof elem.data(Service.SYSTEM_ACTION) !== "undefined"){
-                    elem = Service.Transform(elem.data(Service.SYSTEM_ACTION),elem);
+                if(typeof elem.data(Service.SYSTEM_CUSTOM) !== "undefined"){
+                    elem = Service.Transform(elem.data(Service.SYSTEM_CUSTOM),elem);
                 }
             }
             else{
                 let property = Service.GetProperty(elem.prop("id"),data);
-                if(typeof elem.data(Service.SYSTEM_ACTION) !== "undefined"){
-                    property = Service.Transform(elem.data(Service.SYSTEM_ACTION),property);
+                if(typeof elem.data(Service.SYSTEM_CUSTOM) !== "undefined"){
+                    property = Service.Transform(elem.data(Service.SYSTEM_CUSTOM),property);
                 }
                 //bind property to element as valid HTML
                 if(elem.hasClass(Service.SYSTEM_BIND_VALUE)){
@@ -548,7 +521,7 @@ Service.AddProperty("Bind",function(component, data){
             if(typeof elem.prop("id") !== "undefined"){
                 let property = Service.GetProperty(elem.prop("id"),Service.MetaData);
                 if(typeof elem.data(Service.SYSTEM_ACTION) !== "undefined"){
-                    let func = Service.Transformation[elem.data(Service.SYSTEM_ACTION)];
+                    let func = Service.Transformation[elem.data(Service.SYSTEM_CUSTOM)];
                     if(typeof func !== "undefined"){
                         property = func(property);
                     }
@@ -708,9 +681,13 @@ Service.AddProperty("GetProperty",function(id,data){
  */
 Service.AddProperty("ListUpdate",function(elem,target,actionBtn){
     if(elem.value.length > 0){
-       /* Service.ServerRequest(`/${elem.dataset[Service.SYSTEM_URL]}/${elem.value}`,{},"GET",function(result){
-            Service.SelectListBuilder(jQuery(target),result.data);
-        },Service.ErrorHandler);*/
+        const site = `/${elem.dataset[Service.SYSTEM_URL]}/${elem.value}`;
+        const method = "GET";
+        const params = {};
+        const success = function(result){Service.SelectListBuilder(jQuery(target),result.data,result.actionBtn);};
+       Service.ServerRequest({
+           site,method,params,success
+       });
     }
 });
 
@@ -788,7 +765,7 @@ Service.AddProperty("LoadPanel",function(elem,target=null){
  * @param elem select list element
  * @param list array of objects to construct options
  */
-Service.AddProperty("SelectListBuilder",function(elem,list, emptyList = true){
+Service.AddProperty("SelectListBuilder",function(elem,list, actionBtn, emptyList = true){
     if(emptyList) elem.empty();
     jQuery.each(list, function () {
         elem.append(`<option data-value="${this.Value}" value="${this.Value}"> ${this.Text} </option>`);
@@ -815,7 +792,6 @@ Service.AddProperty("FindElement",function(name){
          **/
         let clone = jQuery(item[0]).clone();
         const action = clone.data(Service.SYSTEM_ACTION);
-        const custom = clone.data(Service.SYSTEM_CUSTOM);
         let element = jQuery(clone.html());
         //ensure we have one root element
         if(element.length !== 1){
@@ -823,7 +799,6 @@ Service.AddProperty("FindElement",function(name){
         }
         //add system actions as data properties
         if(typeof action !== "undefined")element.data(Service.SYSTEM_ACTION,action);
-        if(typeof custom !== "undefined")element.data(Service.SYSTEM_CUSTOM,custom);
         return element;
     }
     return jQuery("<div></div>");
@@ -837,17 +812,14 @@ Service.AddProperty("FindElement",function(name){
  * @param action names of the custom actions to execute
  * @param component panel or modal on which to apply custom actions
  */
-Service.AddProperty("ExecuteCustom",function(action,component,actionBtn){
+Service.AddProperty("ExecuteCustom",function(action,component,actionBtn,result=null){
     action = action.split("|");
     action.forEach(function(item){
-        if(Controller.hasOwnProperty(item)){
-            Controller[item](component,actionBtn);
+        if(Service.Modification.hasOwnProperty(item)){
+            Service.Modification[item](component,actionBtn,result);
         }
-        else if(Service.Modification.hasOwnProperty(item)){
-            Service.Modification[item](component,actionBtn);
-        }
-        else if(Service.hasOwnProperty(item)){
-            Service[item](component,actionBtn);
+        else if(Controller.hasOwnProperty(item)){
+            Controller[item](component,actionBtn,result);
         }
     });
 });
@@ -863,14 +835,11 @@ Service.AddProperty("ExecuteCustom",function(action,component,actionBtn){
 Service.AddProperty("Transform",function(action,component,actionBtn){
     action = action.split("|");
     action.forEach(function(item){
-        if(Controller.hasOwnProperty(item)){
-            component = Controller[item](component,actionBtn);
-        }
-        else if(Service.Transformation.hasOwnProperty(item)){
+        if(Service.Transformation.hasOwnProperty(item)){
             component = Service.Transformation[item](component,actionBtn);
         }
-        else if(Service.hasOwnProperty(item)){
-            component = Service[item](component,actionBtn);
+        else if(Controller.hasOwnProperty(item)){
+            component = Controller[item](component,actionBtn);
         }
     });
     return component;
@@ -888,14 +857,11 @@ Service.AddProperty("Transform",function(action,component,actionBtn){
 Service.AddProperty("ExecuteSubmitTransformation",function(action,component,params,actionBtn){
     action = action.split("|");
     action.forEach(function(item){
-        if(Controller.hasOwnProperty(item)){
-            component = Controller[item](component,params,actionBtn);
-        }
-        else if(Service.SubmitTransformation.hasOwnProperty(item)){
+        if(Service.SubmitTransformation.hasOwnProperty(item)){
             params = Service.SubmitTransformation[item](component,params,actionBtn);
         }
-        else if(Service.hasOwnProperty(item)){
-            params = Service[item](component,params,actionBtn);
+        else if(Controller.hasOwnProperty(item)){
+            component = Controller[item](component,params,actionBtn);
         }
     });
     return params;
@@ -942,4 +908,22 @@ Service.AddProperty("LoadPanelTransition",function(container,panel,actionBtn = n
     container.css("display","none");
     container.empty();
     container.html(panel).fadeIn("slow");
+});
+
+Service.AddProperty("ErrorDataHandler", function(result,notificationType){
+    let data = {
+        Code: result.request.statusText,
+        Entity: "Application",
+        notificationType: notificationType
+    };
+    if(result.request.responseText.length > 0){
+        try{
+            data = JSON.parse(result.request.responseText);
+        }
+        catch(e){
+            data.Code = "An error occurred on the server";
+            data.Entity = "Application";
+        }
+    }
+    return data;
 });

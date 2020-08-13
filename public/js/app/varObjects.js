@@ -154,9 +154,9 @@ window.Service = function(){
 /**
  * -- Modification --
  * Add a method to the modification executor if you want it to be called after a panel or modal has
- * been loaded. use the 'data-custom' attribute on the element triggering the action to add the method(s)
- * that should be executed after loading is complete. if there needs to be more than one method called,
- * use the pipe (|) character to separate them.
+ * been loaded or form submitted. use the 'data-complete' attribute on the element triggering the 
+ * action to add the method(s) that should be executed after loading is complete. if there needs 
+ * to be more than one method called, use the pipe (|) character to separate them.
  */
 window.Service.AddProperty('Modification',function(){
 
@@ -174,7 +174,7 @@ window.Service.AddProperty('Modification',function(){
 /**
  * -- SubmitTransformation --
  * Add a method to the submit transformation executor if you want to transform the value of a form
- * element before it is submitted to the server for processing. use the 'data-action' attribute on
+ * element before it is submitted to the server for processing. use the 'data-custom' attribute on
  * the element triggering the submission to add the method(s) that should be executed. if there needs
  * to be more than one method called, use the pipe (|) character to separate them.
  */
@@ -194,7 +194,7 @@ window.Service.AddProperty('SubmitTransformation',function(){
 /**
  * -- Transformation --
  * Add a method to the transformation executor if you want it to be called during data binding.
- * use the 'data-action' attribute on the element that should be transformed to add the method(s)
+ * use the 'data-custom' attribute on the element that should be transformed to add the method(s)
  * that should be executed. if there needs to be more than one method called, use the pipe (|)
  * them. note that during binding only elements with the class 'bind' or 'bind-loop' will be considered
  */
@@ -239,6 +239,8 @@ window.Service.AddProperty('Data',function(){
  * Add a method to the action executor if a form needs a non-standard way of sending the
  * request to the server and handling the response. methods can be triggered by inline
  * onclick and onchange events or by the data-action attribute on a submit button.
+ * please note that the data-action is the same item that determines the location of  
+ * the form if the submit button is not contained within it.
  */
 window.Service.AddProperty('Action',function(){
 
