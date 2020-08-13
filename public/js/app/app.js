@@ -145,7 +145,8 @@ Controller.AddProperty("FormSubmit",function(elem){
         headers,
         site: site_url,
         request: method,
-        actionBtn: ActionButton
+        actionBtn: ActionButton,
+        component: Service.LoadedForm
     });
     else Service.ServerRequest({
         params,
@@ -154,7 +155,8 @@ Controller.AddProperty("FormSubmit",function(elem){
         headers,
         site: site_url,
         request: method,
-        actionBtn: ActionButton
+        actionBtn: ActionButton,
+        component: Service.LoadedForm
     });
 });
 
