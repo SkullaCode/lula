@@ -95,7 +95,6 @@ window.Service = function(){
         ErrorHandler                        : null,
         SuccessHandler                      : null,
         NotificationHandler                 : null,
-        FormSubmitSuccessHandler            : null,
         ErrorDataHandler                    : null,
         ServerRequest                       : null,
         LaunchModal                         : null,
@@ -144,8 +143,8 @@ window.Service = function(){
         SYSTEM_SUCCESS_HANDLER              : "success-handler",
         SYSTEM_ERROR_HANDLER                : "error-handler",
         SYSTEM_LOAD_TYPE                    : "load-type",
-        SYSTEM_NOTIFICATION_ON_SUCCESS      : "notif-on-success",
-        SYSTEM_NOTIFICATION_ON_ERROR        : "notif-on-error"
+        SYSTEM_NOTIFICATION_ON_SUCCESS      : "notification-success",
+        SYSTEM_NOTIFICATION_ON_ERROR        : "notification-error"
     };
 
     return Response;

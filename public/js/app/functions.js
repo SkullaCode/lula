@@ -5,7 +5,6 @@
  * which return 400 or 500 level status codes
  */
 Service.AddProperty("ErrorHandler",function(result){
-    let notificationType = "alert";
     //manipulate form if present
     if(Service.LoadedForm !== null){
         Service.LoadedForm.find('input,select,textarea,button')
@@ -26,55 +25,6 @@ Service.AddProperty("ErrorHandler",function(result){
                 }
             });
     }
-    //set custom notification type if present
-    if(typeof result.actionBtn.data(Service.SYSTEM_NOTIFICATION_ON_ERROR) !== "undefined"){
-        notificationType = result.actionBtn.data(Service.SYSTEM_NOTIFICATION_ON_ERROR);
-    }
-
-    //define and format data from server or use default
-    //implementation
-    const data = Service.ErrorDataHandler(result,notificationType);
-    
-    //add status codes and how they should be treated here
-    switch(result.request.status){
-        case 500: {
-            Service.NotificationHandler({
-                status: "error",
-                message: result.message,
-                data,
-                actionBtn: result.actionBtn,
-                notificationType
-            });
-            break;
-        }
-        case 401:{
-            location.href = location.origin;
-            break;
-        }
-        case 403:{
-            location.href = location.origin;
-            break;
-        }
-        case 404:{
-            Service.NotificationHandler({
-                status: "error",
-                message: "Oops!",
-                data,
-                actionBtn: result.actionBtn,
-                notificationType
-            });
-            break;
-        }
-        default:{
-            Service.NotificationHandler({
-                status:"error",
-                message: "Oops!",
-                data,
-                actionBtn: result.actionBtn,
-                notificationType
-            });
-        }
-    }
 });
 
 /**
@@ -85,30 +35,6 @@ Service.AddProperty("ErrorHandler",function(result){
  * @param result object containing success handler parameters
  */
 Service.AddProperty("SuccessHandler",function(result){
-
-    //trigger notification event
-    result.notificationType = result.actionBtn.data(Service.SYSTEM_NOTIFICATION_ON_SUCCESS) || "toaster";
-    Service.NotificationHandler(result);
-
-    //check if a complete action was specified and execute it
-    let custom =result.actionBtn.data(Service.SYSTEM_COMPLETE);
-    if(typeof custom !== "undefined"){
-        Service.ExecuteCustom(custom,{
-            panel:Service.LoadedPanel,
-            form:Service.LoadedForm,
-            modal:Service.LoadedModal
-        },result.actionBtn,result);
-    }
-});
-
-/**
- * -- Form Submit Success Handler --
- * This function handles successful responses
- * from calls to the server by default.
- *
- * @param result object containing success handler parameters
- */
-Service.AddProperty("FormSubmitSuccessHandler",function(result){
     //manipulate form if present
     if(Service.LoadedForm !== null){
         Service.LoadedForm.find('input,select,textarea,button')
@@ -128,19 +54,6 @@ Service.AddProperty("FormSubmitSuccessHandler",function(result){
                     }
                 }
             });
-    }
-
-    //trigger notification event
-    result.notificationType = result.actionBtn.data(Service.SYSTEM_NOTIFICATION_ON_SUCCESS) || "toaster";
-    Service.NotificationHandler(result);
-
-    let custom =result.actionBtn.data(Service.SYSTEM_COMPLETE);
-    if(typeof custom !== "undefined"){
-        Service.ExecuteCustom(custom,{
-            panel:Service.LoadedPanel,
-            form:Service.LoadedForm,
-            modal:Service.LoadedModal
-        },result.actionBtn,result);
     }
 });
 
@@ -220,21 +133,20 @@ Service.AddProperty("ServerRequest",function(requirements){
         requirements.error = Service.ErrorHandler;
     }
 
+    if(typeof requirements.component === "undefined" || requirements.component === null || !requirements.component){
+        requirements.component = jQuery("<div></div>");
+    }
+
+    if(typeof requirements.responseType === "undefined" || requirements.responseType === null || !requirements.responseType){
+        requirements.responseType = "json";
+    }
+
     // fix: throws an exception if a POST request is sent
     //without a body
     if(requirements.params === null){
         requirements.params = {};
     }
 
-    //ensure request data is FormData
-    //todo fix if conditional
-/*    if (typeof requirements.params !== FormData) {
-        const p = new FormData();
-        jQuery.each(requirements.params, function (name,value) {
-            p.append(name, value);
-        });
-        requirements.params = p;
-    }*/
     //disable form input and controls while request is
     //processed by the server
     Service.LoadingStateOn(requirements.actionBtn);
@@ -255,15 +167,6 @@ Service.AddProperty("ServerRequest",function(requirements){
             return;
         }
         let res = {};
-        //ensure data is in JSON format
-        if(typeof data === 'string' && data.length > 0){
-            try{
-                data = JSON.parse(data);
-            }
-            catch(e){
-                data = {};
-            }
-        }
         res.status = status;
         res.message = jqXHR.statusText;
         res.data = data;
@@ -271,10 +174,19 @@ Service.AddProperty("ServerRequest",function(requirements){
         res.actionBtn = requirements.actionBtn;
         //execute the success callback with results received.
         requirements.success(res);
+
+        //trigger notification event
+        res.notificationType = requirements.actionBtn.data(Service.SYSTEM_NOTIFICATION_ON_SUCCESS) || "toaster";
+        Service.NotificationHandler(res);
+
+        let custom = requirements.actionBtn.data(Service.SYSTEM_COMPLETE);
+        if(typeof custom !== "undefined"){
+            Service.ExecuteCustom(custom,requirements.component,requirements.actionBtn,res);
+        }
         Service.ActionLoading = false;
     };
 
-    let ajax_params = {
+    const ajax_params = {
         url 		: requirements.site,
         type 		: requirements.request,
         success 	: successFunction,
@@ -286,12 +198,66 @@ Service.AddProperty("ServerRequest",function(requirements){
             }
             //enable disabled elements
            Service.LoadingStateOff(requirements.actionBtn);
-            requirements.error({
+            const res = {
                 request,
                 status,
                 message: error,
                 actionBtn: requirements.actionBtn
-            });
+            };
+            requirements.error(res);
+
+            let notificationType = "alert";
+            //set custom notification type if present
+            if(typeof requirements.actionBtn.data(Service.SYSTEM_NOTIFICATION_ON_ERROR) !== "undefined"){
+                notificationType = requirements.actionBtn.data(Service.SYSTEM_NOTIFICATION_ON_ERROR);
+            }
+
+            //define and format data from server or use default
+            //implementation
+            const data = Service.ErrorDataHandler(res,notificationType);
+
+            //add status codes and how they should be treated here
+
+
+            switch(res.request.status){
+                case 500: {
+                    Service.NotificationHandler({
+                        status: "error",
+                        message: res.message,
+                        data,
+                        actionBtn: requirements.actionBtn,
+                        notificationType
+                    });
+                    break;
+                }
+                case 401:{
+                    location.href = location.origin;
+                    break;
+                }
+                case 403:{
+                    location.href = location.origin;
+                    break;
+                }
+                case 404:{
+                    Service.NotificationHandler({
+                        status: "error",
+                        message: "Oops!",
+                        data,
+                        actionBtn: requirements.actionBtn,
+                        notificationType
+                    });
+                    break;
+                }
+                default:{
+                    Service.NotificationHandler({
+                        status:"error",
+                        message: "Oops!",
+                        data,
+                        actionBtn: requirements.actionBtn,
+                        notificationType
+                    });
+                }
+            }
             Service.ActionLoading = false;
         },
         //execute specified actions before request is sent
@@ -311,8 +277,10 @@ Service.AddProperty("ServerRequest",function(requirements){
     if(requestTypes.indexOf(requirements.request.toUpperCase()) >= 0){
         ajax_params.data = requirements.params;
     }
+    ajax_params.dataType = requirements.responseType;
     ajax_params.processData = false;
     ajax_params.contentType = false;
+    ajax_params.global = false;
     jQuery.ajax(ajax_params);
 });
 

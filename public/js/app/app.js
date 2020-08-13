@@ -30,16 +30,20 @@ Controller.AddProperty("FormSubmit",function(elem){
         Service.LoadedForm = jQuery(ActionButton.parents('form'));
     }
     else{
+        const url = ActionButton.data(Service.SYSTEM_URL);
+        const method = ActionButton.data(Service.SYSTEM_METHOD);
         if (target.substring(0, 1) !== "#") target = `#${target}`;
         const targetContainer = jQuery(document).find(target);
         let form = targetContainer.find("form");
         if (form.length > 0) {
             Service.LoadedForm = form;
+            if(typeof url !== "undefined") form.attr("action",url);
+            if(typeof method !== "undefined") form.attr("method",method);
         } else {
             form = jQuery("<form></form>",
                 {
-                    action: ActionButton.data(Service.SYSTEM_URL),
-                    method: ActionButton.data(Service.SYSTEM_METHOD)
+                    action: url,
+                    method: method
                 });
             form.append(targetContainer.children());
             targetContainer.empty().append(form);
@@ -114,7 +118,7 @@ Controller.AddProperty("FormSubmit",function(elem){
 
     //determine the response handlers to use for success and error
     //defaults are chosen by default obviously
-    let success = Service.FormSubmitSuccessHandler;
+    let success = Service.SuccessHandler;
     let error = Service.ErrorHandler;
     let successHandler = ActionButton.data(Service.SYSTEM_SUCCESS_HANDLER);
     let errorHandler = ActionButton.data(Service.SYSTEM_ERROR_HANDLER);

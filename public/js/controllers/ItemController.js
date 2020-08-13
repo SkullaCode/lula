@@ -4,7 +4,7 @@ Controller.Init = function () {
 
 Controller.CustomSuccessHandler = function(result){
     alert("Custom success handler was fired");
-    Service.FormSubmitSuccessHandler(result);
+    Service.SuccessHandler(result);
 };
 
 Controller.CustomErrorHandler = function(e){
