@@ -296,43 +296,44 @@ Controller.AddProperty("PanelSelect",function(elem){
     //get history url if defined
     const history = ActionButton.data(Service.SYSTEM_HISTORY);
     //locate panel
-    const panel = Service.FindElement(ActionButton.data(Service.SYSTEM_ACTION));
-    //update modal attributes
-    const filterList = [Service.SYSTEM_ACTION,Service.SYSTEM_COMPLETE,Service.SYSTEM_TARGET];
-    jQuery.each(ActionButton.data(),function(key,value){
-        //filter out action and custom attribute
-        // these are defined on the panel
-        if(jQuery.inArray(key,filterList) === -1){
-            panel.data(key,value);
+    Service.FindElement(ActionButton.data(Service.SYSTEM_ACTION)).then((panel) =>{
+        //update modal attributes
+        const filterList = [Service.SYSTEM_ACTION,Service.SYSTEM_COMPLETE,Service.SYSTEM_TARGET];
+        jQuery.each(ActionButton.data(),function(key,value){
+            //filter out action and custom attribute
+            // these are defined on the panel
+            if(jQuery.inArray(key,filterList) === -1){
+                panel.data(key,value);
+            }
+        });
+        //adding panel change to browser history
+        //ignore if history data attribute is defined
+        if(typeof history === "undefined"){
+            window.history.pushState({
+                data: ActionButton.data(),
+                panelSelect: true
+            },"");
         }
-    });
-    //adding panel change to browser history
-    //ignore if history data attribute is defined
-    if(typeof history === "undefined"){
-        window.history.pushState({
-            data: ActionButton.data(),
-            panelSelect: true
-        },"");
-    }
 
-    //determine and set page title
-    const title = (typeof ActionButton.data(Service.SYSTEM_TITLE) !== "undefined")
-        ? ActionButton.data(Service.SYSTEM_TITLE)
-        : ActionButton.data(Service.SYSTEM_ACTION);
-    window.document.title = `${Service.Title} - ${title}`;
-    //load panel unto the DOM
-    if(typeof  ActionButton.data(Service.SYSTEM_TARGET) !== "undefined"){
-        Service.LoadPanel(panel,ActionButton,ActionButton.data(Service.SYSTEM_TARGET));
-    }
-    else{
-        Service.LoadPanel(panel,ActionButton);
-    }
-    //execute custom changes
-    let custom = ActionButton.data(Service.SYSTEM_COMPLETE);
-    if(typeof custom !== "undefined"){
-        Service.ExecuteCustom(custom,Service.LoadedPanel,ActionButton);
-    }
-    Service.PanelLoading = false;
+        //determine and set page title
+        const title = (typeof ActionButton.data(Service.SYSTEM_TITLE) !== "undefined")
+            ? ActionButton.data(Service.SYSTEM_TITLE)
+            : ActionButton.data(Service.SYSTEM_ACTION);
+        window.document.title = `${Service.Title} - ${title}`;
+        //load panel unto the DOM
+        if(typeof  ActionButton.data(Service.SYSTEM_TARGET) !== "undefined"){
+            Service.LoadPanel(panel,ActionButton,ActionButton.data(Service.SYSTEM_TARGET));
+        }
+        else{
+            Service.LoadPanel(panel,ActionButton);
+        }
+        //execute custom changes
+        let custom = ActionButton.data(Service.SYSTEM_COMPLETE);
+        if(typeof custom !== "undefined"){
+            Service.ExecuteCustom(custom,Service.LoadedPanel,ActionButton);
+        }
+        Service.PanelLoading = false;
+    });
 });
 
 /**

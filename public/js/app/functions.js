@@ -759,28 +759,30 @@ Service.AddProperty("SelectListBuilder",function(elem,list, actionBtn, emptyList
  * @param name name of the element to retrieve
  */
 Service.AddProperty("FindElement",function(name){
-    let templateContent = jQuery('template').prop('content');
-    templateContent = jQuery(templateContent);
-    //add hash tag if not present. element lookup is always by id
-    if(name.substring(0,1) !== "#") name = `#${name}`;
-    let item = templateContent.find(name);
-    if(item.length > 0){
-        /**
-         * todo cloning the first item in the list... need to ensure
-         * that highest order divs are selected
-         **/
-        let clone = jQuery(item[0]).clone();
-        const action = clone.data(Service.SYSTEM_ACTION);
-        let element = jQuery(clone.html());
-        //ensure we have one root element
-        if(element.length !== 1){
-            element = jQuery("<div></div>").append(clone.html())
+    return new Promise((resolve) =>{
+        let templateContent = jQuery('template').prop('content');
+        templateContent = jQuery(templateContent);
+        //add hash tag if not present. element lookup is always by id
+        if(name.substring(0,1) !== "#") name = `#${name}`;
+        let item = templateContent.find(name);
+        if(item.length > 0){
+            /**
+             * todo cloning the first item in the list... need to ensure
+             * that highest order divs are selected
+             **/
+            let clone = jQuery(item[0]).clone();
+            const action = clone.data(Service.SYSTEM_ACTION);
+            let element = jQuery(clone.html());
+            //ensure we have one root element
+            if(element.length !== 1){
+                element = jQuery("<div></div>").append(clone.html())
+            }
+            //add system actions as data properties
+            if(typeof action !== "undefined")element.data(Service.SYSTEM_ACTION,action);
+            resolve(element);
         }
-        //add system actions as data properties
-        if(typeof action !== "undefined")element.data(Service.SYSTEM_ACTION,action);
-        return element;
-    }
-    return jQuery("<div></div>");
+        resolve(jQuery("<div></div>"));
+    });
 });
 
 /**
