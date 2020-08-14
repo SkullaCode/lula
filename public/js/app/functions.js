@@ -180,7 +180,9 @@ Service.AddProperty("ServerRequest",function(requirements){
         requirements.success(res);
 
         if(typeof requirements.actionBtn.data(Service.SYSTEM_NOTIFICATION) === "undefined" ||
-            requirements.actionBtn.data(Service.SYSTEM_NOTIFICATION) === "true"){
+            requirements.actionBtn.data(Service.SYSTEM_NOTIFICATION) === "true" ||
+            requirements.actionBtn.data(Service.SYSTEM_NOTIFICATION) === "success"
+            ){
             //trigger notification event
             res.notificationType = requirements.actionBtn.data(Service.SYSTEM_NOTIFICATION_ON_SUCCESS) || "toaster";
             Service.NotificationHandler(res);
@@ -221,7 +223,8 @@ Service.AddProperty("ServerRequest",function(requirements){
 
             //add status codes and how they should be treated here
             if(typeof requirements.actionBtn.data(Service.SYSTEM_NOTIFICATION) === "undefined" ||
-                requirements.actionBtn.data(Service.SYSTEM_NOTIFICATION) === "true"){
+                requirements.actionBtn.data(Service.SYSTEM_NOTIFICATION) === "true" ||
+                requirements.actionBtn.data(Service.SYSTEM_NOTIFICATION) === "error"){
                 //set custom notification type if present
                 if(typeof requirements.actionBtn.data(Service.SYSTEM_NOTIFICATION_ON_ERROR) !== "undefined"){
                     notificationType = requirements.actionBtn.data(Service.SYSTEM_NOTIFICATION_ON_ERROR);
