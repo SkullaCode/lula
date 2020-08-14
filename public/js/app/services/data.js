@@ -5,7 +5,7 @@
  * These methods are where the data is defined that the panel or modal will use while binding
  * takes place.
  */
-Service.Data.AddMethod("form-data",function(component){
+Service.Data.AddMethod("form-data",function(component,actionBtn){
     const data = [];
     data[12] = {
         NameLabel: "Person Name",
@@ -18,7 +18,7 @@ Service.Data.AddMethod("form-data",function(component){
     const id = component.data(Service.SYSTEM_ID);
     Service.Bind(component,data[id]);
 });
-Service.Data.AddMethod("table-data",function(component){
+Service.Data.AddMethod("table-data",function(component,actionBtn){
     const data = [
         { ID: 1, Name: "John Doe", Age: 30 },
         { ID: 2, Name: "Ricky Smith", Age: 24 },
@@ -30,7 +30,7 @@ Service.Data.AddMethod("table-data",function(component){
     ];
     Service.Bind(component,data);
 });
-Service.Data.AddMethod("datatable-data",function(component){
+Service.Data.AddMethod("datatable-data",function(component,actionBtn){
     const data = [
         { ID: 1, Name: "John Doe", Age: 30 },
         { ID: 2, Name: "Ricky Smith", Age: 24 },
@@ -51,7 +51,7 @@ Service.Data.AddMethod("datatable-data",function(component){
         columns: listingHeaders
     });
 });
-Service.Data.AddMethod("modal-data",function(component){
+Service.Data.AddMethod("modal-data",function(component,actionBtn){
     const data = [];
     data[12] = {
         NameLabel: "Person Name",

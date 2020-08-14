@@ -7,7 +7,13 @@
  * function on form fields if present, and send the result to
  * Service.ServerRequest to be processed.
  */
-Controller.AddProperty("FormSubmit",function(elem){
+Controller.AddProperty("FormSubmit",function(elem,e){
+    //prevent default action for submit button
+    if(typeof e !== "undefined"){
+        e.preventDefault();
+    }else{
+        window.event.preventDefault();
+    }
     //exit if another submission is in progress
     if(Service.ActionLoading) return false;
     const ActionButton = jQuery(elem);
@@ -266,7 +272,7 @@ Controller.AddProperty("ModalSelect",function(elem){
             Service.ExecuteCustom(custom,Service.LoadedModal,ActionButton);
         }
         // launch modal
-        Service.LaunchModal();
+        Service.LaunchModal(Service.LoadedModal,ActionButton);
     }
     Service.ModalLoading = false;
 });
@@ -316,10 +322,10 @@ Controller.AddProperty("PanelSelect",function(elem){
     window.document.title = `${Service.Title} - ${title}`;
     //load panel unto the DOM
     if(typeof  ActionButton.data(Service.SYSTEM_TARGET) !== "undefined"){
-        Service.LoadPanel(panel,ActionButton.data(Service.SYSTEM_TARGET));
+        Service.LoadPanel(panel,ActionButton,ActionButton.data(Service.SYSTEM_TARGET));
     }
     else{
-        Service.LoadPanel(panel);
+        Service.LoadPanel(panel,ActionButton);
     }
     //execute custom changes
     let custom = ActionButton.data(Service.SYSTEM_COMPLETE);
@@ -334,7 +340,11 @@ Controller.AddProperty("PanelSelect",function(elem){
  * this function reloads the current panel
  */
 Controller.AddProperty("ReloadPanel",function(){
-    Service.LoadPanel(Service.LoadedPanel);
+    const btn = jQuery("<button></button>",{
+        type:"button",
+        "data-notification":"false"
+    });
+    Service.LoadPanel(Service.LoadedPanel,btn);
 });
 
 window.onpopstate = function(event){

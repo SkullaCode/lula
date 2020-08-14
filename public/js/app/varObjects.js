@@ -145,6 +145,7 @@ window.Service = function(){
         SYSTEM_LOAD_TYPE                    : "load-type",
         SYSTEM_NOTIFICATION_ON_SUCCESS      : "notification-success",
         SYSTEM_NOTIFICATION_ON_ERROR        : "notification-error",
+        SYSTEM_NOTIFICATION                 : "notification",
         SYSTEM_TITLE                        : "title"
     };
 

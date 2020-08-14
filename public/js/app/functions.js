@@ -141,6 +141,10 @@ Service.AddProperty("ServerRequest",function(requirements){
         requirements.responseType = "json";
     }
 
+    if(typeof requirements.actionBtn === "undefined" || requirements.actionBtn === null || !requirements.actionBtn){
+        requirements.actionBtn = jQuery("<button></button>",{type:"button"});
+    }
+
     // fix: throws an exception if a POST request is sent
     //without a body
     if(requirements.params === null){
@@ -175,9 +179,12 @@ Service.AddProperty("ServerRequest",function(requirements){
         //execute the success callback with results received.
         requirements.success(res);
 
-        //trigger notification event
-        res.notificationType = requirements.actionBtn.data(Service.SYSTEM_NOTIFICATION_ON_SUCCESS) || "toaster";
-        Service.NotificationHandler(res);
+        if(typeof requirements.actionBtn.data(Service.SYSTEM_NOTIFICATION) === "undefined" ||
+            requirements.actionBtn.data(Service.SYSTEM_NOTIFICATION) === "true"){
+            //trigger notification event
+            res.notificationType = requirements.actionBtn.data(Service.SYSTEM_NOTIFICATION_ON_SUCCESS) || "toaster";
+            Service.NotificationHandler(res);
+        }
 
         let custom = requirements.actionBtn.data(Service.SYSTEM_COMPLETE);
         if(typeof custom !== "undefined"){
@@ -207,55 +214,56 @@ Service.AddProperty("ServerRequest",function(requirements){
             requirements.error(res);
 
             let notificationType = "alert";
-            //set custom notification type if present
-            if(typeof requirements.actionBtn.data(Service.SYSTEM_NOTIFICATION_ON_ERROR) !== "undefined"){
-                notificationType = requirements.actionBtn.data(Service.SYSTEM_NOTIFICATION_ON_ERROR);
-            }
 
             //define and format data from server or use default
             //implementation
             const data = Service.ErrorDataHandler(res,notificationType);
 
             //add status codes and how they should be treated here
-
-
-            switch(res.request.status){
-                case 500: {
-                    Service.NotificationHandler({
-                        status: "error",
-                        message: res.message,
-                        data,
-                        actionBtn: requirements.actionBtn,
-                        notificationType
-                    });
-                    break;
+            if(typeof requirements.actionBtn.data(Service.SYSTEM_NOTIFICATION) === "undefined" ||
+                requirements.actionBtn.data(Service.SYSTEM_NOTIFICATION) === "true"){
+                //set custom notification type if present
+                if(typeof requirements.actionBtn.data(Service.SYSTEM_NOTIFICATION_ON_ERROR) !== "undefined"){
+                    notificationType = requirements.actionBtn.data(Service.SYSTEM_NOTIFICATION_ON_ERROR);
                 }
-                case 401:{
-                    location.href = location.origin;
-                    break;
-                }
-                case 403:{
-                    location.href = location.origin;
-                    break;
-                }
-                case 404:{
-                    Service.NotificationHandler({
-                        status: "error",
-                        message: "Oops!",
-                        data,
-                        actionBtn: requirements.actionBtn,
-                        notificationType
-                    });
-                    break;
-                }
-                default:{
-                    Service.NotificationHandler({
-                        status:"error",
-                        message: "Oops!",
-                        data,
-                        actionBtn: requirements.actionBtn,
-                        notificationType
-                    });
+                switch(res.request.status){
+                    case 500: {
+                        Service.NotificationHandler({
+                            status: "error",
+                            message: res.message,
+                            data,
+                            actionBtn: requirements.actionBtn,
+                            notificationType
+                        });
+                        break;
+                    }
+                    case 401:{
+                        location.href = location.origin;
+                        break;
+                    }
+                    case 403:{
+                        location.href = location.origin;
+                        break;
+                    }
+                    case 404:{
+                        Service.NotificationHandler({
+                            status: "error",
+                            message: "Oops!",
+                            data,
+                            actionBtn: requirements.actionBtn,
+                            notificationType
+                        });
+                        break;
+                    }
+                    default:{
+                        Service.NotificationHandler({
+                            status:"error",
+                            message: "Oops!",
+                            data,
+                            actionBtn: requirements.actionBtn,
+                            notificationType
+                        });
+                    }
                 }
             }
             Service.ActionLoading = false;
@@ -290,17 +298,17 @@ Service.AddProperty("ServerRequest",function(requirements){
  * launching a modal
  *
  */
-Service.AddProperty("LaunchModal",function(){
-    Service.LoadedModal.modal();
-    const action = Service.LoadedModal.data(Service.SYSTEM_ACTION);
+Service.AddProperty("LaunchModal",function(modal,actionBtn){
+    modal.modal();
+    const action = modal.data(Service.SYSTEM_ACTION);
     if(typeof action === "string"){
         let func = Service.Data[action];
-        if(typeof func !== "undefined") func(Service.LoadedModal);
+        if(typeof func !== "undefined") func(modal,actionBtn);
     }
-    Service.LoadedModal.on('hide.bs.modal',function(e){
+    modal.on('hide.bs.modal',function(e){
 
     });
-    Service.LoadedModal.on('hidden.bs.modal',function(){
+    modal.on('hidden.bs.modal',function(){
         Service.LoadedModal.remove();
         Service.LoadedModal = null;
         jQuery(`.${ModalContainer}`).empty();
@@ -705,10 +713,10 @@ Service.AddProperty("ImagePreview",function(input, target) {
  * @param elem the panel selected to be loaded
  * @param target location where it should be placed
  */
-Service.AddProperty("LoadPanel",function(elem,target=null){
+Service.AddProperty("LoadPanel",function(elem,actionBtn,target=null){
     if(typeof elem !== "undefined" && typeof elem === "object"){
         let action = elem.data(Service.SYSTEM_ACTION);
-        if(Service.Data.hasOwnProperty(action)) Service.Data[action](elem);
+        if(Service.Data.hasOwnProperty(action)) Service.Data[action](elem,actionBtn);
 
         // we have to place panel on the DOM before we load it.....
         // idk if its a javascript thing or jQuery thing
