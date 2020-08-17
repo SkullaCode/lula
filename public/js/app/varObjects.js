@@ -14,6 +14,15 @@ let MainContainer         = "MainContainer";
 let ModalContainer        = "modal-container";
 
 /**
+ * -- TemplateContainer --
+ * Defines the container used to temporarily
+ * store templates before they are placed on
+ * the DOM
+ * @type {string}
+ */
+let TemplateContainer     = "container-panel";
+
+/**
  * -- Controller --
  * Contains all the custom logic for the current page
  * this is just the definition, the programmer will
@@ -96,6 +105,8 @@ window.Service = function(){
         SuccessHandler                      : null,
         NotificationHandler                 : null,
         ErrorDataHandler                    : null,
+        DefaultModalHandler                 : null,
+        DefaultElementHandler               : null,
         ServerRequest                       : null,
         LaunchModal                         : null,
         Bind                                : null,

@@ -65,14 +65,18 @@ Service.Data.AddMethod("modal-data",function(component,actionBtn){
     component.find(".modal-body").attr("id","formSubmit");
     if(typeof id !== "undefined"){
         data[12].ModalTitle = "New Modal";
-        const form = Service.FindElement("form");
-        //Service.BindForm(form,data[id]);
-        Service.Bind(form,data[id]);
-        Service.Bind(component,data[id]);
-        component.find("#modal-form").append(form);
+
+        Service.FindElement("form").then((form) => {
+            //Service.BindForm(form,data[id]);
+            Service.Bind(form,data[id]);
+            Service.Bind(component,data[id]);
+            component.find("#modal-form").append(form);
+        });
     }
-    const image = Service.FindElement("file-select");
-    image.find("img").css("max-width","250px");
-    image.find("input[type=file]").prop("multiple",true);
-    component.find("#modal-image").append(image);
+
+    Service.FindElement("file-select").then((image) => {
+        image.find("img").css("max-width","250px");
+        image.find("input[type=file]").prop("multiple",true);
+        component.find("#modal-image").append(image);
+    });
 });

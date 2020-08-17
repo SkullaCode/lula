@@ -223,56 +223,35 @@ Controller.AddProperty("ModalSelect",function(elem){
     //if a modal is already loaded do not execute
     if(Service.LoadedModal === null){
         let action = ActionButton.data(Service.SYSTEM_ACTION);
-        Service.LoadedModal = Service.FindElement(action);
-        if (!Service.LoadedModal.hasClass("modal")) {
-            const modalContent = Service.LoadedModal.find(".modal");
-            if (modalContent.length === 1) {
-                Service.LoadedModal = modalContent;
-            } else {
-                let act = Service.LoadedModal.data(Service.SYSTEM_ACTION);
-                if (typeof act !== "string")
-                    act = "";
-                const modalData = Service.LoadedModal.html();
-                Service.LoadedModal = jQuery(
-                    `<div class="modal fade" role="dialog" data-action="${act}">
-                    <div class="modal-dialog">
-                        <div class="modal-content">
-                            <div class="modal-header">
-                                <button type="button" class="close" data-dismiss="modal">&times;</button>
-                                <h4 class="modal-title"></h4>
-                            </div>
-                            <div class="modal-body">
-                                ${modalData}
-                            </div>
-                            <div class="modal-footer">
-                                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-                            </div>
-                        </div>
-                    </div>
-                </div>`
-                );
+        Service.FindElement(action).then((elem) =>{
+            Service.LoadedModal = elem;
+
+            //format modal... has to be structured a specific way
+            //to work
+            if (!Service.LoadedModal.hasClass("modal")) {
+                Service.LoadedModal = Service.DefaultModalHandler(elem,ActionButton);
             }
-        }
-        //place modal on the DOM
-        const modalContainer = jQuery(ModalContainer);
-        modalContainer.empty().append(Service.LoadedModal);
-        //update modal attributes
-        const dataAttributes = ActionButton.data();
-        const filterList = [Service.SYSTEM_ACTION,Service.SYSTEM_COMPLETE];
-        jQuery.each(dataAttributes,function(key,value){
-            //filter out action and custom attribute
-            // these are defined on the modal
-            if(jQuery.inArray(key,filterList) === -1){
-                Service.LoadedModal.data(key,value);
+            //place modal on the DOM
+            const modalContainer = jQuery(`#${ModalContainer}`);
+            modalContainer.empty().append(Service.LoadedModal);
+            //update modal attributes
+            const dataAttributes = ActionButton.data();
+            const filterList = [Service.SYSTEM_ACTION,Service.SYSTEM_COMPLETE];
+            jQuery.each(dataAttributes,function(key,value){
+                //filter out action and custom attribute
+                // these are defined on the modal
+                if(jQuery.inArray(key,filterList) === -1){
+                    Service.LoadedModal.data(key,value);
+                }
+            });
+            let custom = ActionButton.data(Service.SYSTEM_COMPLETE);
+            //execute custom changes
+            if(typeof custom !== "undefined"){
+                Service.ExecuteCustom(custom,Service.LoadedModal,ActionButton);
             }
+            // launch modal
+            Service.LaunchModal(Service.LoadedModal,ActionButton);
         });
-        let custom = ActionButton.data(Service.SYSTEM_COMPLETE);
-        //execute custom changes
-        if(typeof custom !== "undefined"){
-            Service.ExecuteCustom(custom,Service.LoadedModal,ActionButton);
-        }
-        // launch modal
-        Service.LaunchModal(Service.LoadedModal,ActionButton);
     }
     Service.ModalLoading = false;
 });
@@ -322,17 +301,23 @@ Controller.AddProperty("PanelSelect",function(elem){
         window.document.title = `${Service.Title} - ${title}`;
         //load panel unto the DOM
         if(typeof  ActionButton.data(Service.SYSTEM_TARGET) !== "undefined"){
-            Service.LoadPanel(panel,ActionButton,ActionButton.data(Service.SYSTEM_TARGET));
+            Service.LoadPanel(panel,ActionButton,ActionButton.data(Service.SYSTEM_TARGET)).then(() =>{
+                let custom = ActionButton.data(Service.SYSTEM_COMPLETE);
+                if(typeof custom !== "undefined"){
+                    Service.ExecuteCustom(custom,Service.LoadedPanel,ActionButton);
+                }
+                Service.PanelLoading = false;
+            });
         }
         else{
-            Service.LoadPanel(panel,ActionButton);
+            Service.LoadPanel(panel,ActionButton).then(() =>{
+                let custom = ActionButton.data(Service.SYSTEM_COMPLETE);
+                if(typeof custom !== "undefined"){
+                    Service.ExecuteCustom(custom,Service.LoadedPanel,ActionButton);
+                }
+                Service.PanelLoading = false;
+            });
         }
-        //execute custom changes
-        let custom = ActionButton.data(Service.SYSTEM_COMPLETE);
-        if(typeof custom !== "undefined"){
-            Service.ExecuteCustom(custom,Service.LoadedPanel,ActionButton);
-        }
-        Service.PanelLoading = false;
     });
 });
 

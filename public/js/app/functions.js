@@ -108,6 +108,83 @@ Service.AddProperty("NotificationHandler",function(result){
 });
 
 /**
+ * -- Default Element Handler --
+ * This function handles the default implementation for elements not
+ * found or having rendering issues
+ *
+ * @param actionBtn object triggering action
+ */
+Service.AddProperty("DefaultElementHandler",function(actionBtn){
+    const elem = jQuery("<div></div>",{ class: "alert alert-danger"});
+    elem.append("<p>The panel you are trying to load experienced an error while rendering....</p>");
+    return elem;
+});
+
+/**
+ * -- Default Modal Handler --
+ * This function handles the default implementation of handling
+ * modal elements that are not formatted properly
+ *
+ * @param modal modal element as was retrieved
+ * @param actionBtn object triggering action
+ */
+Service.AddProperty("DefaultModalHandler",function(modal,actionBtn){
+    if (!modal.hasClass("modal")) {
+        const modalContent = modal.find(".modal");
+        if (modalContent.length === 1) {
+            return modalContent;
+        } else {
+            let act = modal.data(Service.SYSTEM_ACTION);
+            if (typeof act !== "string")
+                act = "";
+            const modalData = modal.html();
+            return jQuery(
+                `<div class="modal fade" role="dialog" data-action="${act}">
+                    <div class="modal-dialog">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <button type="button" class="close" data-dismiss="modal">&times;</button>
+                                <h4 class="modal-title"></h4>
+                            </div>
+                            <div class="modal-body">
+                                ${modalData}
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>`
+            );
+        }
+    }
+});
+
+/**
+ * -- Error Data Handler --
+ * This function handles default transformation of error
+ * data from server
+ *
+ * @param request object that represents data returned from server
+ */
+Service.AddProperty("ErrorDataHandler", function(request){
+    let data = {
+        Code: request.statusText,
+        Entity: "Application"
+    };
+    if(request.responseText.length > 0){
+        try{
+            data = JSON.parse(request.responseText);
+        }
+        catch(e){
+            data.Code = "An error occurred on the server";
+            data.Entity = "Application";
+        }
+    }
+    return data;
+});
+
+/**
  * -- Server Request --
  * This function handles ajax requests
  *
@@ -174,17 +251,20 @@ Service.AddProperty("ServerRequest",function(requirements){
         res.status = status;
         res.message = jqXHR.statusText;
         res.data = data;
-        res.request = jqXHR;
         res.actionBtn = requirements.actionBtn;
+
+
+        //determine default notification handling mechanism
+        res.notificationType = requirements.actionBtn.data(Service.SYSTEM_NOTIFICATION_ON_SUCCESS) || "toaster";
+
         //execute the success callback with results received.
         requirements.success(res);
 
+        //trigger notification event
         if(typeof requirements.actionBtn.data(Service.SYSTEM_NOTIFICATION) === "undefined" ||
             requirements.actionBtn.data(Service.SYSTEM_NOTIFICATION) === "true" ||
             requirements.actionBtn.data(Service.SYSTEM_NOTIFICATION) === "success"
-            ){
-            //trigger notification event
-            res.notificationType = requirements.actionBtn.data(Service.SYSTEM_NOTIFICATION_ON_SUCCESS) || "toaster";
+        ){
             Service.NotificationHandler(res);
         }
 
@@ -202,24 +282,23 @@ Service.AddProperty("ServerRequest",function(requirements){
         error       : function(request, status, error){
             //jQuery sometimes throws a parse error but the response is successful
             if(request.status === 200){
-                successFunction("","success",request);
+                successFunction({},"success",request);
                 return;
             }
             //enable disabled elements
            Service.LoadingStateOff(requirements.actionBtn);
             const res = {
-                request,
                 status,
                 message: error,
-                actionBtn: requirements.actionBtn
+                actionBtn: requirements.actionBtn,
+                notificationType: "alert"
             };
-            requirements.error(res);
-
-            let notificationType = "alert";
 
             //define and format data from server or use default
             //implementation
-            const data = Service.ErrorDataHandler(res,notificationType);
+            res.data = Service.ErrorDataHandler(request);
+            //execute error handler
+            requirements.error(res);
 
             //add status codes and how they should be treated here
             if(typeof requirements.actionBtn.data(Service.SYSTEM_NOTIFICATION) === "undefined" ||
@@ -227,17 +306,11 @@ Service.AddProperty("ServerRequest",function(requirements){
                 requirements.actionBtn.data(Service.SYSTEM_NOTIFICATION) === "error"){
                 //set custom notification type if present
                 if(typeof requirements.actionBtn.data(Service.SYSTEM_NOTIFICATION_ON_ERROR) !== "undefined"){
-                    notificationType = requirements.actionBtn.data(Service.SYSTEM_NOTIFICATION_ON_ERROR);
+                    res.notificationType = requirements.actionBtn.data(Service.SYSTEM_NOTIFICATION_ON_ERROR);
                 }
                 switch(res.request.status){
                     case 500: {
-                        Service.NotificationHandler({
-                            status: "error",
-                            message: res.message,
-                            data,
-                            actionBtn: requirements.actionBtn,
-                            notificationType
-                        });
+                        Service.NotificationHandler(res);
                         break;
                     }
                     case 401:{
@@ -249,23 +322,15 @@ Service.AddProperty("ServerRequest",function(requirements){
                         break;
                     }
                     case 404:{
-                        Service.NotificationHandler({
-                            status: "error",
-                            message: "Oops!",
-                            data,
-                            actionBtn: requirements.actionBtn,
-                            notificationType
-                        });
+                        res.status = "error";
+                        res.message = "Oops!";
+                        Service.NotificationHandler(res);
                         break;
                     }
                     default:{
-                        Service.NotificationHandler({
-                            status:"error",
-                            message: "Oops!",
-                            data,
-                            actionBtn: requirements.actionBtn,
-                            notificationType
-                        });
+                        res.status = "error";
+                        res.message = "Oops!";
+                        Service.NotificationHandler(res);
                     }
                 }
             }
@@ -717,22 +782,32 @@ Service.AddProperty("ImagePreview",function(input, target) {
  * @param target location where it should be placed
  */
 Service.AddProperty("LoadPanel",function(elem,actionBtn,target=null){
-    if(typeof elem !== "undefined" && typeof elem === "object"){
-        let action = elem.data(Service.SYSTEM_ACTION);
-        if(Service.Data.hasOwnProperty(action)) Service.Data[action](elem,actionBtn);
+    return new Promise((resolve,reject) => {
+        if(typeof elem !== "undefined" && typeof elem === "object"){
+            const tContainer = jQuery("<div></div>");
+            let action = elem.data(Service.SYSTEM_ACTION);
+            if(Service.Data.hasOwnProperty(action)) Service.Data[action](elem,actionBtn);
 
-        // we have to place panel on the DOM before we load it.....
-        // idk if its a javascript thing or jQuery thing
-        Service.ContainerPanel = jQuery("#container-panel");
-        Service.ContainerPanel.empty().append(elem);
-        let elem_id = (target === null) ? jQuery(`#${MainContainer}`) : jQuery(`#${target}`);
-        Service.LoadPanelTransition(elem_id,elem);
-        Service.ContainerPanel.empty();
-        Service.ContainerPanel = null;
-        Service.LoadedPanel = elem;
-        return true;
-    }
-    return false;
+            // we have to place panel on the DOM before we load it.....
+            // idk if its a javascript thing or jQuery thing
+            Service.ContainerPanel = jQuery(`#${TemplateContainer}`);
+
+            //if template container not found....just build one
+            if(Service.ContainerPanel.length <= 0){
+                jQuery("<body>").append(tContainer);
+                Service.ContainerPanel = tContainer;
+            }
+            Service.ContainerPanel.empty().append(elem);
+            let elem_id = (target === null) ? jQuery(`#${MainContainer}`) : jQuery(`#${target}`);
+            Service.LoadPanelTransition(elem_id,elem);
+            Service.ContainerPanel.empty();
+            Service.ContainerPanel = null;
+            Service.LoadedPanel = elem;
+            tContainer.empty().remove();
+            resolve();
+        }
+        reject();
+    });
 });
 
 /**
@@ -758,7 +833,7 @@ Service.AddProperty("SelectListBuilder",function(elem,list, actionBtn, emptyList
  *
  * @param name name of the element to retrieve
  */
-Service.AddProperty("FindElement",function(name){
+Service.AddProperty("FindElement",function(name,actionBtn=null){
     return new Promise((resolve) =>{
         let templateContent = jQuery('template').prop('content');
         templateContent = jQuery(templateContent);
@@ -780,8 +855,11 @@ Service.AddProperty("FindElement",function(name){
             //add system actions as data properties
             if(typeof action !== "undefined")element.data(Service.SYSTEM_ACTION,action);
             resolve(element);
+        }else{
+            const container = jQuery("<div></div>");
+            container.append(Service.DefaultElementHandler(actionBtn));
+            resolve(container);
         }
-        resolve(jQuery("<div></div>"));
     });
 });
 
@@ -889,22 +967,4 @@ Service.AddProperty("LoadPanelTransition",function(container,panel,actionBtn = n
     container.css("display","none");
     container.empty();
     container.html(panel).fadeIn("slow");
-});
-
-Service.AddProperty("ErrorDataHandler", function(result,notificationType){
-    let data = {
-        Code: result.request.statusText,
-        Entity: "Application",
-        notificationType: notificationType
-    };
-    if(result.request.responseText.length > 0){
-        try{
-            data = JSON.parse(result.request.responseText);
-        }
-        catch(e){
-            data.Code = "An error occurred on the server";
-            data.Entity = "Application";
-        }
-    }
-    return data;
 });
