@@ -308,7 +308,7 @@ Service.AddProperty("ServerRequest",function(requirements){
                 if(typeof requirements.actionBtn.data(Service.SYSTEM_NOTIFICATION_ON_ERROR) !== "undefined"){
                     res.notificationType = requirements.actionBtn.data(Service.SYSTEM_NOTIFICATION_ON_ERROR);
                 }
-                switch(res.request.status){
+                switch(request.status){
                     case 500: {
                         Service.NotificationHandler(res);
                         break;
@@ -829,9 +829,11 @@ Service.AddProperty("SelectListBuilder",function(elem,list, actionBtn, emptyList
 /**
  * -- Find Element --
  * this function retrieves templates from the
- * template tag and ensures they are recognized by the DOM
+ * template tag or from a server side call and
+ * ensures they are recognized by the DOM
  *
  * @param name name of the element to retrieve
+ * @param actionBtn object triggering action
  */
 Service.AddProperty("FindElement",function(name,actionBtn=null){
     return new Promise((resolve) =>{
@@ -861,6 +863,42 @@ Service.AddProperty("FindElement",function(name,actionBtn=null){
             resolve(container);
         }
     });
+});
+
+/**
+ * -- Find Local Element --
+ * this function retrieves templates from the
+ * template tag and ensures they are recognized by the DOM
+ *
+ * @param name name of the element to retrieve
+ * @param actionBtn object triggering action
+ */
+Service.AddProperty("FindLocalElement",function(name,actionBtn=null){
+    let templateContent = jQuery('template').prop('content');
+    templateContent = jQuery(templateContent);
+    //add hash tag if not present. element lookup is always by id
+    if(name.substring(0,1) !== "#") name = `#${name}`;
+    let item = templateContent.find(name);
+    if(item.length > 0){
+        /**
+         * todo cloning the first item in the list... need to ensure
+         * that highest order divs are selected
+         **/
+        let clone = jQuery(item[0]).clone();
+        const action = clone.data(Service.SYSTEM_ACTION);
+        let element = jQuery(clone.html());
+        //ensure we have one root element
+        if(element.length !== 1){
+            element = jQuery("<div></div>").append(clone.html())
+        }
+        //add system actions as data properties
+        if(typeof action !== "undefined")element.data(Service.SYSTEM_ACTION,action);
+        return element;
+    }else{
+        const container = jQuery("<div></div>");
+        container.append(Service.DefaultElementHandler(actionBtn));
+        return container;
+    }
 });
 
 /**
