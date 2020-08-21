@@ -28,8 +28,12 @@ Service.Bootstrap = function(){
         Service.ModelData.List['Gender'] = data;
         sessionStorage.setItem('GenderList',JSON.stringify(data));
     }
-    setTimeout(function(){
-        Controller.PanelSelect(document.getElementById(`${MainContainer}`));
+    setTimeout(async function(){
+        const link = jQuery("<a>");
+        link.attr("data-action","form");
+        link.attr("data-target","SmallTarget");
+        await Controller.PanelSelect(document.getElementById(`${MainContainer}`));
+        await Controller.PanelSelect(link[0]);
     },1000);
 };
 
