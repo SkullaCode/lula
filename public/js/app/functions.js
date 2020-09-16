@@ -67,19 +67,19 @@ Service.AddProperty("NotificationHandler",function(result){
     switch(result.notificationType){
         case "alert":{
             if(typeof Service.AlertNotification === "function"){
-                Service.AlertNotification(result);
+                Service.AlertNotification(result.notificationData);
             }
             else{
-                alert(result.message)
+                alert(result.notificationData.Message)
             }
             break;
         }
         case "toaster":{
             if(typeof Service.ToasterNotification === "function"){
-                Service.ToasterNotification(result);
+                Service.ToasterNotification(result.notificationData);
             }
             else{
-                alert(result.message);
+                alert(result.notificationData.Message);
             }
             break;
         }
@@ -89,18 +89,18 @@ Service.AddProperty("NotificationHandler",function(result){
         default:{
             if(result.status === "success"){
                 if(typeof Service.ToasterNotification === "function"){
-                    Service.ToasterNotification(result);
+                    Service.ToasterNotification(result.notificationData);
                 }
                 else{
-                    alert(result.message);
+                    alert(result.notificationData.Message);
                 }
             }
             else{
                 if(typeof Service.AlertNotification === "function"){
-                    Service.AlertNotification(result);
+                    Service.AlertNotification(result.notificationData);
                 }
                 else{
-                    alert(result.message)
+                    alert(result.notificationData.Message)
                 }
             }
         }
@@ -161,27 +161,22 @@ Service.AddProperty("DefaultModalHandler",function(modal,actionBtn){
 });
 
 /**
- * -- Error Data Handler --
- * This function handles default transformation of error
- * data from server
+ * -- Notification Data Handler --
+ * This function handles default transformation of
+ * data from the server to be used for notification
  *
  * @param request object that represents data returned from server
+ * @param actionBtn object that represents the current entity that triggered
+ * the action in progress
  */
-Service.AddProperty("ErrorDataHandler", function(request){
-    let data = {
-        Code: request.statusText,
+Service.AddProperty("NotificationDataHandler", function(request,actionBtn,status){
+     return {
+        Status: status,
+        Code: request.status,
+        Title: request.statusText,
+        Message: request.statusText,
         Entity: "Application"
     };
-    if(request.responseText.length > 0){
-        try{
-            data = JSON.parse(request.responseText);
-        }
-        catch(e){
-            data.Code = "An error occurred on the server";
-            data.Entity = "Application";
-        }
-    }
-    return data;
 });
 
 /**
@@ -248,14 +243,11 @@ Service.AddProperty("ServerRequest",function(requirements){
             return;
         }
         let res = {};
+        res.request = jqXHR;
         res.status = status;
         res.message = jqXHR.statusText;
         res.data = data;
         res.actionBtn = requirements.actionBtn;
-
-
-        //determine default notification handling mechanism
-        res.notificationType = requirements.actionBtn.data(Service.SYSTEM_NOTIFICATION_ON_SUCCESS) || "toaster";
 
         //execute the success callback with results received.
         requirements.success(res);
@@ -265,7 +257,10 @@ Service.AddProperty("ServerRequest",function(requirements){
             requirements.actionBtn.data(Service.SYSTEM_NOTIFICATION) === "true" ||
             requirements.actionBtn.data(Service.SYSTEM_NOTIFICATION) === "success"
         ){
-            Service.NotificationHandler(res);
+            //determine default notification handling mechanism
+            const notificationType = requirements.actionBtn.data(Service.SYSTEM_NOTIFICATION_ON_SUCCESS) || "toaster";
+            const notificationData = Service.NotificationDataHandler(jqXHR,requirements.actionBtn,"success");
+            Service.NotificationHandler({notificationType, notificationData});
         }
 
         let custom = requirements.actionBtn.data(Service.SYSTEM_COMPLETE);
@@ -288,15 +283,12 @@ Service.AddProperty("ServerRequest",function(requirements){
             //enable disabled elements
            Service.LoadingStateOff(requirements.actionBtn);
             const res = {
+                request,
                 status,
                 message: error,
-                actionBtn: requirements.actionBtn,
-                notificationType: "alert"
+                actionBtn: requirements.actionBtn
             };
 
-            //define and format data from server or use default
-            //implementation
-            res.data = Service.ErrorDataHandler(request);
             //execute error handler
             requirements.error(res);
 
@@ -304,13 +296,15 @@ Service.AddProperty("ServerRequest",function(requirements){
             if(typeof requirements.actionBtn.data(Service.SYSTEM_NOTIFICATION) === "undefined" ||
                 requirements.actionBtn.data(Service.SYSTEM_NOTIFICATION) === "true" ||
                 requirements.actionBtn.data(Service.SYSTEM_NOTIFICATION) === "error"){
+                let notificationType = "alert";
+                const notificationData = Service.NotificationDataHandler(request,requirements.actionBtn,"error");
                 //set custom notification type if present
                 if(typeof requirements.actionBtn.data(Service.SYSTEM_NOTIFICATION_ON_ERROR) !== "undefined"){
-                    res.notificationType = requirements.actionBtn.data(Service.SYSTEM_NOTIFICATION_ON_ERROR);
+                    notificationType = requirements.actionBtn.data(Service.SYSTEM_NOTIFICATION_ON_ERROR);
                 }
                 switch(request.status){
                     case 500: {
-                        Service.NotificationHandler(res);
+                        Service.NotificationHandler({notificationType, notificationData });
                         break;
                     }
                     case 401:{
@@ -322,15 +316,11 @@ Service.AddProperty("ServerRequest",function(requirements){
                         break;
                     }
                     case 404:{
-                        res.status = "error";
-                        res.message = "Oops!";
-                        Service.NotificationHandler(res);
+                        Service.NotificationHandler({notificationType, notificationData });
                         break;
                     }
                     default:{
-                        res.status = "error";
-                        res.message = "Oops!";
-                        Service.NotificationHandler(res);
+                        Service.NotificationHandler({notificationType, notificationData });
                     }
                 }
             }

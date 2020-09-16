@@ -11,8 +11,20 @@
 
 
 //defining a default alert notification handler
-Service.AlertNotification = function(result){
-    swal(result.message,"ALERT MESSAGE GOES HERE!",result.status);
+Service.AlertNotification = function(notification){
+    swal(notification.Title,notification.Message,notification.Status);
+};
+//defining a default toaster notification handler
+Service.ToasterNotification = function(notification){
+    const title = (notification.Status === "success")
+        ? "Success!" : "Error!";
+    VanillaToasts.create({
+        title: title,
+        text: notification.Message,
+        type: notification.Status,
+        timeout: 5000
+    });
+    jQuery("#vanillatoasts-container").css("z-index",2050);
 };
 Service.Bootstrap = function(){
     Service.ModelData.List = {};

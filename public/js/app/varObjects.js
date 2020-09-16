@@ -104,7 +104,7 @@ window.Service = function(){
         ErrorHandler                        : null,
         SuccessHandler                      : null,
         NotificationHandler                 : null,
-        ErrorDataHandler                    : null,
+        NotificationDataHandler             : null,
         DefaultModalHandler                 : null,
         DefaultElementHandler               : null,
         ServerRequest                       : null,
