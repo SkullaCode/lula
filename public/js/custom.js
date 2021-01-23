@@ -1,32 +1,25 @@
-/**
- * -- Custom --
- * Add methods that will be used by inline 'onclick' or 'onchange'
- * actions. If default implementations need to be overwritten, do that here
- * as well. A jQuery 'ready' function is defined where global bootstrapping
- * of the page can be placed.
- */
-
 //overriding the title for application
-//Service.Title = "Default Application";
+Service.Title = "Default Testing Application";
 
 
 //defining a default alert notification handler
 Service.AlertNotification = function(notification){
-    swal(notification.Title,notification.Message,notification.Status);
+    swal(notification.notificationType,notification.message,notification.status);
 };
 //defining a default toaster notification handler
 Service.ToasterNotification = function(notification){
-    const title = (notification.Status === "success")
+    const title = (notification.status === "success")
         ? "Success!" : "Error!";
     VanillaToasts.create({
         title: title,
-        text: notification.Message,
-        type: notification.Status,
+        text: notification.message,
+        type: notification.status,
         timeout: 5000
     });
     jQuery("#vanillatoasts-container").css("z-index",2050);
 };
-Service.Bootstrap = function(){
+//defining application start process
+Service.Bootstrap = function(link){
     Service.ModelData.List = {};
 
     if(sessionStorage.getItem('GenderList') !== null){
@@ -41,14 +34,15 @@ Service.Bootstrap = function(){
         sessionStorage.setItem('GenderList',JSON.stringify(data));
     }
     setTimeout(async function(){
-        const link = jQuery("<a>");
-        link.attr("data-action","form");
-        link.attr("data-target","SmallTarget");
         await Controller.PanelSelect(document.getElementById(`${MainContainer}`));
         await Controller.PanelSelect(link[0]);
     },1000);
 };
 
+//launch application when javascript and jQuery is finished loading
 jQuery(function(){
-    Service.Bootstrap();
+    const link = jQuery("<a>");
+    link.attr("data-action","form");
+    link.attr("data-target","SmallTarget");
+    Service.Bootstrap(link);
 });

@@ -67,8 +67,8 @@ window.Service = function(){
     let PanelLoading        = null;
     let ModalLoading        = null;
     let ActionLoading       = null;
-    let ModelData           = [];
-    let MetaData            = [];
+    let ModelData           = {};
+    let MetaData            = {};
     let ContainerPanel      = null;
     let APIUrl              = null;
     let LoadingComplete     = false;
@@ -104,7 +104,8 @@ window.Service = function(){
         ErrorHandler                        : null,
         SuccessHandler                      : null,
         NotificationHandler                 : null,
-        NotificationDataHandler             : null,
+        ErrorDataHandler                    : null,
+        SuccessMessageHandler               : null,
         DefaultModalHandler                 : null,
         DefaultElementHandler               : null,
         ServerRequest                       : null,
@@ -129,6 +130,7 @@ window.Service = function(){
         LoadingStateOn                      : null,
         LoadingStateOff                     : null,
         CanSubmitForm                       : null,
+        Bootstrap                           : null,
         AddProperty                         : addProperty,
         AddMethod                           : addMethod,
         SYSTEM_ID                           : "id",
@@ -149,6 +151,8 @@ window.Service = function(){
         SYSTEM_BIND                         : "bind",
         SYSTEM_BIND_VALUE                   : "bind-value",
         SYSTEM_BIND_META                    : "bind-meta",
+        SYSTEM_BIND_ELEM                    : "bind-element",  
+        SYSTEM_BIND_GLOBAL                  : "bind-global",
         SYSTEM_LOOP                         : "loop",
         SYSTEM_BIND_LOOP                    : "bind-loop",
         SYSTEM_SUCCESS_HANDLER              : "success-handler",
@@ -208,8 +212,13 @@ window.Service.AddProperty('SubmitTransformation',function(){
  * Add a method to the transformation executor if you want it to be called during data binding.
  * use the 'data-custom' attribute on the element that should be transformed to add the method(s)
  * that should be executed. if there needs to be more than one method called, use the pipe (|)
- * them. note that during binding only elements with the class 'bind' or 'bind-loop' will be considered
- */
+ * them. note that during binding only elements with the class 'bind' or 'bind-loop' will be considered.
+ * Also, TRANSFORMATION WORKS TWO WAYS!!..... if 'bind-global' or 'bind-element' is present the
+ * transformation will take place on the element and not the binding property. In other words, normal
+ * transformation mutates the data property to be bounded to the element; 'bind-global' transforms the
+ * element itself and provides the entire dataset; 'bind-element' transforms the element itself but
+ * only provides the binding data property.
+*/
 window.Service.AddProperty('Transformation',function(){
 
     let addMethod = function(name,f){

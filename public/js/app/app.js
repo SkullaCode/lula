@@ -46,13 +46,19 @@ Controller.AddProperty("FormSubmit",function(elem,e){
             if(typeof url !== "undefined") form.attr("action",url);
             if(typeof method !== "undefined") form.attr("method",method);
         } else {
+            const formContent = targetContainer.clone();
             form = jQuery("<form></form>",
                 {
                     action: url,
                     method: method
                 });
-            form.append(targetContainer.children());
-            targetContainer.empty().append(form);
+            form.append(formContent.children());
+            //jQuery does not clone selects.....say its to expensive
+            const selects = targetContainer.find("select");
+            jQuery(selects).each(function (i) {
+                form.find("select").eq(i).val(jQuery(this).val());
+            });
+            //targetContainer.empty().append(form);
             Service.LoadedForm = form;
         }
     }
@@ -218,18 +224,6 @@ Controller.AddProperty("ModalSelect",function(elem){
    if(Service.ModalLoading) return false;
     const ActionButton = jQuery(elem);
     Service.ModalLoading = true;
-
-    //if pre execution is defined modify action button
-    let pre = ActionButton.data(Service.SYSTEM_PRE_FORM_EXECUTION);
-    if(typeof pre !== "undefined"){
-        pre = pre.split("|");
-        pre.forEach(function(item){
-            if(Controller.hasOwnProperty(item)){
-                Controller[item](ActionButton);
-            }
-        });
-    }
-
     //make action button aware of loaded type
     ActionButton.data(Service.SYSTEM_LOAD_TYPE,"modal");
     //if a modal is already loaded do not execute
@@ -278,76 +272,58 @@ Controller.AddProperty("ModalSelect",function(elem){
  * the DOM, and execute custom modifications if specified
  */
 Controller.AddProperty("PanelSelect",function(elem){
-    return new Promise((resolve,reject) => {
-        //if there is a triggered action do not execute
-        if(Service.PanelLoading) reject(false);
-        //activate panel loading
-        Service.PanelLoading = true;
-
-        let ActionButton = jQuery(elem);
-
-        //if pre execution is defined modify action button
-        let pre = ActionButton.data(Service.SYSTEM_PRE_FORM_EXECUTION);
-        if(typeof pre !== "undefined"){
-            pre = pre.split("|");
-            pre.forEach(function(item){
-                if(Controller.hasOwnProperty(item)){
-                    Controller[item](ActionButton);
-                }
-            });
-        }
-
-        //make action button aware of loaded type
-        ActionButton.data(Service.SYSTEM_LOAD_TYPE,"panel");
-        //get history url if defined
-        const history = ActionButton.data(Service.SYSTEM_HISTORY);
-        //locate panel
-        Service.FindElement(ActionButton.data(Service.SYSTEM_ACTION)).then((panel) =>{
-            //update modal attributes
-            const filterList = [Service.SYSTEM_ACTION,Service.SYSTEM_COMPLETE,Service.SYSTEM_TARGET];
-            jQuery.each(ActionButton.data(),function(key,value){
-                //filter out action and custom attribute
-                // these are defined on the panel
-                if(jQuery.inArray(key,filterList) === -1){
-                    panel.data(key,value);
-                }
-            });
-            //adding panel change to browser history
-            //ignore if history data attribute is defined
-            if(typeof history === "undefined"){
-                window.history.pushState({
-                    data: ActionButton.data(),
-                    panelSelect: true
-                },"");
-            }
-
-            //determine and set page title
-            const title = (typeof ActionButton.data(Service.SYSTEM_TITLE) !== "undefined")
-                ? ActionButton.data(Service.SYSTEM_TITLE)
-                : ActionButton.data(Service.SYSTEM_ACTION);
-            window.document.title = `${Service.Title} - ${title}`;
-            //load panel unto the DOM
-            if(typeof  ActionButton.data(Service.SYSTEM_TARGET) !== "undefined"){
-                Service.LoadPanel(panel,ActionButton,ActionButton.data(Service.SYSTEM_TARGET)).then(() =>{
-                    let custom = ActionButton.data(Service.SYSTEM_COMPLETE);
-                    if(typeof custom !== "undefined"){
-                        Service.ExecuteCustom(custom,Service.LoadedPanel,ActionButton);
-                    }
-                    Service.PanelLoading = false;
-                    resolve(true);
-                });
-            }
-            else{
-                Service.LoadPanel(panel,ActionButton).then(() =>{
-                    let custom = ActionButton.data(Service.SYSTEM_COMPLETE);
-                    if(typeof custom !== "undefined"){
-                        Service.ExecuteCustom(custom,Service.LoadedPanel,ActionButton);
-                    }
-                    Service.PanelLoading = false;
-                    resolve(true);
-                });
+    //if there is a triggered action do not execute
+    if(Service.PanelLoading) return false;
+    const ActionButton = jQuery(elem);
+    Service.PanelLoading = true;
+    //make action button aware of loaded type
+    ActionButton.data(Service.SYSTEM_LOAD_TYPE,"panel");
+    //get history url if defined
+    const history = ActionButton.data(Service.SYSTEM_HISTORY);
+    //locate panel
+    Service.FindElement(ActionButton.data(Service.SYSTEM_ACTION)).then((panel) =>{
+        //update modal attributes
+        const filterList = [Service.SYSTEM_ACTION,Service.SYSTEM_COMPLETE,Service.SYSTEM_TARGET];
+        jQuery.each(ActionButton.data(),function(key,value){
+            //filter out action and custom attribute
+            // these are defined on the panel
+            if(jQuery.inArray(key,filterList) === -1){
+                panel.data(key,value);
             }
         });
+        //adding panel change to browser history
+        //ignore if history data attribute is defined
+        if(typeof history === "undefined"){
+            window.history.pushState({
+                data: ActionButton.data(),
+                panelSelect: true
+            },"");
+        }
+
+        //determine and set page title
+        const title = (typeof ActionButton.data(Service.SYSTEM_TITLE) !== "undefined")
+            ? ActionButton.data(Service.SYSTEM_TITLE)
+            : ActionButton.data(Service.SYSTEM_ACTION);
+        window.document.title = `${Service.Title} - ${title}`;
+        //load panel unto the DOM
+        if(typeof  ActionButton.data(Service.SYSTEM_TARGET) !== "undefined"){
+            Service.LoadPanel(panel,ActionButton,ActionButton.data(Service.SYSTEM_TARGET)).then(() =>{
+                let custom = ActionButton.data(Service.SYSTEM_COMPLETE);
+                if(typeof custom !== "undefined"){
+                    Service.ExecuteCustom(custom,Service.LoadedPanel,ActionButton);
+                }
+                Service.PanelLoading = false;
+            });
+        }
+        else{
+            Service.LoadPanel(panel,ActionButton).then(() =>{
+                let custom = ActionButton.data(Service.SYSTEM_COMPLETE);
+                if(typeof custom !== "undefined"){
+                    Service.ExecuteCustom(custom,Service.LoadedPanel,ActionButton);
+                }
+                Service.PanelLoading = false;
+            });
+        }
     });
 });
 
