@@ -874,13 +874,17 @@ Service.AddProperty("LoadPanel", function (elem, actionBtn, target = null) {
                 Service.ContainerPanel = tContainer;
             }
             Service.ContainerPanel.empty().append(elem);
+            //elem_id is the DOM container that will hold the panel
+            //if for some reason it does not exist the panel will not display
             let elem_id = (target === null) ? jQuery(`#${MainContainer}`) : jQuery(`#${target}`);
             Service.LoadPanelTransition(elem_id, elem);
+            //empty and remove temp container
             Service.ContainerPanel.empty();
             Service.ContainerPanel = null;
+            //add elem as LoadedPanel for further reference
             Service.LoadedPanel = elem;
             tContainer.empty().remove();
-            resolve();
+            return resolve();
         }
         reject();
     });
@@ -915,9 +919,12 @@ Service.AddProperty("FindElement", function (name, actionBtn = null) {
     return new Promise((resolve) => {
         let templateContent = jQuery('template').prop('content');
         templateContent = jQuery(templateContent);
-        //add hash tag if not present. element lookup is always by id
-        if (name.substring(0, 1) !== "#") name = `#${name}`;
-        let item = templateContent.find(name);
+        let item = "";
+        if(typeof name !== "undefined" && name.length > 0){
+            //add hash tag if not present. element lookup is always by id
+            if (name.substring(0, 1) !== "#") name = `#${name}`;
+             item = templateContent.find(name);
+        }
         if (item.length > 0) {
             /**
              * todo cloning the first item in the list... need to ensure
