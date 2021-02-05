@@ -263,7 +263,7 @@ Service.AddProperty("ServerRequest", function (requirements) {
         let res = {};
         res.status = status;
         res.message = Service.SuccessMessageHandler(jqXHR);
-        res.data = data;
+        res.data = (!jQuery.isEmptyObject(data)) ? data : jqXHR.responseText;
         res.actionBtn = requirements.actionBtn;
 
 

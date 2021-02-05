@@ -32,7 +32,7 @@ Controller.AddProperty("FormSubmit",function(elem,e){
     //load the form from target specified. if not
     //load the parent form element
     if(typeof target === "undefined"){
-       target = "";
+        target = "";
         Service.LoadedForm = jQuery(ActionButton.parents('form'));
     }
     else{
@@ -221,7 +221,7 @@ Controller.AddProperty("FileSelect",function(elem){
  */
 Controller.AddProperty("ModalSelect",function(elem){
     //if there is a triggered action do not execute
-   if(Service.ModalLoading) return false;
+    if(Service.ModalLoading) return false;
     const ActionButton = jQuery(elem);
     Service.ModalLoading = true;
     //make action button aware of loaded type
@@ -229,7 +229,7 @@ Controller.AddProperty("ModalSelect",function(elem){
     //if a modal is already loaded do not execute
     if(Service.LoadedModal === null){
         let action = ActionButton.data(Service.SYSTEM_ACTION);
-        Service.FindElement(action).then((elem) =>{
+        Service.FindElement(action, ActionButton).then((elem) =>{
             Service.LoadedModal = elem;
 
             //format modal... has to be structured a specific way
@@ -281,21 +281,44 @@ Controller.AddProperty("PanelSelect",function(elem){
     //get history url if defined
     const history = ActionButton.data(Service.SYSTEM_HISTORY);
     //locate panel
-    Service.FindElement(ActionButton.data(Service.SYSTEM_ACTION)).then((panel) =>{
+    Service.FindElement(ActionButton.data(Service.SYSTEM_ACTION), ActionButton).then((panel) =>{
         //update modal attributes
-        const filterList = [Service.SYSTEM_ACTION,Service.SYSTEM_COMPLETE,Service.SYSTEM_TARGET];
-        jQuery.each(ActionButton.data(),function(key,value){
-            //filter out action and custom attribute
-            // these are defined on the panel
-            if(jQuery.inArray(key,filterList) === -1){
-                panel.data(key,value);
-            }
-        });
+        //const filterList = [Service.SYSTEM_ACTION,Service.SYSTEM_COMPLETE,Service.SYSTEM_TARGET];
+        //jQuery.each(ActionButton.data(),function(key,value){
+        //filter out action and custom attribute
+        // these are defined on the panel
+        //if(jQuery.inArray(key,filterList) === -1){
+        //panel.data(key,value);
+        //}
+        //});
         //adding panel change to browser history
         //ignore if history data attribute is defined
+
+        //store only defined system data attributes
+        const historyData = {};
+        //attributes that should be persisted if present on the action button
+        const filterList = [
+            Service.SYSTEM_ACTION,
+            Service.SYSTEM_COMPLETE,
+            Service.SYSTEM_TARGET,
+            Service.SYSTEM_CUSTOM,
+            Service.SYSTEM_HISTORY,
+            Service.SYSTEM_NOTIFICATION_ON_SUCCESS,
+            Service.SYSTEM_NOTIFICATION_ON_ERROR,
+            Service.SYSTEM_NOTIFICATION,
+            Service.SYSTEM_TITLE
+        ];
+        //add them to history data if present
+        jQuery.each(ActionButton.data(),function(key,value){
+            if(jQuery.inArray(key,filterList) !== -1) {
+                historyData[key] = value;
+            }
+        });
+
+        //add history record
         if(typeof history === "undefined"){
             window.history.pushState({
-                data: ActionButton.data(),
+                data: historyData,
                 panelSelect: true
             },"");
         }
