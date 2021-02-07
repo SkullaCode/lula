@@ -21,7 +21,7 @@ Controller.AddProperty("FormSubmit",function(elem,e){
     Service.CanSubmitForm = true;
     let target = ActionButton.data(Service.SYSTEM_ACTION);
     let custom = ActionButton.data(Service.SYSTEM_CUSTOM);
-    let pre = ActionButton.data(Service.SYSTEM_PRE_FORM_EXECUTION);
+    let complete = ActionButton.data(Service.SYSTEM_COMPLETE);
     let requestHeaders = ActionButton.data(Service.SYSTEM_HEADERS);
     let site_url = "";
     let method = "";
@@ -114,19 +114,15 @@ Controller.AddProperty("FormSubmit",function(elem,e){
         });
     }
 
-    //determine if there are pre execution events
-    if(typeof pre !== "undefined"){
-        pre = pre.split("|");
-        pre.forEach(function(item){
-            if(Controller.hasOwnProperty(item)){
-                Controller[item](params);
-            }
-        });
-    }
-
     //determine if there are submit transformations and execute them
     if(typeof custom !== "undefined")
         params = Service.ExecuteSubmitTransformation(custom,Service.LoadedForm,params);
+
+    //determine if we should send form to server for processing or not
+    if(Service.CanSubmitForm === false){
+        Service.ActionLoading = false;
+        return false;
+    }
 
     //determine the response handlers to use for success and error
     //defaults are chosen by default obviously
@@ -141,11 +137,6 @@ Controller.AddProperty("FormSubmit",function(elem,e){
         error = Controller[errorHandler];
     }
 
-    if(Service.CanSubmitForm === false){
-        Service.ActionLoading = false;
-        return false;
-    }
-
     //determine how the form submission should be processed
     //if a specific action was specified we use that
     //otherwise we use the default server request
@@ -155,6 +146,7 @@ Controller.AddProperty("FormSubmit",function(elem,e){
         success,
         error,
         headers,
+        complete,
         site: site_url,
         request: method,
         actionBtn: ActionButton,
@@ -165,6 +157,7 @@ Controller.AddProperty("FormSubmit",function(elem,e){
         success,
         error,
         headers,
+        complete,
         site: site_url,
         request: method,
         actionBtn: ActionButton,
@@ -250,16 +243,21 @@ Controller.AddProperty("ModalSelect",function(elem){
                     Service.LoadedModal.data(key,value);
                 }
             });
-            let custom = ActionButton.data(Service.SYSTEM_COMPLETE);
-            //execute custom changes
-            if(typeof custom !== "undefined"){
-                Service.ExecuteCustom(custom,Service.LoadedModal,ActionButton);
-            }
-            // launch modal
-            Service.LaunchModal(Service.LoadedModal,ActionButton);
+            //execute custom modifications
+            Service.ExecuteCustom(ActionButton.data(Service.SYSTEM_CUSTOM),Service.LoadedModal,ActionButton).then(() => {
+                // launch modal
+                Service.LaunchModal(Service.LoadedModal,ActionButton).then(() => {
+                    //execute complete modifications
+                    Service.ExecuteCustom(ActionButton.data(Service.SYSTEM_COMPLETE),Service.LoadedModal,ActionButton).then(() => {
+                        Service.ModalLoading = false;
+                    });
+                });
+            });
         });
     }
-    Service.ModalLoading = false;
+    else{
+        Service.ModalLoading = false;
+    }
 });
 
 /**
@@ -313,6 +311,10 @@ Controller.AddProperty("PanelSelect",function(elem){
             if(jQuery.inArray(key,filterList) !== -1) {
                 historyData[key] = value;
             }
+            //add values that are strings....other types will cause errors
+            else if(typeof value === "string"){
+                historyData[key] = value;
+            }
         });
 
         //add history record
@@ -328,25 +330,16 @@ Controller.AddProperty("PanelSelect",function(elem){
             ? ActionButton.data(Service.SYSTEM_TITLE)
             : ActionButton.data(Service.SYSTEM_ACTION);
         window.document.title = `${Service.Title} - ${title}`;
-        //load panel unto the DOM
-        if(typeof  ActionButton.data(Service.SYSTEM_TARGET) !== "undefined"){
+        //execute custom modifications
+        Service.ExecuteCustom(ActionButton.data(Service.SYSTEM_CUSTOM),Service.LoadedPanel,ActionButton).then(() => {
+            //load panel unto the DOM
             Service.LoadPanel(panel,ActionButton,ActionButton.data(Service.SYSTEM_TARGET)).then(() =>{
-                let custom = ActionButton.data(Service.SYSTEM_COMPLETE);
-                if(typeof custom !== "undefined"){
-                    Service.ExecuteCustom(custom,Service.LoadedPanel,ActionButton);
-                }
-                Service.PanelLoading = false;
+                //execute complete modifications
+                Service.ExecuteCustom(ActionButton.data(Service.SYSTEM_COMPLETE),Service.LoadedPanel,ActionButton).then(() => {
+                    Service.PanelLoading = false;
+                });
             });
-        }
-        else{
-            Service.LoadPanel(panel,ActionButton).then(() =>{
-                let custom = ActionButton.data(Service.SYSTEM_COMPLETE);
-                if(typeof custom !== "undefined"){
-                    Service.ExecuteCustom(custom,Service.LoadedPanel,ActionButton);
-                }
-                Service.PanelLoading = false;
-            });
-        }
+        });
     });
 });
 

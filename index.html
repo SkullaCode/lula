@@ -20,11 +20,6 @@
     <script src="public/js/plugins/sweetalert.min.js"></script>
     <script src="public/js/app/varObjects.js"></script>
     <script src="public/js/app/functions.js"></script>
-    <script src="public/js/app/services/action.js"></script>
-    <script src="public/js/app/services/data.js"></script>
-    <script src="public/js/app/services/modification.js"></script>
-    <script src="public/js/app/services/submitTransformation.js"></script>
-    <script src="public/js/app/services/transformation.js"></script>
     <script src="public/js/app/app.js"></script>
     <script src="public/js/custom.js"></script>
     <script src="public/js/controllers/ItemController.js"></script>
@@ -199,6 +194,7 @@
                                 data-action="#formSubmit"
                                 data-method="post"
                                 data-href="/form_submit.php?result=random"
+                                data-complete="CustomCompleteHandler"
                                 onclick="Controller.FormSubmit(this)"
                         >Submit</button>
                         <button
@@ -209,7 +205,6 @@
                                 data-href="/form_submit.php?result=success"
                                 data-success-handler="CustomSuccessHandler"
                                 data-error-handler="CustomErrorHandler"
-                                data-complete="CustomCompleteHandler"
                                 data-custom="TransformFormStage1|transform-form-stage-2"
                                 data-pre="PreFormSubmitEvent"
                                 onclick="Controller.FormSubmit(this)"
@@ -224,6 +219,17 @@
                                 data-error-handler="CustomErrorHandler"
                                 onclick="Controller.FormSubmit(this)"
                         >Submit Fail</button>
+                        <button
+                                type="button"
+                                class="btn btn-danger"
+                                data-action="#formSubmit"
+                                data-method="post"
+                                data-href="/form_submit.php?result=fail"
+                                data-success-handler="CustomSuccessHandler"
+                                data-error-handler="CustomErrorHandler"
+                                data-custom="transformation-no-submit"
+                                onclick="Controller.FormSubmit(this)"
+                        >Submit Fail Pre</button>
                         <button
                                 type="button"
                                 class="btn btn-default"

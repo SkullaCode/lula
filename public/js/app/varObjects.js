@@ -169,10 +169,13 @@ window.Service = function(){
 
 /**
  * -- Modification --
- * Add a method to the modification executor if you want it to be called after a panel or modal has
- * been loaded or form submitted. use the 'data-complete' attribute on the element triggering the 
- * action to add the method(s) that should be executed after loading is complete. if there needs 
- * to be more than one method called, use the pipe (|) character to separate them.
+ * Add a method to the modification executor if you want it to be called before or after a panel
+ * or modal has been loaded. use the 'data-complete' attribute on the element triggering the action
+ * to add the method(s) that should be executed after loading is complete. use the 'data-custom'
+ * attribute on the element triggering the action to add the method(s) that should be executed before
+ * loading is complete. if there needs to be more than one method called, use the pipe (|) character
+ * to separate them. 'data-complete' can also be used to indicate method(s) that should be executed
+ * after a form has been successfully submitted.
  */
 window.Service.AddProperty('Modification',function(){
 
@@ -192,7 +195,8 @@ window.Service.AddProperty('Modification',function(){
  * Add a method to the submit transformation executor if you want to transform the value of a form
  * element before it is submitted to the server for processing. use the 'data-custom' attribute on
  * the element triggering the submission to add the method(s) that should be executed. if there needs
- * to be more than one method called, use the pipe (|) character to separate them.
+ * to be more than one method called, use the pipe (|) character to separate them. If for some reason
+ * the form should not be submitted set the globally available Service.CanSubmitForm to false.
  */
 window.Service.AddProperty('SubmitTransformation',function(){
 
@@ -218,7 +222,7 @@ window.Service.AddProperty('SubmitTransformation',function(){
  * transformation mutates the data property to be bounded to the element; 'bind-global' transforms the
  * element itself and provides the entire dataset; 'bind-element' transforms the element itself but
  * only provides the binding data property.
-*/
+ */
 window.Service.AddProperty('Transformation',function(){
 
     let addMethod = function(name,f){

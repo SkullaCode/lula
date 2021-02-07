@@ -1,9 +1,199 @@
+let MainContainer         = "MainContainer";
+let ModalContainer        = "modal-container";
+let TemplateContainer     = "container-panel";
+window.Controller = function(){
+    let AddProperty = function(name,f){
+        Response[name] = f;
+    };
 
-/**
- * -- Error Handler --
- * This function is responsible for handling all requests
- * which return 400 or 500 level status codes
- */
+    let AddMethod = function(name,f){
+        AddProperty(name,f);
+    };
+
+    let Response = {
+        AddProperty,
+        AddMethod,
+        FormSubmit: null,
+        FileSelect: null,
+        ModalSelect: null,
+        PanelSelect: null
+    };
+
+    return Response;
+}();
+window.Service = function(){
+    let LoadedModal         = null;
+    let LoadedPanel         = null;
+    let LoadedForm          = null;
+    let PanelLoading        = null;
+    let ModalLoading        = null;
+    let ActionLoading       = null;
+    let ModelData           = {};
+    let MetaData            = {};
+    let ContainerPanel      = null;
+    let APIUrl              = null;
+    let LoadingComplete     = false;
+    let Title               = "Javascript UI";
+
+    let addProperty = function(name,f){
+        Response[name] = f;
+    };
+
+    let addMethod = function(name,f){
+        addProperty(name,f);
+    };
+
+    let Response = {
+        LoadedModal,
+        LoadedPanel,
+        LoadedForm,
+        PanelLoading,
+        ModalLoading,
+        ActionLoading,
+        ModelData,
+        MetaData,
+        ContainerPanel,
+        APIUrl,
+        LoadingComplete,
+        Title,
+        Modification                        : null,
+        SubmitTransformation                : null,
+        Transformation                      : null,
+        DomEvents                           : null,
+        Data                                : null,
+        Action                              : null,
+        ErrorHandler                        : null,
+        SuccessHandler                      : null,
+        NotificationHandler                 : null,
+        ErrorDataHandler                    : null,
+        SuccessMessageHandler               : null,
+        DefaultModalHandler                 : null,
+        DefaultElementHandler               : null,
+        ServerRequest                       : null,
+        LaunchModal                         : null,
+        Bind                                : null,
+        BindForm                            : null,
+        GetProperty                         : null,
+        ListUpdate                          : null,
+        TriggerEvents                       : null,
+        ImagePreview                        : null,
+        LoadPanel                           : null,
+        LoadLayout                          : null,
+        LoadPanelTransition                 : null,
+        SelectListBuilder                   : null,
+        FindElement                         : null,
+        Transform                           : null,
+        ExecuteCustom                       : null,
+        ExecuteSubmitTransformation         : null,
+        ReloadPanel                         : null,
+        ToasterNotification                 : null,
+        AlertNotification                   : null,
+        LoadingStateOn                      : null,
+        LoadingStateOff                     : null,
+        CanSubmitForm                       : null,
+        Bootstrap                           : null,
+        AddProperty                         : addProperty,
+        AddMethod                           : addMethod,
+        SYSTEM_ID                           : "id",
+        SYSTEM_PROPERTY                     : "property",
+        SYSTEM_TARGET                       : "target",
+        SYSTEM_COMPLETE                     : "complete",
+        SYSTEM_HEADERS                      : "headers",
+        SYSTEM_ACTION                       : "action",
+        SYSTEM_CUSTOM                       : "custom",
+        SYSTEM_URL                          : "href",
+        SYSTEM_METHOD                       : "method",
+        SYSTEM_PRE_FORM_EXECUTION           : "pre",
+        SYSTEM_HISTORY                      : "history",
+        SYSTEM_FILE_UPLOAD_CONTAINER        : ".file-upload",
+        SYSTEM_CLEAR_ERROR                  : "clear-error",
+        SYSTEM_CLEAR_SUCCESS                : "clear-success",
+        SYSTEM_LIST                         : "list",
+        SYSTEM_BIND                         : "bind",
+        SYSTEM_BIND_VALUE                   : "bind-value",
+        SYSTEM_BIND_META                    : "bind-meta",
+        SYSTEM_BIND_ELEM                    : "bind-element",
+        SYSTEM_BIND_GLOBAL                  : "bind-global",
+        SYSTEM_LOOP                         : "loop",
+        SYSTEM_BIND_LOOP                    : "bind-loop",
+        SYSTEM_SUCCESS_HANDLER              : "success-handler",
+        SYSTEM_ERROR_HANDLER                : "error-handler",
+        SYSTEM_LOAD_TYPE                    : "load-type",
+        SYSTEM_NOTIFICATION_ON_SUCCESS      : "notification-success",
+        SYSTEM_NOTIFICATION_ON_ERROR        : "notification-error",
+        SYSTEM_NOTIFICATION                 : "notification",
+        SYSTEM_TITLE                        : "title"
+    };
+
+    return Response;
+}();
+window.Service.AddProperty('Modification',function(){
+
+    let addMethod = function(name,f){
+        Response[name] = f;
+    };
+
+    let Response = {
+        AddMethod: addMethod
+    };
+
+    return Response;
+}());
+window.Service.AddProperty('SubmitTransformation',function(){
+
+    let addMethod = function(name,f){
+        Response[name] = f;
+    };
+
+    let Response = {
+        AddMethod: addMethod
+    };
+
+    return Response;
+}());
+window.Service.AddProperty('Transformation',function(){
+
+    let addMethod = function(name,f){
+        Response[name] = f;
+    };
+
+    let Response = {
+        AddMethod: addMethod
+    };
+
+    return Response;
+}());
+window.Service.AddProperty('Data',function(){
+
+    let store = {};
+
+    let addMethod = function(name,f){
+        Response[name] = f;
+    };
+
+    let Response = {
+        AddMethod: addMethod,
+        Store: store
+    };
+
+    return Response;
+}());
+window.Service.AddProperty('Action',function(){
+
+    let store = {};
+
+    let addMethod = function(name,f){
+        Response[name] = f;
+    };
+
+    let Response = {
+        AddMethod: addMethod,
+        Store: store
+    };
+
+    return Response;
+}());
+
 Service.AddProperty("ErrorHandler", function (result) {
     //manipulate form if present
     if (Service.LoadedForm !== null) {
@@ -26,14 +216,6 @@ Service.AddProperty("ErrorHandler", function (result) {
             });
     }
 });
-
-/**
- * -- Success Handler --
- * This function handles successful responses
- * from calls to the server by default.
- *
- * @param result object containing success handler parameters
- */
 Service.AddProperty("SuccessHandler", function (result) {
     //manipulate form if present
     if (Service.LoadedForm !== null) {
@@ -56,13 +238,6 @@ Service.AddProperty("SuccessHandler", function (result) {
             });
     }
 });
-
-/**
- * -- Notification Handler --
- * This function handles the default implementation for notifications
- *
- * @param result object containing notification parameters
- */
 Service.AddProperty("NotificationHandler", function (result) {
     switch (result.notificationType) {
         case "alert": {
@@ -106,28 +281,11 @@ Service.AddProperty("NotificationHandler", function (result) {
         }
     }
 });
-
-/**
- * -- Default Element Handler --
- * This function handles the default implementation for elements not
- * found or having rendering issues
- *
- * @param actionBtn object triggering action
- */
 Service.AddProperty("DefaultElementHandler", function (actionBtn) {
     const elem = jQuery("<div></div>", { class: "alert alert-danger" });
     elem.append("<p>The panel you are trying to load experienced an error while rendering....</p>");
     return elem;
 });
-
-/**
- * -- Default Modal Handler --
- * This function handles the default implementation of handling
- * modal elements that are not formatted properly
- *
- * @param modal modal element as was retrieved
- * @param actionBtn object triggering action
- */
 Service.AddProperty("DefaultModalHandler", function (modal, actionBtn) {
     if (!modal.hasClass("modal")) {
         const modalContent = modal.find(".modal");
@@ -159,14 +317,6 @@ Service.AddProperty("DefaultModalHandler", function (modal, actionBtn) {
         }
     }
 });
-
-/**
- * -- Error Data Handler --
- * This function handles default transformation of error
- * data from server
- *
- * @param request object that represents data returned from server
- */
 Service.AddProperty("ErrorDataHandler", function (request) {
     let data = {
         Code: request.statusText,
@@ -183,24 +333,9 @@ Service.AddProperty("ErrorDataHandler", function (request) {
     }
     return data;
 });
-
-/**
- * -- Success Message Handler --
- * This function handles default transformation of success
- * data from server into a success message
- *
- * @param request object that represents data returned from server
- */
 Service.AddProperty("SuccessMessageHandler", function (request) {
     return request.statusText;
 });
-
-/**
- * -- Server Request --
- * This function handles ajax requests
- *
- * @param requirements object containing request parameters
- */
 Service.AddProperty("ServerRequest", function (requirements) {
     //backwards compatibility, method and request is the same thing
     if (typeof requirements.method !== "undefined") requirements.request = requirements.method;
@@ -368,49 +503,30 @@ Service.AddProperty("ServerRequest", function (requirements) {
     ajax_params.global = false;
     jQuery.ajax(ajax_params);
 });
-
-/**
- * -- LaunchModal --
- * This function handles default implementation for
- * launching a modal
- *
- */
 Service.AddProperty("LaunchModal", function (modal, actionBtn) {
-   return new Promise(function(resolve){
-       modal.on('hide.bs.modal', function (e) {
+    return new Promise(function(resolve){
+        modal.on('hide.bs.modal', function (e) {
 
-       });
-       modal.on('hidden.bs.modal', function () {
-           Service.LoadedModal.remove();
-           Service.LoadedModal = null;
-           jQuery(`.${ModalContainer}`).empty();
-       });
-       const action = modal.data(Service.SYSTEM_ACTION);
-       if (typeof action === "string") {
-           let func = Service.Data[action];
-           if (typeof func !== "undefined") func(modal, actionBtn).then(() => {
-               modal.modal();
-               resolve(true);
-           });
-       }
-       else{
-           modal.modal();
-           resolve(true);
-       }
-   });
+        });
+        modal.on('hidden.bs.modal', function () {
+            Service.LoadedModal.remove();
+            Service.LoadedModal = null;
+            jQuery(`.${ModalContainer}`).empty();
+        });
+        const action = modal.data(Service.SYSTEM_ACTION);
+        if (typeof action === "string") {
+            let func = Service.Data[action];
+            if (typeof func !== "undefined") func(modal, actionBtn).then(() => {
+                modal.modal();
+                resolve(true);
+            });
+        }
+        else{
+            modal.modal();
+            resolve(true);
+        }
+    });
 });
-
-/**
- * -- Bind --
- * this function is responsible for binding the data
- * provided to the elements of the desired
- * component. only components with the class 'bind'
- * or 'bind-loop' are handled by this function. Binding
- * is done using the id property.
- *
- * @param component element that will have its elements bound
- * @param data data set from which values will be used in binding
- */
 Service.AddProperty("Bind", function (component, data, actionBtn = null) {
     let elems = component.find(`.${Service.SYSTEM_BIND}`);
     jQuery.each(elems, function () {
@@ -635,16 +751,6 @@ Service.AddProperty("Bind", function (component, data, actionBtn = null) {
         }
     });
 });
-
-/**
- * -- Bind Form --
- * this function binds data to the supplied form.
- * data is bound to input,select, and textarea
- * elements.
- *
- * @param form the form element
- * @param ds data set from which values will be used in binding
- */
 Service.AddProperty("BindForm", function (form, ds) {
     if (ds === null) return;
     if (typeof form === "undefined") return;
@@ -699,27 +805,27 @@ Service.AddProperty("BindForm", function (form, ds) {
                 elem.val(el);
                 break;
             case 'date':
-                {
-                    if (!el) {
-                        elem.val("");
-                    } else {
-                        let dob = new Date(el);
-                        let day = ("0" + dob.getDate()).slice(-2);
-                        let month = ("0" + (dob.getMonth() + 1)).slice(-2);
-                        dob = dob.getFullYear() + "-" + (month) + "-" + (day);
-                        elem.data("value", dob);
-                        elem.val(dob);
-                    }
-                    break;
+            {
+                if (!el) {
+                    elem.val("");
+                } else {
+                    let dob = new Date(el);
+                    let day = ("0" + dob.getDate()).slice(-2);
+                    let month = ("0" + (dob.getMonth() + 1)).slice(-2);
+                    dob = dob.getFullYear() + "-" + (month) + "-" + (day);
+                    elem.data("value", dob);
+                    elem.val(dob);
                 }
+                break;
+            }
             case 'datetime':
             case 'datetime-local':
             case 'email':
-                {
-                    elem.data("value", el);
-                    elem.val(el);
-                    break;
-                }
+            {
+                elem.data("value", el);
+                elem.val(el);
+                break;
+            }
             case 'number':
                 elem.data("value", el);
                 elem.val(el);
@@ -744,17 +850,17 @@ Service.AddProperty("BindForm", function (form, ds) {
                 elem.val(el);
                 break;
             case 'select-one':
-                {
-                    elem.data("value", el);
-                    let options = elem.find("option");
-                    elem.prop("selectedIndex", 0);
-                    options.each(function (i) {
-                        if (this.value == el) {
-                            elem.prop("selectedIndex", i);
-                        }
-                    });
-                    break;
-                }
+            {
+                elem.data("value", el);
+                let options = elem.find("option");
+                elem.prop("selectedIndex", 0);
+                options.each(function (i) {
+                    if (this.value == el) {
+                        elem.prop("selectedIndex", i);
+                    }
+                });
+                break;
+            }
             case 'select-multiple':
                 break;
         }
@@ -763,15 +869,6 @@ Service.AddProperty("BindForm", function (form, ds) {
         Service.TriggerEvents(jQuery(els[x]));
     }
 });
-
-/**
- * -- Get Property --
- * this function is used to get a specific data property
- * form the data provided.
- *
- * @param id name of the property to retrieve
- * @param data data set from which the property will be retrieved
- */
 Service.AddProperty("GetProperty", function (id, data) {
     if (id === null) return data;
     if (typeof id === 'undefined') return data;
@@ -793,16 +890,6 @@ Service.AddProperty("GetProperty", function (id, data) {
     }
     return property;
 });
-
-/**
- * -- List Update --
- * this function is used for creating a secondary dropdown
- * list from a primary one (eg. Selecting a country and
- * retrieving associated states)
- *
- * @param elem the element selected
- * @param target the element to update with created select list
- */
 Service.AddProperty("ListUpdate", function (elem, target, actionBtn) {
     if (elem.value.length > 0) {
         const site = `/${elem.dataset[Service.SYSTEM_URL]}/${elem.value}`;
@@ -814,14 +901,6 @@ Service.AddProperty("ListUpdate", function (elem, target, actionBtn) {
         });
     }
 });
-
-/**
- * -- Trigger Events --
- * this function triggers onclick and onchange events if
- * present on the element passed to it
- *
- * @param elem element on which to trigger events
- */
 Service.AddProperty("TriggerEvents", function (elem) {
     let click = elem.prop("onclick");
     let change = elem.prop("onchange");
@@ -830,15 +909,6 @@ Service.AddProperty("TriggerEvents", function (elem) {
     if (change !== null) elem.change();
     if (blur !== null) elem.blur();
 });
-
-/**
- * -- Image Preview --
- * this function allows an image preview when a file
- * is selected
- *
- * @param input the file input element
- * @param target the img element to show the preview
- */
 Service.AddProperty("ImagePreview", function (input, target) {
     if (input.length === 1 && input[0].files[0]) {
         let reader = new FileReader();
@@ -851,16 +921,6 @@ Service.AddProperty("ImagePreview", function (input, target) {
         reader.readAsDataURL(input[0].files[0]);
     }
 });
-
-/**
- * -- Load Panel --
- * this function is responsible for loading html templates
- * into the panel location specified. if no location
- * is specified the default is used.
- *
- * @param elem the panel selected to be loaded
- * @param target location where it should be placed
- */
 Service.AddProperty("LoadPanel", function (elem, actionBtn, target) {
     return new Promise((resolve) => {
         if (typeof elem !== "undefined" && typeof elem === "object") {
@@ -926,32 +986,12 @@ Service.AddProperty("LoadPanel", function (elem, actionBtn, target) {
         resolve(false);
     });
 });
-
-/**
- * -- Select List Builder --
- * this function is responsible for building the options
- * for a select element passed to it. data for each
- * option is retrieved from a list provided.
- *
- * @param elem select list element
- * @param list array of objects to construct options
- */
 Service.AddProperty("SelectListBuilder", function (elem, list, actionBtn, emptyList = true) {
     if (emptyList) elem.empty();
     jQuery.each(list, function () {
         elem.append(`<option data-value="${this.Value}" value="${this.Value}"> ${this.Text} </option>`);
     });
 });
-
-/**
- * -- Find Element --
- * this function retrieves templates from the
- * template tag or from a server side call and
- * ensures they are recognized by the DOM
- *
- * @param name name of the element to retrieve
- * @param actionBtn object triggering action
- */
 Service.AddProperty("FindElement", function (name, actionBtn = null) {
     return new Promise((resolve) => {
         let templateContent = jQuery('template').prop('content');
@@ -960,7 +1000,7 @@ Service.AddProperty("FindElement", function (name, actionBtn = null) {
         if(typeof name !== "undefined" && name.length > 0){
             //add hash tag if not present. element lookup is always by id
             if (name.substring(0, 1) !== "#") name = `#${name}`;
-             item = templateContent.find(name);
+            item = templateContent.find(name);
         }
         if (item.length > 0) {
             /**
@@ -984,15 +1024,6 @@ Service.AddProperty("FindElement", function (name, actionBtn = null) {
         }
     });
 });
-
-/**
- * -- Find Local Element --
- * this function retrieves templates from the
- * template tag and ensures they are recognized by the DOM
- *
- * @param name name of the element to retrieve
- * @param actionBtn object triggering action
- */
 Service.AddProperty("FindLocalElement", function (name, actionBtn = null) {
     let templateContent = jQuery('template').prop('content');
     templateContent = jQuery(templateContent);
@@ -1020,15 +1051,6 @@ Service.AddProperty("FindLocalElement", function (name, actionBtn = null) {
         return container;
     }
 });
-
-/**
- * -- Execute Custom --
- * this function automates the execution of modifications to
- * panels or modals that have been loaded
- *
- * @param action names of the custom actions to execute
- * @param component panel or modal on which to apply custom actions
- */
 Service.AddProperty("ExecuteCustom", function (action, component, actionBtn, result = null) {
     return new Promise(function(resolve){
         if(typeof action !== "undefined" && action !== null && action.length > 0){
@@ -1046,15 +1068,6 @@ Service.AddProperty("ExecuteCustom", function (action, component, actionBtn, res
         resolve(false);
     });
 });
-
-/**
- * -- Transform --
- * this function automates the execution of modifications to
- * elements during binding.
- *
- * @param action names of the custom actions to execute
- * @param component element on which to apply custom actions
- */
 Service.AddProperty("Transform", function (action, elem, property, actionBtn) {
     action = action.split("|");
     action.forEach(function (item) {
@@ -1074,16 +1087,6 @@ Service.AddProperty("Transform", function (action, elem, property, actionBtn) {
     });
     return property;
 });
-
-/**
- * -- Execute Submit Transformation --
- * this function automates the execution of modification to
- * form elements before they are sent to the server
- *
- * @param action names of the custom actions to execute
- * @param component element on which to apply custom actions
- * @param params current form fields in the request
- */
 Service.AddProperty("ExecuteSubmitTransformation", function (action, component, params, actionBtn) {
     action = action.split("|");
     action.forEach(function (item) {
@@ -1096,14 +1099,6 @@ Service.AddProperty("ExecuteSubmitTransformation", function (action, component, 
     });
     return params;
 });
-
-/**
- * -- Loading State On --
- * this function defines what happens when a request
- * is being sent to the server. It should be primarily
- * used to disable controls so that multiple requests
- * cannot be sent at the same time
- */
 Service.AddProperty("LoadingStateOn", function (ActionButton) {
     //disable form fields so that they cannot be edited
     //while submission is taking place
@@ -1114,13 +1109,6 @@ Service.AddProperty("LoadingStateOn", function (ActionButton) {
     //be duplicated.
     ActionButton.prop("disabled", true);
 });
-
-/**
- * -- Loading State Off --
- * this function defines what should happen when
- * a request is executed by the server and a response
- * received
- */
 Service.AddProperty("LoadingStateOff", function (ActionButton) {
     //enable disabled elements
     if (Service.LoadedForm !== null) {
@@ -1128,24 +1116,11 @@ Service.AddProperty("LoadingStateOff", function (ActionButton) {
     }
     ActionButton.prop("disabled", false);
 });
-
-/**
- * -- Load Panel Transition --
- * this function defines the process of placing the panel
- * within the specified container
- */
 Service.AddProperty("LoadPanelTransition", function (container, panel, actionBtn = null) {
     container.css("display", "none");
     container.empty();
     container.html(panel).fadeIn("slow");
 });
-
-/**
- * -- Bootstrap --
- * this function defines default process for loading the DOM.
- * It searches for the defined main container and loads the
- * defined panel into it
- */
 Service.AddProperty("Bootstrap", function(link = null){
     Service.ModelData.List = {};
 
@@ -1154,3 +1129,335 @@ Service.AddProperty("Bootstrap", function(link = null){
         if(link !== null) await Controller.PanelSelect(link[0]);
     },1000);
 });
+
+Controller.AddProperty("FormSubmit",function(elem,e){
+    //prevent default action for submit button
+    if(typeof e !== "undefined"){
+        e.preventDefault();
+    }else{
+        window.event.preventDefault();
+    }
+    //exit if another submission is in progress
+    if(Service.ActionLoading) return false;
+    const ActionButton = jQuery(elem);
+    Service.ActionLoading = true;
+    Service.CanSubmitForm = true;
+    let target = ActionButton.data(Service.SYSTEM_ACTION);
+    let custom = ActionButton.data(Service.SYSTEM_CUSTOM);
+    let complete = ActionButton.data(Service.SYSTEM_COMPLETE);
+    let requestHeaders = ActionButton.data(Service.SYSTEM_HEADERS);
+    let site_url = "";
+    let method = "";
+    let params = new FormData();
+    let headers = [];
+    let data = [];
+
+    //load the form from target specified. if not
+    //load the parent form element
+    if(typeof target === "undefined"){
+        target = "";
+        Service.LoadedForm = jQuery(ActionButton.parents('form'));
+    }
+    else{
+        const url = ActionButton.data(Service.SYSTEM_URL);
+        const method = ActionButton.data(Service.SYSTEM_METHOD);
+        if (target.substring(0, 1) !== "#") target = `#${target}`;
+        const targetContainer = jQuery(document).find(target);
+        let form = targetContainer.find("form");
+        if (form.length > 0) {
+            Service.LoadedForm = form;
+            if(typeof url !== "undefined") form.attr("action",url);
+            if(typeof method !== "undefined") form.attr("method",method);
+        } else {
+            const formContent = targetContainer.clone();
+            form = jQuery("<form></form>",
+                {
+                    action: url,
+                    method: method
+                });
+            form.append(formContent.children());
+            //jQuery does not clone selects.....say its to expensive
+            const selects = targetContainer.find("select");
+            jQuery(selects).each(function (i) {
+                form.find("select").eq(i).val(jQuery(this).val());
+            });
+            //targetContainer.empty().append(form);
+            Service.LoadedForm = form;
+        }
+    }
+
+    // if LoadedForm is not specified, terminate the action
+    if(Service.LoadedForm.length <= 0){
+        Service.ActionLoading = false;
+        return false;
+    }
+
+    //if headers function is defined execute it and get headers for request
+    if(typeof requestHeaders !== "undefined"){
+        if(Controller.hasOwnProperty(requestHeaders)){
+            headers = Controller[requestHeaders]();
+        }
+    }
+
+
+
+    //retrieve form fields and submission data from loaded form
+    //exclude file input from search...handled separately below
+    data = jQuery(Service.LoadedForm.serializeArray());
+    jQuery.each(data,function(){
+        params.append(this.name,this.value);
+    });
+    site_url = Service.LoadedForm[0].action;
+    method = Service.LoadedForm[0].method;
+
+    if(typeof site_url === "undefined") return false;
+    if(typeof method === "undefined") method = "POST";
+    method = method.toUpperCase();
+
+    //determine if the form has a file, and if so serialize
+    //using FormData object, or just use an object
+    const file = Service.LoadedForm.find("input[type='file']");
+    if(file.length > 0){
+        jQuery(file).each(function(e){
+            //determine if multiple files are selected and add
+            //each of them to the payload
+            if(file[e].files.length > 1){
+                let fileName = file[e].name;
+                //determine if file name is array or not
+                if(fileName.substring(fileName.length -1,fileName.length) !== "]"){
+                    fileName = `${file[e].name}[]`;
+                }
+                for(let i=0; i<file[e].files.length; i++){
+                    params.append(fileName,file[e].files[i]);
+                }
+            }
+            else{
+                params.append(file[e].name,file[e].files[0]);
+            }
+        });
+    }
+
+    //determine if there are submit transformations and execute them
+    if(typeof custom !== "undefined")
+        params = Service.ExecuteSubmitTransformation(custom,Service.LoadedForm,params);
+
+    //determine if we should send form to server for processing or not
+    if(Service.CanSubmitForm === false){
+        Service.ActionLoading = false;
+        return false;
+    }
+
+    //determine the response handlers to use for success and error
+    //defaults are chosen by default obviously
+    let success = Service.SuccessHandler;
+    let error = Service.ErrorHandler;
+    let successHandler = ActionButton.data(Service.SYSTEM_SUCCESS_HANDLER);
+    let errorHandler = ActionButton.data(Service.SYSTEM_ERROR_HANDLER);
+    if(typeof successHandler !== "undefined" && Controller.hasOwnProperty(successHandler)){
+        success = Controller[successHandler];
+    }
+    if(typeof errorHandler !== "undefined" && Controller.hasOwnProperty(errorHandler)){
+        error = Controller[errorHandler];
+    }
+
+    //determine how the form submission should be processed
+    //if a specific action was specified we use that
+    //otherwise we use the default server request
+    let ex = Service.Action[target];
+    if(typeof ex !== "undefined") ex({
+        params,
+        success,
+        error,
+        headers,
+        complete,
+        site: site_url,
+        request: method,
+        actionBtn: ActionButton,
+        component: Service.LoadedForm
+    });
+    else Service.ServerRequest({
+        params,
+        success,
+        error,
+        headers,
+        complete,
+        site: site_url,
+        request: method,
+        actionBtn: ActionButton,
+        component: Service.LoadedForm
+    });
+});
+Controller.AddProperty("FileSelect",function(elem){
+    //if there is a triggered action do not execute
+    if(Service.ActionLoading) return false;
+    const ActionButton = jQuery(elem);
+    Service.ActionLoading = true;
+    let target = ActionButton.data(Service.SYSTEM_ACTION);
+    let custom = ActionButton.data(Service.SYSTEM_COMPLETE);
+    //load the form associated with the file
+    const form = (typeof target === "undefined")
+        ? jQuery(ActionButton.parents(Service.SYSTEM_FILE_UPLOAD_CONTAINER))
+        : jQuery(document).find(`#${target}`);
+    // find the file input element
+    let input = form.find("input[type=file]");
+    // find the image element that displays preview
+    let img = form.find("img");
+    // trigger click event that opens upload file dialog
+    input.click();
+    // update preview image when file is changed
+    input.change(function() {
+        Service.ImagePreview(input, img);
+    });
+    input.change();
+    // execute custom code on the form
+    if(typeof custom !== "undefined"){
+        Service.ExecuteCustom(custom,form,ActionButton);
+    }
+    Service.ActionLoading = false;
+});
+Controller.AddProperty("ModalSelect",function(elem){
+    //if there is a triggered action do not execute
+    if(Service.ModalLoading) return false;
+    const ActionButton = jQuery(elem);
+    Service.ModalLoading = true;
+    //make action button aware of loaded type
+    ActionButton.data(Service.SYSTEM_LOAD_TYPE,"modal");
+    //if a modal is already loaded do not execute
+    if(Service.LoadedModal === null){
+        let action = ActionButton.data(Service.SYSTEM_ACTION);
+        Service.FindElement(action, ActionButton).then((elem) =>{
+            Service.LoadedModal = elem;
+
+            //format modal... has to be structured a specific way
+            //to work
+            if (!Service.LoadedModal.hasClass("modal")) {
+                Service.LoadedModal = Service.DefaultModalHandler(elem,ActionButton);
+            }
+            //place modal on the DOM
+            const modalContainer = jQuery(`#${ModalContainer}`);
+            modalContainer.empty().append(Service.LoadedModal);
+            //update modal attributes
+            const dataAttributes = ActionButton.data();
+            const filterList = [Service.SYSTEM_ACTION,Service.SYSTEM_COMPLETE];
+            jQuery.each(dataAttributes,function(key,value){
+                //filter out action and custom attribute
+                // these are defined on the modal
+                if(jQuery.inArray(key,filterList) === -1){
+                    Service.LoadedModal.data(key,value);
+                }
+            });
+            //execute custom modifications
+            Service.ExecuteCustom(ActionButton.data(Service.SYSTEM_CUSTOM),Service.LoadedModal,ActionButton).then(() => {
+                // launch modal
+                Service.LaunchModal(Service.LoadedModal,ActionButton).then(() => {
+                    //execute complete modifications
+                    Service.ExecuteCustom(ActionButton.data(Service.SYSTEM_COMPLETE),Service.LoadedModal,ActionButton).then(() => {
+                        Service.ModalLoading = false;
+                    });
+                });
+            });
+        });
+    }
+    else{
+        Service.ModalLoading = false;
+    }
+});
+Controller.AddProperty("PanelSelect",function(elem){
+    //if there is a triggered action do not execute
+    if(Service.PanelLoading) return false;
+    const ActionButton = jQuery(elem);
+    Service.PanelLoading = true;
+    //make action button aware of loaded type
+    ActionButton.data(Service.SYSTEM_LOAD_TYPE,"panel");
+    //get history url if defined
+    const history = ActionButton.data(Service.SYSTEM_HISTORY);
+    //locate panel
+    Service.FindElement(ActionButton.data(Service.SYSTEM_ACTION), ActionButton).then((panel) =>{
+        //update modal attributes
+        //const filterList = [Service.SYSTEM_ACTION,Service.SYSTEM_COMPLETE,Service.SYSTEM_TARGET];
+        //jQuery.each(ActionButton.data(),function(key,value){
+        //filter out action and custom attribute
+        // these are defined on the panel
+        //if(jQuery.inArray(key,filterList) === -1){
+        //panel.data(key,value);
+        //}
+        //});
+        //adding panel change to browser history
+        //ignore if history data attribute is defined
+
+        //store only defined system data attributes
+        const historyData = {};
+        //attributes that should be persisted if present on the action button
+        const filterList = [
+            Service.SYSTEM_ACTION,
+            Service.SYSTEM_COMPLETE,
+            Service.SYSTEM_TARGET,
+            Service.SYSTEM_CUSTOM,
+            Service.SYSTEM_HISTORY,
+            Service.SYSTEM_NOTIFICATION_ON_SUCCESS,
+            Service.SYSTEM_NOTIFICATION_ON_ERROR,
+            Service.SYSTEM_NOTIFICATION,
+            Service.SYSTEM_TITLE
+        ];
+        //add them to history data if present
+        jQuery.each(ActionButton.data(),function(key,value){
+            if(jQuery.inArray(key,filterList) !== -1) {
+                historyData[key] = value;
+            }
+            //add values that are strings....other types will cause errors
+            else if(typeof value === "string"){
+                historyData[key] = value;
+            }
+        });
+
+        //add history record
+        if(typeof history === "undefined"){
+            window.history.pushState({
+                data: historyData,
+                panelSelect: true
+            },"");
+        }
+
+        //determine and set page title
+        const title = (typeof ActionButton.data(Service.SYSTEM_TITLE) !== "undefined")
+            ? ActionButton.data(Service.SYSTEM_TITLE)
+            : ActionButton.data(Service.SYSTEM_ACTION);
+        window.document.title = `${Service.Title} - ${title}`;
+        //execute custom modifications
+        Service.ExecuteCustom(ActionButton.data(Service.SYSTEM_CUSTOM),Service.LoadedPanel,ActionButton).then(() => {
+            //load panel unto the DOM
+            Service.LoadPanel(panel,ActionButton,ActionButton.data(Service.SYSTEM_TARGET)).then(() =>{
+                //execute complete modifications
+                Service.ExecuteCustom(ActionButton.data(Service.SYSTEM_COMPLETE),Service.LoadedPanel,ActionButton).then(() => {
+                    Service.PanelLoading = false;
+                });
+            });
+        });
+    });
+});
+Controller.AddProperty("ReloadPanel",function(){
+    const btn = jQuery("<button></button>",{
+        type:"button",
+        "data-notification":"false"
+    });
+    Service.LoadPanel(Service.LoadedPanel,btn);
+});
+window.onpopstate = function(event){
+    //get page state
+    const state = event.state;
+    if(state !== null){
+        if(state.panelSelect){
+            //create a action link to fire the controller action
+            const link = jQuery("<a>");
+            //add the data attributes recorded in the state
+            jQuery.each(state.data,function(i,e){
+                link.attr(`data-${i}`,e);
+            });
+            //add a history data attribute so the panel
+            //ignores the entry for pushState
+            link.attr("data-history",true);
+            //fire controller action with created anchor tag
+            Controller.PanelSelect(link[0]);
+        }
+    }
+};
