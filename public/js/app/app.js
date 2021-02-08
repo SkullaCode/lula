@@ -270,29 +270,22 @@ Controller.AddProperty("ModalSelect",function(elem){
  * the DOM, and execute custom modifications if specified
  */
 Controller.AddProperty("PanelSelect",function(elem){
-    //if there is a triggered action do not execute
-    if(Service.PanelLoading) return false;
     const ActionButton = jQuery(elem);
-    Service.PanelLoading = true;
+    const action = ActionButton.data(Service.SYSTEM_ACTION);
+    //determine if current action is already being loaded
+    //if so exit............
+    if(jQuery.inArray(action,Service.PanelLoading) !== -1){
+        return false;
+    }
+    Service.PanelLoading.push(ActionButton.data(Service.SYSTEM_ACTION));
+    
     //make action button aware of loaded type
     ActionButton.data(Service.SYSTEM_LOAD_TYPE,"panel");
     //get history url if defined
     const history = ActionButton.data(Service.SYSTEM_HISTORY);
     //locate panel
     Service.FindElement(ActionButton.data(Service.SYSTEM_ACTION), ActionButton).then((panel) =>{
-        //update modal attributes
-        //const filterList = [Service.SYSTEM_ACTION,Service.SYSTEM_COMPLETE,Service.SYSTEM_TARGET];
-        //jQuery.each(ActionButton.data(),function(key,value){
-        //filter out action and custom attribute
-        // these are defined on the panel
-        //if(jQuery.inArray(key,filterList) === -1){
-        //panel.data(key,value);
-        //}
-        //});
-        //adding panel change to browser history
-        //ignore if history data attribute is defined
-
-        //store only defined system data attributes
+        //define properties to store on history
         const historyData = {};
         //attributes that should be persisted if present on the action button
         const filterList = [
@@ -336,7 +329,9 @@ Controller.AddProperty("PanelSelect",function(elem){
             Service.LoadPanel(panel,ActionButton,ActionButton.data(Service.SYSTEM_TARGET)).then(() =>{
                 //execute complete modifications
                 Service.ExecuteCustom(ActionButton.data(Service.SYSTEM_COMPLETE),Service.LoadedPanel,ActionButton).then(() => {
-                    Service.PanelLoading = false;
+                    //remove action from loading list.......
+                    const index = Service.PanelLoading.indexOf(action);
+                    Service.PanelLoading.splice(index,1);
                 });
             });
         });

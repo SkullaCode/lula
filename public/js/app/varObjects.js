@@ -64,13 +64,13 @@ window.Service = function(){
     let LoadedModal         = null;
     let LoadedPanel         = null;
     let LoadedForm          = null;
-    let PanelLoading        = null;
     let ModalLoading        = null;
     let ActionLoading       = null;
-    let ModelData           = {};
-    let MetaData            = {};
     let ContainerPanel      = null;
     let APIUrl              = null;
+    let ModelData           = {};
+    let MetaData            = {};
+    let PanelLoading        = [];
     let LoadingComplete     = false;
     let Title               = "Javascript UI";
 
