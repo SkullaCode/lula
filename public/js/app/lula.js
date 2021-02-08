@@ -65,8 +65,10 @@ window.Service = function(){
         ErrorHandler                        : null,
         SuccessHandler                      : null,
         NotificationHandler                 : null,
+        ErrorMessageHandler                 : null,
         ErrorDataHandler                    : null,
         SuccessMessageHandler               : null,
+        SuccessDataHandler                  : null,
         DefaultModalHandler                 : null,
         DefaultElementHandler               : null,
         ServerRequest                       : null,
@@ -317,6 +319,9 @@ Service.AddProperty("DefaultModalHandler", function (modal, actionBtn) {
         }
     }
 });
+Service.AddProperty("ErrorMessageHandler", function(error, request){
+    return error;
+});
 Service.AddProperty("ErrorDataHandler", function (request) {
     let data = {
         Code: request.statusText,
@@ -335,6 +340,18 @@ Service.AddProperty("ErrorDataHandler", function (request) {
 });
 Service.AddProperty("SuccessMessageHandler", function (request) {
     return request.statusText;
+});
+Service.AddProperty("SuccessDataHandler", function(data, request){
+    const contentType = request.getResponseHeader("Content-Type");
+    if(contentType === "application/json"){
+        return request.responseJSON;
+    }
+    else if(contentType === "text/html" || contentType === "text/plain"){
+        return request.responseText;
+    }
+    else{
+        return null;
+    }
 });
 Service.AddProperty("ServerRequest", function (requirements) {
     //backwards compatibility, method and request is the same thing
@@ -398,8 +415,9 @@ Service.AddProperty("ServerRequest", function (requirements) {
         let res = {};
         res.status = status;
         res.message = Service.SuccessMessageHandler(jqXHR);
-        res.data = (!jQuery.isEmptyObject(data)) ? data : jqXHR.responseText;
+        res.data = Service.SuccessDataHandler(data,jqXHR);
         res.actionBtn = requirements.actionBtn;
+        res.component = requirements.component;
 
 
         //determine default notification handling mechanism
@@ -440,13 +458,14 @@ Service.AddProperty("ServerRequest", function (requirements) {
             Service.LoadingStateOff(requirements.actionBtn);
             const res = {
                 status,
-                message: error,
                 actionBtn: requirements.actionBtn,
+                component: requirements.component,
                 notificationType: "alert"
             };
 
-            //define and format data from server or use default
-            //implementation
+            //define and format message from server or use default implementation
+            res.message = Service.ErrorMessageHandler(error, request);
+            //define and format data from server or use default implementation
             res.data = Service.ErrorDataHandler(request);
             //execute error handler
             requirements.error(res);

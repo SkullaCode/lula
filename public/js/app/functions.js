@@ -161,6 +161,17 @@ Service.AddProperty("DefaultModalHandler", function (modal, actionBtn) {
 });
 
 /**
+ * -- Error Message Handler --
+ * This function handles default transformation of error
+ * data from server into a error message
+ *
+ * @param request object that represents data returned from server
+ */
+Service.AddProperty("ErrorMessageHandler", function(error, request){
+    return error;
+});
+
+/**
  * -- Error Data Handler --
  * This function handles default transformation of error
  * data from server
@@ -193,6 +204,27 @@ Service.AddProperty("ErrorDataHandler", function (request) {
  */
 Service.AddProperty("SuccessMessageHandler", function (request) {
     return request.statusText;
+});
+
+/**
+ * -- Success Data Hander --
+ * This function handes the default transformation of success
+ * data from the server into a usable format
+ * 
+ * @param data data as returned from the server
+ * @param request object that represents data returned from server 
+ */
+Service.AddProperty("SuccessDataHandler", function(data, request){
+    const contentType = request.getResponseHeader("Content-Type");
+    if(contentType === "application/json"){
+        return request.responseJSON;
+    }
+    else if(contentType === "text/html" || contentType === "text/plain"){
+        return request.responseText;
+    }
+    else{
+        return null;
+    }
 });
 
 /**
@@ -263,8 +295,9 @@ Service.AddProperty("ServerRequest", function (requirements) {
         let res = {};
         res.status = status;
         res.message = Service.SuccessMessageHandler(jqXHR);
-        res.data = (!jQuery.isEmptyObject(data)) ? data : jqXHR.responseText;
+        res.data = Service.SuccessDataHandler(data,jqXHR);
         res.actionBtn = requirements.actionBtn;
+        res.component = requirements.component;
 
 
         //determine default notification handling mechanism
@@ -305,13 +338,14 @@ Service.AddProperty("ServerRequest", function (requirements) {
             Service.LoadingStateOff(requirements.actionBtn);
             const res = {
                 status,
-                message: error,
                 actionBtn: requirements.actionBtn,
+                component: requirements.component,
                 notificationType: "alert"
             };
 
-            //define and format data from server or use default
-            //implementation
+            //define and format message from server or use default implementation
+            res.message = Service.ErrorMessageHandler(error, request);
+            //define and format data from server or use default implementation
             res.data = Service.ErrorDataHandler(request);
             //execute error handler
             requirements.error(res);
