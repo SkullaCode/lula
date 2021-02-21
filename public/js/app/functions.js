@@ -422,10 +422,15 @@ Service.AddProperty("LaunchModal", function (modal, actionBtn) {
        const action = modal.data(Service.SYSTEM_ACTION);
        if (typeof action === "string") {
            let func = Service.Data[action];
-           if (typeof func !== "undefined") func(modal, actionBtn).then(() => {
+           if (typeof func !== "undefined"){
+               func(modal, actionBtn).then(() => {
+                   modal.modal();
+                   resolve(true);
+               });
+           }else{
                modal.modal();
                resolve(true);
-           });
+           }
        }
        else{
            modal.modal();
