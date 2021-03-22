@@ -422,17 +422,17 @@ Service.AddProperty("ServerRequest", function (requirements) {
 
         //determine default notification handling mechanism
         res.notificationType = requirements.actionBtn.data(Service.SYSTEM_NOTIFICATION_ON_SUCCESS) || "toaster";
+        //trigger notification event
+        if (typeof requirements.actionBtn.data(Service.SYSTEM_NOTIFICATION) === "undefined" ||
+            requirements.actionBtn.data(Service.SYSTEM_NOTIFICATION) === "true" ||
+            requirements.actionBtn.data(Service.SYSTEM_NOTIFICATION) === "success"
+        ) {
+            Service.NotificationHandler(res);
+        }
 
         //execute the success callback with results received.
         requirements.success(res);
         Service.ExecuteCustom(requirements.complete, requirements.component, requirements.actionBtn, res).then(() => {
-            //trigger notification event
-            if (typeof requirements.actionBtn.data(Service.SYSTEM_NOTIFICATION) === "undefined" ||
-                requirements.actionBtn.data(Service.SYSTEM_NOTIFICATION) === "true" ||
-                requirements.actionBtn.data(Service.SYSTEM_NOTIFICATION) === "success"
-            ) {
-                Service.NotificationHandler(res);
-            }
             Service.ActionLoading = false;
         });
     };
