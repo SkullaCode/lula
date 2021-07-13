@@ -19,7 +19,7 @@ Controller.AddProperty("FormSubmit",function(elem,e){
     const ActionButton = jQuery(elem);
     Service.ActionLoading = true;
     Service.CanSubmitForm = true;
-    let target = ActionButton.data(Service.SYSTEM_ACTION);
+    let target = ActionButton.data(Service.SYSTEM_TARGET);
     let custom = ActionButton.data(Service.SYSTEM_CUSTOM);
     let complete = ActionButton.data(Service.SYSTEM_COMPLETE);
     let requestHeaders = ActionButton.data(Service.SYSTEM_HEADERS);
@@ -40,7 +40,7 @@ Controller.AddProperty("FormSubmit",function(elem,e){
         const method = ActionButton.data(Service.SYSTEM_METHOD);
         if (target.substring(0, 1) !== "#") target = `#${target}`;
         const targetContainer = jQuery(document).find(target);
-        let form = targetContainer.find("form");
+        let form = (targetContainer.is("form")) ? targetContainer : targetContainer.find("form");
         if (form.length > 0) {
             Service.LoadedForm = form;
             if(typeof url !== "undefined") form.attr("action",url);

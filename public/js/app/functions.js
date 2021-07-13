@@ -844,13 +844,20 @@ Service.AddProperty("GetProperty", function (id, data) {
  */
 Service.AddProperty("ListUpdate", function (elem, target, actionBtn) {
     if (elem.value.length > 0) {
-        const site = `/${elem.dataset[Service.SYSTEM_URL]}/${elem.value}`;
+        let url = elem.dataset[Service.SYSTEM_URL];
+        const site = `${url}/${elem.value}`;
         const method = "GET";
         const params = {};
+        const complete = actionBtn.data(Service.SYSTEM_COMPLETE) || null;
         const success = function (result) { Service.SelectListBuilder(jQuery(target), result.data, result.actionBtn); };
-        Service.ServerRequest({
+        let serverObject = {
             site, method, params, success
-        });
+        };
+        if(actionBtn){
+            serverObject.actionBtn = actionBtn;
+            serverObject.complete = complete;
+        }
+        Service.ServerRequest(serverObject);
     }
 });
 

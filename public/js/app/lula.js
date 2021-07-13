@@ -916,13 +916,20 @@ Service.AddProperty("GetProperty", function (id, data) {
 });
 Service.AddProperty("ListUpdate", function (elem, target, actionBtn) {
     if (elem.value.length > 0) {
-        const site = `/${elem.dataset[Service.SYSTEM_URL]}/${elem.value}`;
+        let url = elem.dataset[Service.SYSTEM_URL];
+        const site = `${url}/${elem.value}`;
         const method = "GET";
         const params = {};
+        const complete = actionBtn.data(Service.SYSTEM_COMPLETE) || null;
         const success = function (result) { Service.SelectListBuilder(jQuery(target), result.data, result.actionBtn); };
-        Service.ServerRequest({
+        let serverObject = {
             site, method, params, success
-        });
+        };
+        if(actionBtn){
+            serverObject.actionBtn = actionBtn;
+            serverObject.complete = complete;
+        }
+        Service.ServerRequest(serverObject);
     }
 });
 Service.AddProperty("TriggerEvents", function (elem) {
@@ -1166,7 +1173,7 @@ Controller.AddProperty("FormSubmit",function(elem,e){
     const ActionButton = jQuery(elem);
     Service.ActionLoading = true;
     Service.CanSubmitForm = true;
-    let target = ActionButton.data(Service.SYSTEM_ACTION);
+    let target = ActionButton.data(Service.SYSTEM_TARGET);
     let custom = ActionButton.data(Service.SYSTEM_CUSTOM);
     let complete = ActionButton.data(Service.SYSTEM_COMPLETE);
     let requestHeaders = ActionButton.data(Service.SYSTEM_HEADERS);
@@ -1187,7 +1194,7 @@ Controller.AddProperty("FormSubmit",function(elem,e){
         const method = ActionButton.data(Service.SYSTEM_METHOD);
         if (target.substring(0, 1) !== "#") target = `#${target}`;
         const targetContainer = jQuery(document).find(target);
-        let form = targetContainer.find("form");
+        let form = (targetContainer.is("form")) ? targetContainer : targetContainer.find("form");
         if (form.length > 0) {
             Service.LoadedForm = form;
             if(typeof url !== "undefined") form.attr("action",url);
