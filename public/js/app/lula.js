@@ -1,6 +1,36 @@
+/**
+ * -- MainContainer --
+ * Defines the main container for panel switching
+ * @type {string}
+ */
 let MainContainer         = "MainContainer";
+
+/**
+ * -- ModalContainer --
+ * Defines the container modals will be placed
+ * in when launched
+ * @type {string}
+ */
 let ModalContainer        = "modal-container";
+
+/**
+ * -- TemplateContainer --
+ * Defines the container used to temporarily
+ * store templates before they are placed on
+ * the DOM
+ * @type {string}
+ */
 let TemplateContainer     = "container-panel";
+
+/**
+ * -- Controller --
+ * Contains all the custom logic for the current page
+ * this is just the definition, the programmer will
+ * add functionality from a script tag. NB. each page
+ * should define its own set of controller functions.
+ * if there is some functionality that needs to be global
+ * it is best to put it in the Service.
+ */
 window.Controller = function(){
     let AddProperty = function(name,f){
         Response[name] = f;
@@ -21,6 +51,15 @@ window.Controller = function(){
 
     return Response;
 }();
+
+/**
+ * -- Service --
+ * Contains global functionality as well as
+ * system helper functionality for common
+ * tasks. This is just the definition. The
+ * programmer can expand on it by adding
+ * functionality using a script tag
+ */
 window.Service = function(){
     let LoadedModal         = null;
     let LoadedPanel         = null;
@@ -129,6 +168,17 @@ window.Service = function(){
 
     return Response;
 }();
+
+/**
+ * -- Modification --
+ * Add a method to the modification executor if you want it to be called before or after a panel
+ * or modal has been loaded. use the 'data-complete' attribute on the element triggering the action
+ * to add the method(s) that should be executed after loading is complete. use the 'data-custom'
+ * attribute on the element triggering the action to add the method(s) that should be executed before
+ * loading is complete. if there needs to be more than one method called, use the pipe (|) character
+ * to separate them. 'data-complete' can also be used to indicate method(s) that should be executed
+ * after a form has been successfully submitted.
+ */
 window.Service.AddProperty('Modification',function(){
 
     let addMethod = function(name,f){
@@ -141,6 +191,15 @@ window.Service.AddProperty('Modification',function(){
 
     return Response;
 }());
+
+/**
+ * -- SubmitTransformation --
+ * Add a method to the submit transformation executor if you want to transform the value of a form
+ * element before it is submitted to the server for processing. use the 'data-custom' attribute on
+ * the element triggering the submission to add the method(s) that should be executed. if there needs
+ * to be more than one method called, use the pipe (|) character to separate them. If for some reason
+ * the form should not be submitted set the globally available Service.CanSubmitForm to false.
+ */
 window.Service.AddProperty('SubmitTransformation',function(){
 
     let addMethod = function(name,f){
@@ -153,6 +212,19 @@ window.Service.AddProperty('SubmitTransformation',function(){
 
     return Response;
 }());
+
+/**
+ * -- Transformation --
+ * Add a method to the transformation executor if you want it to be called during data binding.
+ * use the 'data-custom' attribute on the element that should be transformed to add the method(s)
+ * that should be executed. if there needs to be more than one method called, use the pipe (|)
+ * them. note that during binding only elements with the class 'bind' or 'bind-loop' will be considered.
+ * Also, TRANSFORMATION WORKS TWO WAYS!!..... if 'bind-global' or 'bind-element' is present the
+ * transformation will take place on the element and not the binding property. In other words, normal
+ * transformation mutates the data property to be bounded to the element; 'bind-global' transforms the
+ * element itself and provides the entire dataset; 'bind-element' transforms the element itself but
+ * only provides the binding data property.
+ */
 window.Service.AddProperty('Transformation',function(){
 
     let addMethod = function(name,f){
@@ -165,6 +237,14 @@ window.Service.AddProperty('Transformation',function(){
 
     return Response;
 }());
+
+/**
+ * -- Data --
+ * Add a method to the data executor that has the same signature as the data-action property on a
+ * panel or modal template and it will be automatically called during the binding process.
+ * These methods are where the data is defined that the panel or modal will use while binding
+ * takes place.
+ */
 window.Service.AddProperty('Data',function(){
 
     let store = {};
@@ -180,6 +260,15 @@ window.Service.AddProperty('Data',function(){
 
     return Response;
 }());
+
+/**
+ * -- Action --
+ * Add a method to the action executor if a form needs a non-standard way of sending the
+ * request to the server and handling the response. methods can be triggered by inline
+ * onclick and onchange events or by the data-action attribute on a submit button.
+ * please note that the data-action is the same item that determines the location of
+ * the form if the submit button is not contained within it.
+ */
 window.Service.AddProperty('Action',function(){
 
     let store = {};
@@ -196,6 +285,11 @@ window.Service.AddProperty('Action',function(){
     return Response;
 }());
 
+/**
+ * -- Error Handler --
+ * This function is responsible for handling all requests
+ * which return 400 or 500 level status codes
+ */
 Service.AddProperty("ErrorHandler", function (result) {
     //manipulate form if present
     if (Service.LoadedForm !== null) {
@@ -218,6 +312,14 @@ Service.AddProperty("ErrorHandler", function (result) {
             });
     }
 });
+
+/**
+ * -- Success Handler --
+ * This function handles successful responses
+ * from calls to the server by default.
+ *
+ * @param result object containing success handler parameters
+ */
 Service.AddProperty("SuccessHandler", function (result) {
     //manipulate form if present
     if (Service.LoadedForm !== null) {
@@ -240,6 +342,13 @@ Service.AddProperty("SuccessHandler", function (result) {
             });
     }
 });
+
+/**
+ * -- Notification Handler --
+ * This function handles the default implementation for notifications
+ *
+ * @param result object containing notification parameters
+ */
 Service.AddProperty("NotificationHandler", function (result) {
     switch (result.notificationType) {
         case "alert": {
@@ -283,11 +392,28 @@ Service.AddProperty("NotificationHandler", function (result) {
         }
     }
 });
+
+/**
+ * -- Default Element Handler --
+ * This function handles the default implementation for elements not
+ * found or having rendering issues
+ *
+ * @param actionBtn object triggering action
+ */
 Service.AddProperty("DefaultElementHandler", function (actionBtn) {
     const elem = jQuery("<div></div>", { class: "alert alert-danger" });
     elem.append("<p>The panel you are trying to load experienced an error while rendering....</p>");
     return elem;
 });
+
+/**
+ * -- Default Modal Handler --
+ * This function handles the default implementation of handling
+ * modal elements that are not formatted properly
+ *
+ * @param modal modal element as was retrieved
+ * @param actionBtn object triggering action
+ */
 Service.AddProperty("DefaultModalHandler", function (modal, actionBtn) {
     if (!modal.hasClass("modal")) {
         const modalContent = modal.find(".modal");
@@ -319,9 +445,25 @@ Service.AddProperty("DefaultModalHandler", function (modal, actionBtn) {
         }
     }
 });
+
+/**
+ * -- Error Message Handler --
+ * This function handles default transformation of error
+ * data from server into a error message
+ *
+ * @param request object that represents data returned from server
+ */
 Service.AddProperty("ErrorMessageHandler", function(error, request){
     return error;
 });
+
+/**
+ * -- Error Data Handler --
+ * This function handles default transformation of error
+ * data from server
+ *
+ * @param request object that represents data returned from server
+ */
 Service.AddProperty("ErrorDataHandler", function (request) {
     let data = {
         Code: request.statusText,
@@ -338,9 +480,26 @@ Service.AddProperty("ErrorDataHandler", function (request) {
     }
     return data;
 });
+
+/**
+ * -- Success Message Handler --
+ * This function handles default transformation of success
+ * data from server into a success message
+ *
+ * @param request object that represents data returned from server
+ */
 Service.AddProperty("SuccessMessageHandler", function (request) {
     return request.statusText;
 });
+
+/**
+ * -- Success Data Hander --
+ * This function handes the default transformation of success
+ * data from the server into a usable format
+ *
+ * @param data data as returned from the server
+ * @param request object that represents data returned from server
+ */
 Service.AddProperty("SuccessDataHandler", function(data, request){
     const contentType = request.getResponseHeader("Content-Type");
     if(contentType === "application/json"){
@@ -353,6 +512,13 @@ Service.AddProperty("SuccessDataHandler", function(data, request){
         return null;
     }
 });
+
+/**
+ * -- Server Request --
+ * This function handles ajax requests
+ *
+ * @param requirements object containing request parameters
+ */
 Service.AddProperty("ServerRequest", function (requirements) {
     //backwards compatibility, method and request is the same thing
     if (typeof requirements.method !== "undefined") requirements.request = requirements.method;
@@ -522,6 +688,13 @@ Service.AddProperty("ServerRequest", function (requirements) {
     ajax_params.global = false;
     jQuery.ajax(ajax_params);
 });
+
+/**
+ * -- LaunchModal --
+ * This function handles default implementation for
+ * launching a modal
+ *
+ */
 Service.AddProperty("LaunchModal", function (modal, actionBtn) {
     return new Promise(function(resolve){
         modal.on('hide.bs.modal', function (e) {
@@ -551,6 +724,18 @@ Service.AddProperty("LaunchModal", function (modal, actionBtn) {
         }
     });
 });
+
+/**
+ * -- Bind --
+ * this function is responsible for binding the data
+ * provided to the elements of the desired
+ * component. only components with the class 'bind'
+ * or 'bind-loop' are handled by this function. Binding
+ * is done using the id property.
+ *
+ * @param component element that will have its elements bound
+ * @param data data set from which values will be used in binding
+ */
 Service.AddProperty("Bind", function (component, data, actionBtn = null) {
     let elems = component.find(`.${Service.SYSTEM_BIND}`);
     jQuery.each(elems, function () {
@@ -775,6 +960,16 @@ Service.AddProperty("Bind", function (component, data, actionBtn = null) {
         }
     });
 });
+
+/**
+ * -- Bind Form --
+ * this function binds data to the supplied form.
+ * data is bound to input,select, and textarea
+ * elements.
+ *
+ * @param form the form element
+ * @param ds data set from which values will be used in binding
+ */
 Service.AddProperty("BindForm", function (form, ds) {
     if (ds === null) return;
     if (typeof form === "undefined") return;
@@ -893,6 +1088,15 @@ Service.AddProperty("BindForm", function (form, ds) {
         Service.TriggerEvents(jQuery(els[x]));
     }
 });
+
+/**
+ * -- Get Property --
+ * this function is used to get a specific data property
+ * form the data provided.
+ *
+ * @param id name of the property to retrieve
+ * @param data data set from which the property will be retrieved
+ */
 Service.AddProperty("GetProperty", function (id, data) {
     if (id === null) return data;
     if (typeof id === 'undefined') return data;
@@ -914,6 +1118,16 @@ Service.AddProperty("GetProperty", function (id, data) {
     }
     return property;
 });
+
+/**
+ * -- List Update --
+ * this function is used for creating a secondary dropdown
+ * list from a primary one (eg. Selecting a country and
+ * retrieving associated states)
+ *
+ * @param elem the element selected
+ * @param target the element to update with created select list
+ */
 Service.AddProperty("ListUpdate", function (elem, target, actionBtn) {
     if (elem.value.length > 0) {
         let url = elem.dataset[Service.SYSTEM_URL];
@@ -932,6 +1146,14 @@ Service.AddProperty("ListUpdate", function (elem, target, actionBtn) {
         Service.ServerRequest(serverObject);
     }
 });
+
+/**
+ * -- Trigger Events --
+ * this function triggers onclick and onchange events if
+ * present on the element passed to it
+ *
+ * @param elem element on which to trigger events
+ */
 Service.AddProperty("TriggerEvents", function (elem) {
     let click = elem.prop("onclick");
     let change = elem.prop("onchange");
@@ -940,6 +1162,15 @@ Service.AddProperty("TriggerEvents", function (elem) {
     if (change !== null) elem.change();
     if (blur !== null) elem.blur();
 });
+
+/**
+ * -- Image Preview --
+ * this function allows an image preview when a file
+ * is selected
+ *
+ * @param input the file input element
+ * @param target the img element to show the preview
+ */
 Service.AddProperty("ImagePreview", function (input, target) {
     if (input.length === 1 && input[0].files[0]) {
         let reader = new FileReader();
@@ -952,6 +1183,16 @@ Service.AddProperty("ImagePreview", function (input, target) {
         reader.readAsDataURL(input[0].files[0]);
     }
 });
+
+/**
+ * -- Load Panel --
+ * this function is responsible for loading html templates
+ * into the panel location specified. if no location
+ * is specified the default is used.
+ *
+ * @param elem the panel selected to be loaded
+ * @param target location where it should be placed
+ */
 Service.AddProperty("LoadPanel", function (elem, actionBtn, target) {
     return new Promise((resolve) => {
         if (typeof elem !== "undefined" && typeof elem === "object") {
@@ -1017,12 +1258,32 @@ Service.AddProperty("LoadPanel", function (elem, actionBtn, target) {
         resolve(false);
     });
 });
+
+/**
+ * -- Select List Builder --
+ * this function is responsible for building the options
+ * for a select element passed to it. data for each
+ * option is retrieved from a list provided.
+ *
+ * @param elem select list element
+ * @param list array of objects to construct options
+ */
 Service.AddProperty("SelectListBuilder", function (elem, list, actionBtn, emptyList = true) {
     if (emptyList) elem.empty();
     jQuery.each(list, function () {
         elem.append(`<option data-value="${this.Value}" value="${this.Value}"> ${this.Text} </option>`);
     });
 });
+
+/**
+ * -- Find Element --
+ * this function retrieves templates from the
+ * template tag or from a server side call and
+ * ensures they are recognized by the DOM
+ *
+ * @param name name of the element to retrieve
+ * @param actionBtn object triggering action
+ */
 Service.AddProperty("FindElement", function (name, actionBtn = null) {
     return new Promise((resolve) => {
         let templateContent = jQuery('template').prop('content');
@@ -1055,6 +1316,15 @@ Service.AddProperty("FindElement", function (name, actionBtn = null) {
         }
     });
 });
+
+/**
+ * -- Find Local Element --
+ * this function retrieves templates from the
+ * template tag and ensures they are recognized by the DOM
+ *
+ * @param name name of the element to retrieve
+ * @param actionBtn object triggering action
+ */
 Service.AddProperty("FindLocalElement", function (name, actionBtn = null) {
     let templateContent = jQuery('template').prop('content');
     templateContent = jQuery(templateContent);
@@ -1082,6 +1352,15 @@ Service.AddProperty("FindLocalElement", function (name, actionBtn = null) {
         return container;
     }
 });
+
+/**
+ * -- Execute Custom --
+ * this function automates the execution of modifications to
+ * panels or modals that have been loaded
+ *
+ * @param action names of the custom actions to execute
+ * @param component panel or modal on which to apply custom actions
+ */
 Service.AddProperty("ExecuteCustom", function (action, component, actionBtn, result = null) {
     return new Promise(function(resolve){
         if(typeof action !== "undefined" && action !== null && action.length > 0){
@@ -1099,6 +1378,15 @@ Service.AddProperty("ExecuteCustom", function (action, component, actionBtn, res
         resolve(false);
     });
 });
+
+/**
+ * -- Transform --
+ * this function automates the execution of modifications to
+ * elements during binding.
+ *
+ * @param action names of the custom actions to execute
+ * @param component element on which to apply custom actions
+ */
 Service.AddProperty("Transform", function (action, elem, property, actionBtn) {
     action = action.split("|");
     action.forEach(function (item) {
@@ -1118,6 +1406,16 @@ Service.AddProperty("Transform", function (action, elem, property, actionBtn) {
     });
     return property;
 });
+
+/**
+ * -- Execute Submit Transformation --
+ * this function automates the execution of modification to
+ * form elements before they are sent to the server
+ *
+ * @param action names of the custom actions to execute
+ * @param component element on which to apply custom actions
+ * @param params current form fields in the request
+ */
 Service.AddProperty("ExecuteSubmitTransformation", function (action, component, params, actionBtn) {
     action = action.split("|");
     action.forEach(function (item) {
@@ -1130,6 +1428,14 @@ Service.AddProperty("ExecuteSubmitTransformation", function (action, component, 
     });
     return params;
 });
+
+/**
+ * -- Loading State On --
+ * this function defines what happens when a request
+ * is being sent to the server. It should be primarily
+ * used to disable controls so that multiple requests
+ * cannot be sent at the same time
+ */
 Service.AddProperty("LoadingStateOn", function (ActionButton) {
     //disable form fields so that they cannot be edited
     //while submission is taking place
@@ -1140,6 +1446,13 @@ Service.AddProperty("LoadingStateOn", function (ActionButton) {
     //be duplicated.
     ActionButton.prop("disabled", true);
 });
+
+/**
+ * -- Loading State Off --
+ * this function defines what should happen when
+ * a request is executed by the server and a response
+ * received
+ */
 Service.AddProperty("LoadingStateOff", function (ActionButton) {
     //enable disabled elements
     if (Service.LoadedForm !== null) {
@@ -1147,11 +1460,24 @@ Service.AddProperty("LoadingStateOff", function (ActionButton) {
     }
     ActionButton.prop("disabled", false);
 });
+
+/**
+ * -- Load Panel Transition --
+ * this function defines the process of placing the panel
+ * within the specified container
+ */
 Service.AddProperty("LoadPanelTransition", function (container, panel, actionBtn = null) {
     container.css("display", "none");
     container.empty();
     container.html(panel).fadeIn("slow");
 });
+
+/**
+ * -- Bootstrap --
+ * this function defines default process for loading the DOM.
+ * It searches for the defined main container and loads the
+ * defined panel into it
+ */
 Service.AddProperty("Bootstrap", function(link = null){
     Service.ModelData.List = {};
 
@@ -1160,7 +1486,15 @@ Service.AddProperty("Bootstrap", function(link = null){
         if(link !== null) await Controller.PanelSelect(link[0]);
     },1000);
 });
-
+/**
+ * -- Form Submit --
+ * Handles form submission triggered by the element placed on.
+ * It will only execute if there is no other submission
+ * in progress. Behavior is to locate the form for submission,
+ * serialize form fields (including files), execute submit transformation
+ * function on form fields if present, and send the result to
+ * Service.ServerRequest to be processed.
+ */
 Controller.AddProperty("FormSubmit",function(elem,e){
     //prevent default action for submit button
     if(typeof e !== "undefined"){
@@ -1190,7 +1524,7 @@ Controller.AddProperty("FormSubmit",function(elem,e){
         Service.LoadedForm = jQuery(ActionButton.parents('form'));
     }
     else{
-        const url = ActionButton.data(Service.SYSTEM_URL);
+        const url = ActionButton.data(Service.SYSTEM_ACTION);
         const method = ActionButton.data(Service.SYSTEM_METHOD);
         if (target.substring(0, 1) !== "#") target = `#${target}`;
         const targetContainer = jQuery(document).find(target);
@@ -1318,6 +1652,15 @@ Controller.AddProperty("FormSubmit",function(elem,e){
         component: Service.LoadedForm
     });
 });
+
+/**
+ * -- File Select --
+ * Handles file selection and preview. It will only execute if
+ * there is no other action in progress. Behaviour is to
+ * locate the container with the file input and image,
+ * execute click function on file input to launch dialog,
+ * and setup the preview for showing when selected.
+ */
 Controller.AddProperty("FileSelect",function(elem){
     //if there is a triggered action do not execute
     if(Service.ActionLoading) return false;
@@ -1346,6 +1689,17 @@ Controller.AddProperty("FileSelect",function(elem){
     }
     Service.ActionLoading = false;
 });
+
+/**
+ * -- Modal Select --
+ * Handles launching modals. It will only execute if
+ * there is no other action in progress. Behaviour is to
+ * Find the element specified and update the loaded modal
+ * property with it, place it on the DOM in the modal
+ * container (this is just an empty div with the specified
+ * class that MUST be in the layout), execute any custom
+ * modifications, and launch.
+ */
 Controller.AddProperty("ModalSelect",function(elem){
     //if there is a triggered action do not execute
     if(Service.ModalLoading) return false;
@@ -1393,6 +1747,16 @@ Controller.AddProperty("ModalSelect",function(elem){
         Service.ModalLoading = false;
     }
 });
+
+/**
+ * -- Panel Select --
+ * Handles loading new panels unto the DOM. It will only
+ * execute if there is no other action in progress.
+ * Behaviour is to Find the element specified and update
+ * the loaded panel property with it, determine the target
+ * where the panel should be placed, load panel unto
+ * the DOM, and execute custom modifications if specified
+ */
 Controller.AddProperty("PanelSelect",function(elem){
     const ActionButton = jQuery(elem);
     const action = ActionButton.data(Service.SYSTEM_ACTION);
@@ -1402,7 +1766,7 @@ Controller.AddProperty("PanelSelect",function(elem){
         return false;
     }
     Service.PanelLoading.push(ActionButton.data(Service.SYSTEM_ACTION));
-    
+
     //make action button aware of loaded type
     ActionButton.data(Service.SYSTEM_LOAD_TYPE,"panel");
     //get history url if defined
@@ -1461,6 +1825,11 @@ Controller.AddProperty("PanelSelect",function(elem){
         });
     });
 });
+
+/**
+ * -- Reload Panel --
+ * this function reloads the current panel
+ */
 Controller.AddProperty("ReloadPanel",function(){
     const btn = jQuery("<button></button>",{
         type:"button",
@@ -1468,6 +1837,7 @@ Controller.AddProperty("ReloadPanel",function(){
     });
     Service.LoadPanel(Service.LoadedPanel,btn);
 });
+
 window.onpopstate = function(event){
     //get page state
     const state = event.state;

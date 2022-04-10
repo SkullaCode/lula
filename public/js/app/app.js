@@ -36,7 +36,7 @@ Controller.AddProperty("FormSubmit",function(elem,e){
         Service.LoadedForm = jQuery(ActionButton.parents('form'));
     }
     else{
-        const url = ActionButton.data(Service.SYSTEM_URL);
+        const url = ActionButton.data(Service.SYSTEM_ACTION);
         const method = ActionButton.data(Service.SYSTEM_METHOD);
         if (target.substring(0, 1) !== "#") target = `#${target}`;
         const targetContainer = jQuery(document).find(target);

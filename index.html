@@ -1,4 +1,5 @@
 <!DOCTYPE html>
+<!--suppress ALL -->
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -18,9 +19,7 @@
     <!-- <script src="public/js/plugins/dataTables.responsive.js"></script>-->
     <script src="public/js/plugins/vanillatoasts.js"></script>
     <script src="public/js/plugins/sweetalert.min.js"></script>
-    <script src="public/js/app/varObjects.js"></script>
-    <script src="public/js/app/functions.js"></script>
-    <script src="public/js/app/app.js"></script>
+    <script src="public/js/app/lula.min.js"></script>
     <script src="public/js/custom.js"></script>
     <script src="public/js/controllers/ItemController.js"></script>
 </head>
@@ -191,18 +190,18 @@
                         <button
                                 type="button"
                                 class="btn btn-success"
-                                data-action="#formSubmit"
+                                data-target="#formSubmit"
                                 data-method="post"
-                                data-href="/form_submit.php?result=random"
+                                data-action="/form_submit.php?result=random"
                                 data-complete="CustomCompleteHandler"
                                 onclick="Controller.FormSubmit(this)"
                         >Submit</button>
                         <button
                                 type="button"
                                 class="btn btn-success"
-                                data-action="#formSubmit"
+                                data-target="#formSubmit"
                                 data-method="post"
-                                data-href="/form_submit.php?result=success"
+                                data-action="/form_submit.php?result=success"
                                 data-success-handler="CustomSuccessHandler"
                                 data-error-handler="CustomErrorHandler"
                                 data-custom="TransformFormStage1|transform-form-stage-2"
@@ -212,9 +211,9 @@
                         <button
                                 type="button"
                                 class="btn btn-danger"
-                                data-action="#formSubmit"
+                                data-target="#formSubmit"
                                 data-method="post"
-                                data-href="/form_submit.php?result=fail"
+                                data-action="/form_submit.php?result=fail"
                                 data-success-handler="CustomSuccessHandler"
                                 data-error-handler="CustomErrorHandler"
                                 onclick="Controller.FormSubmit(this)"
@@ -222,9 +221,9 @@
                         <button
                                 type="button"
                                 class="btn btn-danger"
-                                data-action="#formSubmit"
+                                data-target="#formSubmit"
                                 data-method="post"
-                                data-href="/form_submit.php?result=fail"
+                                data-action="/form_submit.php?result=fail"
                                 data-success-handler="CustomSuccessHandler"
                                 data-error-handler="CustomErrorHandler"
                                 data-custom="transformation-no-submit"
