@@ -207,8 +207,8 @@ Service.AddProperty("SuccessMessageHandler", function (request) {
 });
 
 /**
- * -- Success Data Hander --
- * This function handes the default transformation of success
+ * -- Success Data Handler --
+ * This function handles the default transformation of success
  * data from the server into a usable format
  * 
  * @param data data as returned from the server

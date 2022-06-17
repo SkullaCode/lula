@@ -1,0 +1,11 @@
+ - Service.ListUpdate -> modify to check if url is absolute or relative
+ - Service.ListUpdate -> modify to send actionBtn in Service.ServerRequest if not null, and if null kill success notification
+ - Controller.FormSubmit -> change target from Service.SYSTEM_ACTION to Service.SYSTEM_TARGET
+ - Controller.FormSubmit -> determine if target is a form first
+ - Controller.FileSelect -> change target from Service.SYSTEM_ACTION to Service.SYSTEM_TARGET
+ 
+ - Service.Bind -> modify loop so that data-custom applied to the element (one with data-loop) runs Service.Transformation on each child generated
+ - Service.Bind -> modify select list creation to work with both Service.ModelData.List and a list passed to the function in the data property
+ - Controller.PanelSelect/Controller.ModalSelect -> create a way to load sub components automatically
+ 
+ - Service.FindElement -> ensure that element is of type div
