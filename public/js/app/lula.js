@@ -67,11 +67,9 @@ window.Service = function(){
     let ModalLoading        = null;
     let ActionLoading       = null;
     let ContainerPanel      = null;
-    let APIUrl              = null;
     let ModelData           = {};
     let MetaData            = {};
     let PanelLoading        = [];
-    let LoadingComplete     = false;
     let Title               = "Javascript UI";
 
     let addProperty = function(name,f){
@@ -83,18 +81,16 @@ window.Service = function(){
     };
 
     let Response = {
-        LoadedModal,
-        LoadedPanel,
-        LoadedForm,
-        PanelLoading,
-        ModalLoading,
-        ActionLoading,
-        ModelData,
-        MetaData,
-        ContainerPanel,
-        APIUrl,
-        LoadingComplete,
-        Title,
+        LoadedModal,    //-------------------------------------- Currently loaded modal component on the DOM
+        LoadedPanel,    //-------------------------------------- Currently loaded panel component on the DOM
+        LoadedForm,     //-------------------------------------- Currently loaded form when Controller.FormSubmit is called
+        PanelLoading,   //-------------------------------------- Determines if the panel is finished loading or not
+        ModalLoading,   //-------------------------------------- Determines if the modal is finished loading or not
+        ActionLoading,  //-------------------------------------- Determines if an action (PanelSelect,FormSubmit,etc...) is executing or not
+        ModelData,      //-------------------------------------- Container for storing data to be used in binding to panels or modals
+        MetaData,       //-------------------------------------- Container for holding miscellaneous data
+        ContainerPanel, //-------------------------------------- Container for temporarily loading templates on the DOM (loading them directly does not register events)
+        Title,          //-------------------------------------- Container for app title (displayed in the title bar)
         Modification                        : null,
         SubmitTransformation                : null,
         Transformation                      : null,
@@ -135,35 +131,35 @@ window.Service = function(){
         Bootstrap                           : null,
         AddProperty                         : addProperty,
         AddMethod                           : addMethod,
-        SYSTEM_ID                           : "id",
-        SYSTEM_PROPERTY                     : "property",
-        SYSTEM_TARGET                       : "target",
-        SYSTEM_COMPLETE                     : "complete",
-        SYSTEM_HEADERS                      : "headers",
-        SYSTEM_ACTION                       : "action",
-        SYSTEM_CUSTOM                       : "custom",
-        SYSTEM_URL                          : "href",
-        SYSTEM_METHOD                       : "method",
-        SYSTEM_PRE_FORM_EXECUTION           : "pre",
-        SYSTEM_HISTORY                      : "history",
-        SYSTEM_FILE_UPLOAD_CONTAINER        : ".file-upload",
-        SYSTEM_CLEAR_ERROR                  : "clear-error",
-        SYSTEM_CLEAR_SUCCESS                : "clear-success",
-        SYSTEM_LIST                         : "list",
-        SYSTEM_BIND                         : "bind",
-        SYSTEM_BIND_VALUE                   : "bind-value",
-        SYSTEM_BIND_META                    : "bind-meta",
-        SYSTEM_BIND_ELEM                    : "bind-element",
-        SYSTEM_BIND_GLOBAL                  : "bind-global",
-        SYSTEM_LOOP                         : "loop",
-        SYSTEM_BIND_LOOP                    : "bind-loop",
-        SYSTEM_SUCCESS_HANDLER              : "success-handler",
-        SYSTEM_ERROR_HANDLER                : "error-handler",
-        SYSTEM_LOAD_TYPE                    : "load-type",
-        SYSTEM_NOTIFICATION_ON_SUCCESS      : "notification-success",
-        SYSTEM_NOTIFICATION_ON_ERROR        : "notification-error",
-        SYSTEM_NOTIFICATION                 : "notification",
-        SYSTEM_TITLE                        : "title"
+        SYSTEM_ID                           : "id",                     //-------------------------------------- identifier for elements
+        SYSTEM_PROPERTY                     : "property",               //-------------------------------------- identifier for elements
+        SYSTEM_TARGET                       : "target",                 //--------------------------------------
+        SYSTEM_COMPLETE                     : "complete",               //-------------------------------------- identifier for actions that should run after an action has completed successfully
+        SYSTEM_HEADERS                      : "headers",                //--------------------------------------
+        SYSTEM_ACTION                       : "action",                 //-------------------------------------- identifier for template that should be loaded
+        SYSTEM_CUSTOM                       : "custom",                 //-------------------------------------- identifier for custom functions that should be executed on a component
+        SYSTEM_URL                          : "href",                   //-------------------------------------- identifier for url to use with manual form submit and List update
+        SYSTEM_METHOD                       : "method",                 //-------------------------------------- identifier for method (post,put,etc..) to use with manual form submit
+        SYSTEM_PRE_FORM_EXECUTION           : "pre",                    //-------------------------------------- identifier for submit transformations that should be executed before form submission
+        SYSTEM_HISTORY                      : "history",                //--------------------------------------
+        SYSTEM_FILE_UPLOAD_CONTAINER        : ".file-upload",           //-------------------------------------- identifier for container holding file upload panel
+        SYSTEM_CLEAR_ERROR                  : "clear-error",            //-------------------------------------- class that clears data in a form field if an error occurs
+        SYSTEM_CLEAR_SUCCESS                : "clear-success",          //-------------------------------------- class that clears data in a form field if successfully submitted
+        SYSTEM_LIST                         : "list",                   //-------------------------------------- identifier for building select lists on binding
+        SYSTEM_BIND                         : "bind",                   //-------------------------------------- class that determines if the item should be considered while data binding
+        SYSTEM_BIND_VALUE                   : "bind-value",             //-------------------------------------- class that determines if data should be bound to the value property
+        SYSTEM_BIND_META                    : "bind-meta",              //--------------------------------------
+        SYSTEM_BIND_ELEM                    : "bind-element",           //-------------------------------------- class that allows data binding on the element to be manipulated
+        SYSTEM_BIND_GLOBAL                  : "bind-global",            //-------------------------------------- class that allows data binding on the element with data in the current context being provided
+        SYSTEM_LOOP                         : "loop",                   //-------------------------------------- class that determines if binding should occur in a loop
+        SYSTEM_BIND_LOOP                    : "bind-loop",              //-------------------------------------- class that determines if the item should be considered when binding in a loop
+        SYSTEM_SUCCESS_HANDLER              : "success-handler",        //--------------------------------------
+        SYSTEM_ERROR_HANDLER                : "error-handler",          //-------------------------------------- determines which handler (alert or toaster) should be used on error
+        SYSTEM_LOAD_TYPE                    : "load-type",              //--------------------------------------
+        SYSTEM_NOTIFICATION_ON_SUCCESS      : "notification-success",   //-------------------------------------- determines which notification type (alert or toaster) should be used on success
+        SYSTEM_NOTIFICATION_ON_ERROR        : "notification-error",     //-------------------------------------- determines which notification type (alert or toaster) should be used on error
+        SYSTEM_NOTIFICATION                 : "notification",           //-------------------------------------- determines if notification should be executed
+        SYSTEM_TITLE                        : "title"                   //--------------------------------------
     };
 
     return Response;
@@ -194,7 +190,7 @@ window.Service.AddProperty('Modification',function(){
 
 /**
  * -- SubmitTransformation --
- * Add a method to the submit transformation executor if you want to transform the value of a form
+ * Add a method to the submit-transformation executor if you want to transform the value of a form
  * element before it is submitted to the server for processing. use the 'data-custom' attribute on
  * the element triggering the submission to add the method(s) that should be executed. if there needs
  * to be more than one method called, use the pipe (|) character to separate them. If for some reason
@@ -217,13 +213,13 @@ window.Service.AddProperty('SubmitTransformation',function(){
  * -- Transformation --
  * Add a method to the transformation executor if you want it to be called during data binding.
  * use the 'data-custom' attribute on the element that should be transformed to add the method(s)
- * that should be executed. if there needs to be more than one method called, use the pipe (|)
- * them. note that during binding only elements with the class 'bind' or 'bind-loop' will be considered.
- * Also, TRANSFORMATION WORKS TWO WAYS!!..... if 'bind-global' or 'bind-element' is present the
- * transformation will take place on the element and not the binding property. In other words, normal
- * transformation mutates the data property to be bounded to the element; 'bind-global' transforms the
- * element itself and provides the entire dataset; 'bind-element' transforms the element itself but
- * only provides the binding data property.
+ * that should be executed. if there needs to be more than one method called, use the pipe (|) character
+ * to separate them. note that during binding only elements with the class 'bind' or 'bind-loop'
+ * will be considered. Also, TRANSFORMATION WORKS TWO WAYS!!..... if 'bind-global' or 'bind-element'
+ * is present the transformation will take place on the element and not the binding property. In other
+ * words, normal transformation mutates the data property to be bounded to the element; 'bind-global'
+ * transforms the element itself and provides the entire dataset; 'bind-element' transforms the
+ * element itself but only provides the binding data property.
  */
 window.Service.AddProperty('Transformation',function(){
 
@@ -493,8 +489,8 @@ Service.AddProperty("SuccessMessageHandler", function (request) {
 });
 
 /**
- * -- Success Data Hander --
- * This function handes the default transformation of success
+ * -- Success Data Handler --
+ * This function handles the default transformation of success
  * data from the server into a usable format
  *
  * @param data data as returned from the server
@@ -1128,22 +1124,34 @@ Service.AddProperty("GetProperty", function (id, data) {
  * @param elem the element selected
  * @param target the element to update with created select list
  */
-Service.AddProperty("ListUpdate", function (elem, target, actionBtn) {
-    if (elem.value.length > 0) {
-        let url = elem.dataset[Service.SYSTEM_URL];
-        const site = `${url}/${elem.value}`;
-        const method = "GET";
-        const params = {};
-        const complete = actionBtn.data(Service.SYSTEM_COMPLETE) || null;
-        const success = function (result) { Service.SelectListBuilder(jQuery(target), result.data, result.actionBtn); };
-        let serverObject = {
-            site, method, params, success
-        };
-        if(actionBtn){
-            serverObject.actionBtn = actionBtn;
+Service.AddProperty("ListUpdate", function (elem, target) {
+    elem = jQuery(elem);
+    if (elem.val()) {
+        let url = elem.data(Service.SYSTEM_URL);
+        if(typeof url !== "undefined"){
+            const site = `${url}/${elem.val()}`;
+            const method = "GET";
+            const params = {};
+            const complete = elem.data(Service.SYSTEM_COMPLETE) || null;
+            const success = function (result) { Service.SelectListBuilder(jQuery(target), result.data, result.actionBtn); };
+            let serverObject = {
+                site, method, params, success
+            };
+            serverObject.actionBtn = elem;
             serverObject.complete = complete;
+            Service.ServerRequest(serverObject);
+        }else{
+            const dataList = elem.data(Service.SYSTEM_ACTION);
+            if(typeof dataList !== "undefined"){
+                let data = Service.ModelData.List[dataList];
+                if(typeof data !== "undefined"){
+                    data = data[elem.val()];
+                    if(typeof data !== "undefined"){
+                        Service.SelectListBuilder(jQuery(target), data, elem)
+                    }
+                }
+            }
         }
-        Service.ServerRequest(serverObject);
     }
 });
 
@@ -1198,6 +1206,10 @@ Service.AddProperty("LoadPanel", function (elem, actionBtn, target) {
         if (typeof elem !== "undefined" && typeof elem === "object") {
             const tContainer = jQuery("<div></div>");
             let action = elem.data(Service.SYSTEM_ACTION);
+            //check if a data function is defined by convention
+            if(!Service.Data.hasOwnProperty(action)){
+                action = `${actionBtn[0].dataset[Service.SYSTEM_ACTION]}-data`;
+            }
             if (Service.Data.hasOwnProperty(action)) {
                 Service.Data[action](elem, actionBtn).then(() => {
                     // we have to place panel on the DOM before we load it.....
@@ -1270,6 +1282,10 @@ Service.AddProperty("LoadPanel", function (elem, actionBtn, target) {
  */
 Service.AddProperty("SelectListBuilder", function (elem, list, actionBtn, emptyList = true) {
     if (emptyList) elem.empty();
+    const defaultOption = elem.data("default");
+    if(defaultOption){
+        elem.append(`<option data-value="" value=""> ${defaultOption} </option>`);
+    }
     jQuery.each(list, function () {
         elem.append(`<option data-value="${this.Value}" value="${this.Value}"> ${this.Text} </option>`);
     });
@@ -1388,22 +1404,24 @@ Service.AddProperty("ExecuteCustom", function (action, component, actionBtn, res
  * @param component element on which to apply custom actions
  */
 Service.AddProperty("Transform", function (action, elem, property, actionBtn) {
-    action = action.split("|");
-    action.forEach(function (item) {
-        if (elem === null) {
-            if (Service.Transformation.hasOwnProperty(item)) {
-                property = Service.Transformation[item](property, actionBtn);
-            } else if (Controller.hasOwnProperty(item)) {
-                property = Controller[item](property, actionBtn);
+    if(typeof action === "string" && action.length > 0){
+        action = action.split("|");
+        action.forEach(function (item) {
+            if (elem === null) {
+                if (Service.Transformation.hasOwnProperty(item)) {
+                    property = Service.Transformation[item](property, actionBtn);
+                } else if (Controller.hasOwnProperty(item)) {
+                    property = Controller[item](property, actionBtn);
+                }
+            } else {
+                if (Service.Transformation.hasOwnProperty(item)) {
+                    Service.Transformation[item](elem, property, actionBtn);
+                } else if (Controller.hasOwnProperty(item)) {
+                    Controller[item](elem, property, actionBtn);
+                }
             }
-        } else {
-            if (Service.Transformation.hasOwnProperty(item)) {
-                Service.Transformation[item](elem, property, actionBtn);
-            } else if (Controller.hasOwnProperty(item)) {
-                Controller[item](elem, property, actionBtn);
-            }
-        }
-    });
+        });
+    }
     return property;
 });
 
@@ -1836,6 +1854,20 @@ Controller.AddProperty("ReloadPanel",function(){
         "data-notification":"false"
     });
     Service.LoadPanel(Service.LoadedPanel,btn);
+});
+
+/**
+ * -- Get Select List --
+ * this function gets items from Service.ModelData.List based
+ * on the id provided
+ */
+Controller.AddProperty("UpdateSecondaryList", function(elem){
+    elem = jQuery(elem);
+    elem.data(Service.SYSTEM_NOTIFICATION,false);
+    const target = jQuery(document).find(`#${elem.data(Service.SYSTEM_TARGET)}`);
+    if(target){
+        Service.ListUpdate(elem,target);
+    }
 });
 
 window.onpopstate = function(event){

@@ -67,11 +67,9 @@ window.Service = function(){
     let ModalLoading        = null;
     let ActionLoading       = null;
     let ContainerPanel      = null;
-    let APIUrl              = null;
     let ModelData           = {};
     let MetaData            = {};
     let PanelLoading        = [];
-    let LoadingComplete     = false;
     let Title               = "Javascript UI";
 
     let addProperty = function(name,f){
@@ -83,18 +81,16 @@ window.Service = function(){
     };
 
     let Response = {
-        LoadedModal,
-        LoadedPanel,
-        LoadedForm,
-        PanelLoading,
-        ModalLoading,
-        ActionLoading,
-        ModelData,
-        MetaData,
-        ContainerPanel,
-        APIUrl,
-        LoadingComplete,
-        Title,
+        LoadedModal,    //-------------------------------------- Currently loaded modal component on the DOM
+        LoadedPanel,    //-------------------------------------- Currently loaded panel component on the DOM
+        LoadedForm,     //-------------------------------------- Currently loaded form when Controller.FormSubmit is called
+        PanelLoading,   //-------------------------------------- Determines if the panel is finished loading or not
+        ModalLoading,   //-------------------------------------- Determines if the modal is finished loading or not
+        ActionLoading,  //-------------------------------------- Determines if an action (PanelSelect,FormSubmit,etc...) is executing or not
+        ModelData,      //-------------------------------------- Container for storing data to be used in binding to panels or modals
+        MetaData,       //-------------------------------------- Container for holding miscellaneous data
+        ContainerPanel, //-------------------------------------- Container for temporarily loading templates on the DOM (loading them directly does not register events)
+        Title,          //-------------------------------------- Container for app title (displayed in the title bar)
         Modification                        : null,
         SubmitTransformation                : null,
         Transformation                      : null,
@@ -135,35 +131,35 @@ window.Service = function(){
         Bootstrap                           : null,
         AddProperty                         : addProperty,
         AddMethod                           : addMethod,
-        SYSTEM_ID                           : "id",
-        SYSTEM_PROPERTY                     : "property",
-        SYSTEM_TARGET                       : "target",
-        SYSTEM_COMPLETE                     : "complete",
-        SYSTEM_HEADERS                      : "headers",
-        SYSTEM_ACTION                       : "action",
-        SYSTEM_CUSTOM                       : "custom",
-        SYSTEM_URL                          : "href",
-        SYSTEM_METHOD                       : "method",
-        SYSTEM_PRE_FORM_EXECUTION           : "pre",
-        SYSTEM_HISTORY                      : "history",
-        SYSTEM_FILE_UPLOAD_CONTAINER        : ".file-upload",
-        SYSTEM_CLEAR_ERROR                  : "clear-error",
-        SYSTEM_CLEAR_SUCCESS                : "clear-success",
-        SYSTEM_LIST                         : "list",
-        SYSTEM_BIND                         : "bind",
-        SYSTEM_BIND_VALUE                   : "bind-value",
-        SYSTEM_BIND_META                    : "bind-meta",
-        SYSTEM_BIND_ELEM                    : "bind-element",  
-        SYSTEM_BIND_GLOBAL                  : "bind-global",
-        SYSTEM_LOOP                         : "loop",
-        SYSTEM_BIND_LOOP                    : "bind-loop",
-        SYSTEM_SUCCESS_HANDLER              : "success-handler",
-        SYSTEM_ERROR_HANDLER                : "error-handler",
-        SYSTEM_LOAD_TYPE                    : "load-type",
-        SYSTEM_NOTIFICATION_ON_SUCCESS      : "notification-success",
-        SYSTEM_NOTIFICATION_ON_ERROR        : "notification-error",
-        SYSTEM_NOTIFICATION                 : "notification",
-        SYSTEM_TITLE                        : "title"
+        SYSTEM_ID                           : "id",                     //-------------------------------------- identifier for elements
+        SYSTEM_PROPERTY                     : "property",               //-------------------------------------- identifier for elements
+        SYSTEM_TARGET                       : "target",                 //--------------------------------------
+        SYSTEM_COMPLETE                     : "complete",               //-------------------------------------- identifier for actions that should run after an action has completed successfully
+        SYSTEM_HEADERS                      : "headers",                //--------------------------------------
+        SYSTEM_ACTION                       : "action",                 //-------------------------------------- identifier for template that should be loaded
+        SYSTEM_CUSTOM                       : "custom",                 //-------------------------------------- identifier for custom functions that should be executed on a component
+        SYSTEM_URL                          : "href",                   //-------------------------------------- identifier for url to use with manual form submit and List update
+        SYSTEM_METHOD                       : "method",                 //-------------------------------------- identifier for method (post,put,etc..) to use with manual form submit
+        SYSTEM_PRE_FORM_EXECUTION           : "pre",                    //-------------------------------------- identifier for submit transformations that should be executed before form submission
+        SYSTEM_HISTORY                      : "history",                //--------------------------------------
+        SYSTEM_FILE_UPLOAD_CONTAINER        : ".file-upload",           //-------------------------------------- identifier for container holding file upload panel
+        SYSTEM_CLEAR_ERROR                  : "clear-error",            //-------------------------------------- class that clears data in a form field if an error occurs
+        SYSTEM_CLEAR_SUCCESS                : "clear-success",          //-------------------------------------- class that clears data in a form field if successfully submitted
+        SYSTEM_LIST                         : "list",                   //-------------------------------------- identifier for building select lists on binding
+        SYSTEM_BIND                         : "bind",                   //-------------------------------------- class that determines if the item should be considered while data binding
+        SYSTEM_BIND_VALUE                   : "bind-value",             //-------------------------------------- class that determines if data should be bound to the value property
+        SYSTEM_BIND_META                    : "bind-meta",              //--------------------------------------
+        SYSTEM_BIND_ELEM                    : "bind-element",           //-------------------------------------- class that allows data binding on the element to be manipulated
+        SYSTEM_BIND_GLOBAL                  : "bind-global",            //-------------------------------------- class that allows data binding on the element with data in the current context being provided
+        SYSTEM_LOOP                         : "loop",                   //-------------------------------------- class that determines if binding should occur in a loop
+        SYSTEM_BIND_LOOP                    : "bind-loop",              //-------------------------------------- class that determines if the item should be considered when binding in a loop
+        SYSTEM_SUCCESS_HANDLER              : "success-handler",        //--------------------------------------
+        SYSTEM_ERROR_HANDLER                : "error-handler",          //-------------------------------------- determines which handler (alert or toaster) should be used on error
+        SYSTEM_LOAD_TYPE                    : "load-type",              //--------------------------------------
+        SYSTEM_NOTIFICATION_ON_SUCCESS      : "notification-success",   //-------------------------------------- determines which notification type (alert or toaster) should be used on success
+        SYSTEM_NOTIFICATION_ON_ERROR        : "notification-error",     //-------------------------------------- determines which notification type (alert or toaster) should be used on error
+        SYSTEM_NOTIFICATION                 : "notification",           //-------------------------------------- determines if notification should be executed
+        SYSTEM_TITLE                        : "title"                   //--------------------------------------
     };
 
     return Response;
@@ -194,7 +190,7 @@ window.Service.AddProperty('Modification',function(){
 
 /**
  * -- SubmitTransformation --
- * Add a method to the submit transformation executor if you want to transform the value of a form
+ * Add a method to the submit-transformation executor if you want to transform the value of a form
  * element before it is submitted to the server for processing. use the 'data-custom' attribute on
  * the element triggering the submission to add the method(s) that should be executed. if there needs
  * to be more than one method called, use the pipe (|) character to separate them. If for some reason
@@ -217,13 +213,13 @@ window.Service.AddProperty('SubmitTransformation',function(){
  * -- Transformation --
  * Add a method to the transformation executor if you want it to be called during data binding.
  * use the 'data-custom' attribute on the element that should be transformed to add the method(s)
- * that should be executed. if there needs to be more than one method called, use the pipe (|)
- * them. note that during binding only elements with the class 'bind' or 'bind-loop' will be considered.
- * Also, TRANSFORMATION WORKS TWO WAYS!!..... if 'bind-global' or 'bind-element' is present the
- * transformation will take place on the element and not the binding property. In other words, normal
- * transformation mutates the data property to be bounded to the element; 'bind-global' transforms the
- * element itself and provides the entire dataset; 'bind-element' transforms the element itself but
- * only provides the binding data property.
+ * that should be executed. if there needs to be more than one method called, use the pipe (|) character
+ * to separate them. note that during binding only elements with the class 'bind' or 'bind-loop'
+ * will be considered. Also, TRANSFORMATION WORKS TWO WAYS!!..... if 'bind-global' or 'bind-element'
+ * is present the transformation will take place on the element and not the binding property. In other
+ * words, normal transformation mutates the data property to be bounded to the element; 'bind-global'
+ * transforms the element itself and provides the entire dataset; 'bind-element' transforms the
+ * element itself but only provides the binding data property.
  */
 window.Service.AddProperty('Transformation',function(){
 

@@ -19,7 +19,10 @@
     <!-- <script src="public/js/plugins/dataTables.responsive.js"></script>-->
     <script src="public/js/plugins/vanillatoasts.js"></script>
     <script src="public/js/plugins/sweetalert.min.js"></script>
-    <script src="public/js/app/lula.min.js"></script>
+    <script src="public/js/app/varObjects.js"></script>
+    <script src="public/js/app/functions.js"></script>
+    <script src="public/js/app/app.js"></script>
+    <!--<script src="public/js/app/lula.min.js"></script>-->
     <script src="public/js/custom.js"></script>
     <script src="public/js/controllers/ItemController.js"></script>
 </head>
@@ -95,6 +98,7 @@
             <p><a data-action="modal" data-id="12" onclick="Controller.ModalSelect(this)">Launch Modal With Data</a></p>
             <p><a data-action="file-select" data-target="SmallTarget" onclick="Controller.PanelSelect(this)">Image Preview</a></p>
             <p><a data-action="bad-panel" onclick="Controller.PanelSelect(this)">Default Panel</a></p>
+            <p><a data-action="list-update" onclick="Controller.PanelSelect(this)">List Update</a></p>
         </div>
         <div id="MainContainer" data-action="home" class="col-sm-8 text-left">
             <h1>Loading......</h1>
@@ -114,39 +118,40 @@
     <p>Footer Text</p>
 </footer>
 <template>
-    <div id="home" data-action="home-data">
-        <div>
-            <h1>Welcome</h1>
-            <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.</p>
-            <hr>
-            <h3>Test</h3>
-            <p>Lorem ipsum...</p>
-        </div>
+    <div id="home" data-action="Default">
+        <h1>Welcome</h1>
+        <p class="bind" id="data"></p>
+        <hr>
+        <h3>Test</h3>
+        <p>Lorem ipsum...</p>
     </div>
-    <div id="about" data-action="about-data">
-        <div>
-            <h1>About Us</h1>
-            <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.</p>
-        </div>
+    <div id="about">
+        <h1>About Us</h1>
+        <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.</p>
     </div>
-    <div id="contact" data-action="contact-data">
+    <div id="contact">
         <h3>Contact us Today!</h3>
         <p><i class="fa fa-facebook"></i> <i class="fa fa-twitter"></i> <i class="fa fa-instagram"></i></p>
     </div>
     <div id="form" data-action="form-data">
         <div class="row">
             <div class="col-xs-12">
-                <div class="form-group">
-                    <label class="bind control-label" id="NameLabel"></label>
-                    <input type="text" name="name" class="form-control bind bind-value" id="Name" data-action="capitalize"/>
-                </div>
-                <div class="form-group">
-                    <label class="bind control-label" id="AgeLabel"></label>
-                    <input type="number" name="age" class="form-control bind bind-value" id="Age">
-                </div>
-                <div class="form-group">
-                    <label class="bind control-label" id="GenderLabel"></label>
-                    <select name="gender" id="Gender" class="form-control bind bind-value" data-list="Gender"></select>
+                <div class="alert alert-danger bind bind-global" data-custom="form-header"></div>
+                <div class="panel panel-default">
+                    <div class="panel-body">
+                        <div class="form-group">
+                            <label class="bind control-label" id="NameLabel" data-custom="capitalize"></label>
+                            <input type="text" name="name" class="form-control bind bind-value" id="Name"/>
+                        </div>
+                        <div class="form-group">
+                            <label class="bind control-label" id="AgeLabel"></label>
+                            <input type="number" name="age" class="form-control bind bind-element" data-custom="add-age" id="Age">
+                        </div>
+                        <div class="form-group">
+                            <label class="bind control-label" id="GenderLabel"></label>
+                            <select name="gender" id="Gender" class="form-control bind bind-value" data-list="Gender"></select>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -244,6 +249,35 @@
             <img src="" style="max-width: 100px; max-height: inherit;"/>
             <input class="hidden" type="file" name="myFile">
             <input type="button" class="btn btn-primary btn-sm" value="Select File" onclick="Controller.FileSelect(this)" />
+        </div>
+    </div>
+    <div id="list-update">
+        <div class="row">
+            <div class="col-xs-12">
+                <div class="panel panel-default">
+                    <div class="panel-body">
+                        <div class="form-group">
+                            <label for="">Main List</label>
+                            <select
+                                    onchange="Controller.UpdateSecondaryList(this)"
+                                    data-action="secondary-content"
+                                    data-target="secondaryList"
+                                    data class="form-control bind bind-value"
+                                    name="main"
+                                    id="mainList"
+                                    data-list="main-content"
+                            >
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="">Secondary List</label>
+                            <select class="form-control" name="secondary" id="secondaryList" data-default="-- Select an Option --">
+                                <option value="">-- Select an Option --</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 </template>

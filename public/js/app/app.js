@@ -350,6 +350,20 @@ Controller.AddProperty("ReloadPanel",function(){
     Service.LoadPanel(Service.LoadedPanel,btn);
 });
 
+/**
+ * -- Get Select List --
+ * this function gets items from Service.ModelData.List based
+ * on the id provided
+ */
+Controller.AddProperty("UpdateSecondaryList", function(elem){
+    elem = jQuery(elem);
+    elem.data(Service.SYSTEM_NOTIFICATION,false);
+    const target = jQuery(document).find(`#${elem.data(Service.SYSTEM_TARGET)}`);
+    if(target){
+        Service.ListUpdate(elem,target);
+    }
+});
+
 window.onpopstate = function(event){
     //get page state
     const state = event.state;

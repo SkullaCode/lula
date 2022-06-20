@@ -842,22 +842,34 @@ Service.AddProperty("GetProperty", function (id, data) {
  * @param elem the element selected
  * @param target the element to update with created select list
  */
-Service.AddProperty("ListUpdate", function (elem, target, actionBtn) {
-    if (elem.value.length > 0) {
-        let url = elem.dataset[Service.SYSTEM_URL];
-        const site = `${url}/${elem.value}`;
-        const method = "GET";
-        const params = {};
-        const complete = actionBtn.data(Service.SYSTEM_COMPLETE) || null;
-        const success = function (result) { Service.SelectListBuilder(jQuery(target), result.data, result.actionBtn); };
-        let serverObject = {
-            site, method, params, success
-        };
-        if(actionBtn){
-            serverObject.actionBtn = actionBtn;
+Service.AddProperty("ListUpdate", function (elem, target) {
+    elem = jQuery(elem);
+    if (elem.val()) {
+        let url = elem.data(Service.SYSTEM_URL);
+        if(typeof url !== "undefined"){
+            const site = `${url}/${elem.val()}`;
+            const method = "GET";
+            const params = {};
+            const complete = elem.data(Service.SYSTEM_COMPLETE) || null;
+            const success = function (result) { Service.SelectListBuilder(jQuery(target), result.data, result.actionBtn); };
+            let serverObject = {
+                site, method, params, success
+            };
+            serverObject.actionBtn = elem;
             serverObject.complete = complete;
+            Service.ServerRequest(serverObject);
+        }else{
+            const dataList = elem.data(Service.SYSTEM_ACTION);
+            if(typeof dataList !== "undefined"){
+                let data = Service.ModelData.List[dataList];
+                if(typeof data !== "undefined"){
+                   data = data[elem.val()];
+                   if(typeof data !== "undefined"){
+                       Service.SelectListBuilder(jQuery(target), data, elem)
+                   }
+                }
+            }
         }
-        Service.ServerRequest(serverObject);
     }
 });
 
@@ -912,6 +924,10 @@ Service.AddProperty("LoadPanel", function (elem, actionBtn, target) {
         if (typeof elem !== "undefined" && typeof elem === "object") {
             const tContainer = jQuery("<div></div>");
             let action = elem.data(Service.SYSTEM_ACTION);
+            //check if a data function is defined by convention
+            if(!Service.Data.hasOwnProperty(action)){
+                action = `${actionBtn[0].dataset[Service.SYSTEM_ACTION]}-data`;
+            }
             if (Service.Data.hasOwnProperty(action)) {
                 Service.Data[action](elem, actionBtn).then(() => {
                     // we have to place panel on the DOM before we load it.....
@@ -984,6 +1000,10 @@ Service.AddProperty("LoadPanel", function (elem, actionBtn, target) {
  */
 Service.AddProperty("SelectListBuilder", function (elem, list, actionBtn, emptyList = true) {
     if (emptyList) elem.empty();
+    const defaultOption = elem.data("default");
+    if(defaultOption){
+        elem.append(`<option data-value="" value=""> ${defaultOption} </option>`);
+    }
     jQuery.each(list, function () {
         elem.append(`<option data-value="${this.Value}" value="${this.Value}"> ${this.Text} </option>`);
     });
@@ -1102,22 +1122,24 @@ Service.AddProperty("ExecuteCustom", function (action, component, actionBtn, res
  * @param component element on which to apply custom actions
  */
 Service.AddProperty("Transform", function (action, elem, property, actionBtn) {
-    action = action.split("|");
-    action.forEach(function (item) {
-        if (elem === null) {
-            if (Service.Transformation.hasOwnProperty(item)) {
-                property = Service.Transformation[item](property, actionBtn);
-            } else if (Controller.hasOwnProperty(item)) {
-                property = Controller[item](property, actionBtn);
+    if(typeof action === "string" && action.length > 0){
+        action = action.split("|");
+        action.forEach(function (item) {
+            if (elem === null) {
+                if (Service.Transformation.hasOwnProperty(item)) {
+                    property = Service.Transformation[item](property, actionBtn);
+                } else if (Controller.hasOwnProperty(item)) {
+                    property = Controller[item](property, actionBtn);
+                }
+            } else {
+                if (Service.Transformation.hasOwnProperty(item)) {
+                    Service.Transformation[item](elem, property, actionBtn);
+                } else if (Controller.hasOwnProperty(item)) {
+                    Controller[item](elem, property, actionBtn);
+                }
             }
-        } else {
-            if (Service.Transformation.hasOwnProperty(item)) {
-                Service.Transformation[item](elem, property, actionBtn);
-            } else if (Controller.hasOwnProperty(item)) {
-                Controller[item](elem, property, actionBtn);
-            }
-        }
-    });
+        });
+    }
     return property;
 });
 
