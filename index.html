@@ -151,6 +151,10 @@
                             <label class="bind control-label" id="GenderLabel"></label>
                             <select name="gender" id="Gender" class="form-control bind bind-value" data-list="Gender"></select>
                         </div>
+                        <div class="form-group">
+                            <label class="bind control-label" id="OptionLabel"></label>
+                            <select name="option" id="Option" class="form-control bind bind-value" data-list="Option.List" data-default="-- Select an Option --"></select>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -166,7 +170,7 @@
             </thead>
             <tbody class="bind" data-loop="">
                 <tr>
-                    <td class="bind-loop" id="Name"></td>
+                    <td class="bind-loop" id="Name" data-custom="capitalize"></td>
                     <td class="bind-loop" id="Age"></td>
                 </tr>
             </tbody>
@@ -260,7 +264,7 @@
                             <label for="">Main List</label>
                             <select
                                     onchange="Controller.UpdateSecondaryList(this)"
-                                    data-action="secondary-content"
+                                    data-action="GetSecondaryListData"
                                     data-target="secondaryList"
                                     data class="form-control bind bind-value"
                                     name="main"

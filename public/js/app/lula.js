@@ -159,7 +159,8 @@ window.Service = function(){
         SYSTEM_NOTIFICATION_ON_SUCCESS      : "notification-success",   //-------------------------------------- determines which notification type (alert or toaster) should be used on success
         SYSTEM_NOTIFICATION_ON_ERROR        : "notification-error",     //-------------------------------------- determines which notification type (alert or toaster) should be used on error
         SYSTEM_NOTIFICATION                 : "notification",           //-------------------------------------- determines if notification should be executed
-        SYSTEM_TITLE                        : "title"                   //--------------------------------------
+        SYSTEM_TITLE                        : "title",                  //--------------------------------------
+        SYSTEM_DEFAULT                      : "default"                 //-------------------------------------- determines what should be in the first option of a select list
     };
 
     return Response;
@@ -759,8 +760,16 @@ Service.AddProperty("Bind", function (component, data, actionBtn = null) {
             let list = elem.data(Service.SYSTEM_LIST);
             if (typeof list !== "undefined") {
                 let listGroup = Service.ModelData.List[list];
-                if (typeof listGroup !== "undefined") {
+                if(typeof listGroup === "undefined"){
+                    //let's see if the list is in the data provided
+                    listGroup = Service.GetProperty(list,data)
+                }
+                if (typeof listGroup !== "undefined" && listGroup !== null && listGroup.length > 0) {
                     Service.SelectListBuilder(elem, listGroup);
+                }else{
+                    if(elem.data(Service.SYSTEM_DEFAULT)){
+                        Service.SelectListBuilder(elem, []);
+                    }
                 }
             }
         }
@@ -991,8 +1000,16 @@ Service.AddProperty("BindForm", function (form, ds) {
             if (typeof list !== "undefined") {
                 //get dropdown list elements from storage
                 let listGroup = Service.ModelData.List[list];
-                if (typeof listGroup !== "undefined") {
+                if(typeof listGroup === "undefined"){
+                    //lets see if the list is in the data provided
+                    listGroup = Service.GetProperty(list,ds)
+                }
+                if (typeof listGroup !== "undefined" && listGroup !== null && listGroup.length > 0) {
                     Service.SelectListBuilder(elem, listGroup);
+                }else{
+                    if(elem.data(Service.SYSTEM_DEFAULT)){
+                        Service.SelectListBuilder(elem, []);
+                    }
                 }
             }
         }
@@ -1127,8 +1144,26 @@ Service.AddProperty("GetProperty", function (id, data) {
 Service.AddProperty("ListUpdate", function (elem, target) {
     elem = jQuery(elem);
     if (elem.val()) {
-        let url = elem.data(Service.SYSTEM_URL);
-        if(typeof url !== "undefined"){
+        elem.data(Service.SYSTEM_NOTIFICATION,false);
+        const dataList = elem.data(Service.SYSTEM_ACTION);
+        if(typeof dataList !== "undefined"){
+            let data = Service.ModelData.List[dataList];
+            if(typeof data !== "undefined"){
+                data = data[elem.val()];
+                if(typeof data !== "undefined"){
+                    Service.SelectListBuilder(jQuery(target), data, elem)
+                }
+            }else{
+                if(Service.Data.hasOwnProperty(dataList)){
+                    Service.Data[dataList](elem, elem).then((data) => {
+                        if(typeof data !== "undefined"){
+                            Service.SelectListBuilder(jQuery(target), data, elem)
+                        }
+                    });
+                }
+            }
+        }
+        /*if(typeof url !== "undefined"){
             const site = `${url}/${elem.val()}`;
             const method = "GET";
             const params = {};
@@ -1140,18 +1175,7 @@ Service.AddProperty("ListUpdate", function (elem, target) {
             serverObject.actionBtn = elem;
             serverObject.complete = complete;
             Service.ServerRequest(serverObject);
-        }else{
-            const dataList = elem.data(Service.SYSTEM_ACTION);
-            if(typeof dataList !== "undefined"){
-                let data = Service.ModelData.List[dataList];
-                if(typeof data !== "undefined"){
-                    data = data[elem.val()];
-                    if(typeof data !== "undefined"){
-                        Service.SelectListBuilder(jQuery(target), data, elem)
-                    }
-                }
-            }
-        }
+        }*/
     }
 });
 
@@ -1684,7 +1708,7 @@ Controller.AddProperty("FileSelect",function(elem){
     if(Service.ActionLoading) return false;
     const ActionButton = jQuery(elem);
     Service.ActionLoading = true;
-    let target = ActionButton.data(Service.SYSTEM_ACTION);
+    let target = ActionButton.data(Service.SYSTEM_TARGET);
     let custom = ActionButton.data(Service.SYSTEM_COMPLETE);
     //load the form associated with the file
     const form = (typeof target === "undefined")

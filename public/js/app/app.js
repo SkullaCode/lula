@@ -178,7 +178,7 @@ Controller.AddProperty("FileSelect",function(elem){
     if(Service.ActionLoading) return false;
     const ActionButton = jQuery(elem);
     Service.ActionLoading = true;
-    let target = ActionButton.data(Service.SYSTEM_ACTION);
+    let target = ActionButton.data(Service.SYSTEM_TARGET);
     let custom = ActionButton.data(Service.SYSTEM_COMPLETE);
     //load the form associated with the file
     const form = (typeof target === "undefined")

@@ -31,7 +31,20 @@ Service.Data.AddMethod("form-data",function(component,actionBtn){
             AgeLabel: "Person Age",
             Age: 30,
             GenderLabel: "Person Gender",
-            Gender: 1
+            Gender: 1,
+            OptionLabel: "User Options",
+            Option:{
+                List:[
+                    {
+                        Text:"Start",
+                        Value:1
+                    },
+                    {
+                        Text:"Stop",
+                        Value:2
+                    }
+                ]
+            }
         };
         const id = actionBtn.data(Service.SYSTEM_ID);
         Service.Bind(component,data[id],actionBtn);
@@ -136,6 +149,23 @@ Service.Data.AddMethod("list-update-data",function(component,actionBtn){
         resolve();
     });
 });
+Service.Data.GetSecondaryListData = function(component, actionBtn){
+    return new Promise(function(resolve){
+        let index = actionBtn.val();
+        const list = [];
+        list.push({ Text: "MI1 Secondary 1", Value: 1, Map:1 });
+        list.push({ Text: "MI1 Secondary 2", Value: 2, Map:1 });
+        list.push({ Text: "MI1 Secondary 3", Value: 3, Map:1 });
+        list.push({ Text: "MI2 Secondary 1", Value: 1, Map:2 });
+        list.push({ Text: "MI2 Secondary 2", Value: 2, Map:2 });
+        list.push({ Text: "MI2 Secondary 3", Value: 3, Map:2 });
+        list.push({ Text: "MI3 Secondary 1", Value: 1, Map:3 });
+        list.push({ Text: "MI3 Secondary 2", Value: 2, Map:3 });
+        list.push({ Text: "MI3 Secondary 3", Value: 3, Map:3 });
+        let filteredList = list.filter((x) =>  x.Map == index );
+        resolve(filteredList);
+    });
+};
 
 Service.SubmitTransformation.TransformFormStage1 = function(component,params){
     alert("form is being transformed..... stage 1");
