@@ -22,6 +22,11 @@ let ModalContainer        = "modal-container";
  */
 let TemplateContainer     = "container-panel";
 
+const HARD_RELOAD_HEADER = "x-reload-app";
+const HARD_REDIRECT_HEADER = "x-redirect-app";
+const TOASTER_NOTIFICATION_TYPE = "toaster";
+const ALERT_NOTIFICATION_TYPE = "alert";
+
 /**
  * -- Controller --
  * Contains all the custom logic for the current page
@@ -67,7 +72,11 @@ window.Service = function(){
     let ModalLoading        = null;
     let ActionLoading       = null;
     let ContainerPanel      = null;
-    let ModelData           = {};
+    let ModelData           = {
+        Lists: {},
+        Listing: [],
+        SelectedEntity: {},
+    };
     let MetaData            = {};
     let PanelLoading        = [];
     let Title               = "Javascript UI";
@@ -96,7 +105,7 @@ window.Service = function(){
         Transformation                      : null,
         DomEvents                           : null,
         Data                                : null,
-        Action                              : null,
+        AuthorizationHandler                : null,
         ErrorHandler                        : null,
         SuccessHandler                      : null,
         NotificationHandler                 : null,
@@ -243,30 +252,6 @@ window.Service.AddProperty('Transformation',function(){
  * takes place.
  */
 window.Service.AddProperty('Data',function(){
-
-    let store = {};
-
-    let addMethod = function(name,f){
-        Response[name] = f;
-    };
-
-    let Response = {
-        AddMethod: addMethod,
-        Store: store
-    };
-
-    return Response;
-}());
-
-/**
- * -- Action --
- * Add a method to the action executor if a form needs a non-standard way of sending the
- * request to the server and handling the response. methods can be triggered by inline
- * onclick and onchange events or by the data-action attribute on a submit button.
- * please note that the data-action is the same item that determines the location of  
- * the form if the submit button is not contained within it.
- */
-window.Service.AddProperty('Action',function(){
 
     let store = {};
 
