@@ -8,8 +8,7 @@ Service.Modification.Capitalize = function(component, actionBtn){
     header.css("font-variant-caps","all-petite-caps");
 };
 Service.Modification.CustomCompleteHandler = function(component, actionBtn, result){
-    console.log({result});
-    let message = (result.status === "success") ? "successfully" : "in error";
+    let message = (result.Status === "success") ? "successfully" : "in error";
     alert(`Complete handler was fired ${message}`);
 };
 
@@ -33,19 +32,21 @@ Service.Data.AddMethod("form-data",function(component,actionBtn){
             GenderLabel: "Person Gender",
             Gender: 1,
             OptionLabel: "User Options",
-            Option:{
-                List:[
-                    {
-                        Text:"Start",
-                        Value:1
-                    },
-                    {
-                        Text:"Stop",
-                        Value:2
-                    }
-                ]
-            }
+            OptionData:2,
+            ModuleData:1,
+            ControllerData:3
         };
+        const SuppliedDataList = [
+            {
+                Text: "Supplied One",
+                Value: 1
+            },
+            {
+                Text: "Supplied Two",
+                Value: 2
+            }
+        ]
+        Service.BindList(component.find("select[name=suppliedData]"),SuppliedDataList,actionBtn);
         const id = actionBtn.data(Service.SYSTEM_ID);
         Service.Bind(component,data[id],actionBtn);
         return resolve(true);
@@ -99,7 +100,11 @@ Service.Data.AddMethod("modal-data",function(component,actionBtn){
             AgeLabel: "Person Age",
             Age: 30,
             GenderLabel: "Person Gender",
-            Gender: 1
+            Gender: 1,
+            OptionLabel: "User Options",
+            OptionData:2,
+            ModuleData:1,
+            ControllerData:3
         };
         const id = actionBtn.data(Service.SYSTEM_ID);
         component.find(".modal-body").attr("id","formSubmit");
@@ -107,7 +112,6 @@ Service.Data.AddMethod("modal-data",function(component,actionBtn){
             data[12].ModalTitle = "New Modal";
 
             Service.FindElement("form").then((form) => {
-                //Service.BindForm(form,data[id]);
                 Service.Bind(form,data[id],actionBtn);
                 Service.Bind(component,data[id],actionBtn);
                 component.find("#modal-form").append(form);
@@ -122,60 +126,16 @@ Service.Data.AddMethod("modal-data",function(component,actionBtn){
         return resolve(true);
     });
 });
-Service.Data.AddMethod("list-update-data",function(component,actionBtn){
-    return new Promise(function(resolve){
-        Service.ModelData.List["main-content"] = [
-            { Text: "Main Item 1", Value: 1 },
-            { Text: "Main Item 2", Value: 2 },
-            { Text: "Main Item 3", Value: 3 },
-        ];
-        Service.ModelData.List['secondary-content'] = {};
-        Service.ModelData.List['secondary-content'][1] = [
-            { Text: "MI1 Secondary 1", Value: 1 },
-            { Text: "MI1 Secondary 2", Value: 2 },
-            { Text: "MI1 Secondary 3", Value: 3 },
-        ];
-        Service.ModelData.List['secondary-content'][2] = [
-            { Text: "MI2 Secondary 1", Value: 4 },
-            { Text: "MI2 Secondary 2", Value: 5 },
-            { Text: "MI2 Secondary 3", Value: 6 },
-        ];
-        Service.ModelData.List['secondary-content'][3] = [
-            { Text: "MI3 Secondary 1", Value: 7 },
-            { Text: "MI3 Secondary 2", Value: 8 },
-            { Text: "MI3 Secondary 3", Value: 9 },
-        ];
-        Service.Bind(component,{mainList:2});
-        resolve();
-    });
-});
-Service.Data.GetSecondaryListData = function(component, actionBtn){
-    return new Promise(function(resolve){
-        let index = actionBtn.val();
-        const list = [];
-        list.push({ Text: "MI1 Secondary 1", Value: 1, Map:1 });
-        list.push({ Text: "MI1 Secondary 2", Value: 2, Map:1 });
-        list.push({ Text: "MI1 Secondary 3", Value: 3, Map:1 });
-        list.push({ Text: "MI2 Secondary 1", Value: 1, Map:2 });
-        list.push({ Text: "MI2 Secondary 2", Value: 2, Map:2 });
-        list.push({ Text: "MI2 Secondary 3", Value: 3, Map:2 });
-        list.push({ Text: "MI3 Secondary 1", Value: 1, Map:3 });
-        list.push({ Text: "MI3 Secondary 2", Value: 2, Map:3 });
-        list.push({ Text: "MI3 Secondary 3", Value: 3, Map:3 });
-        let filteredList = list.filter((x) =>  x.Map == index );
-        resolve(filteredList);
-    });
-};
 
-Service.SubmitTransformation.TransformFormStage1 = function(component,params){
+Service.SubmitTransformation.TransformFormStage1 = function(component,params,actionBtn){
     alert("form is being transformed..... stage 1");
     return params;
 };
-Service.SubmitTransformation.AddMethod("transform-form-stage-2",function(component,params){
+Service.SubmitTransformation.AddMethod("transform-form-stage-2",function(component,params,actionBtn){
     alert("form is being transformed..... stage 2");
     return params;
 });
-Service.SubmitTransformation.AddMethod("transformation-no-submit", function(component,params){
+Service.SubmitTransformation.AddMethod("transformation-no-submit", function(component,params,actionBtn){
     alert("form submit will fail");
     Service.CanSubmitForm = false;
     return params;
@@ -212,13 +172,28 @@ Controller.CustomSuccessHandler = function(result){
 };
 Controller.CustomErrorHandler = function(e){
     alert("Custom error handler was fired");
+    console.log({e});
     Service.ErrorHandler(e);
 };
-Controller.PreFormSubmitEvent = function(formData){
-  alert("Pre form execution event handler was fired");
-};
+Controller.AddMethod("list-from-controller",function(btn){
+    return [
+        {
+            Text: "Controller List Item One",
+            Value: 1
+        },
+        {
+            Text: "Controller List Item Two",
+            Value: 2
+        }
+    ]
+});
 
+//launch application when javascript and jQuery is finished loading
 jQuery(function(){
     window.Controller.Init();
+    const link = jQuery("<a>");
+    link.attr("data-action","form");
+    link.attr("data-target","SmallTarget");
+    Service.Bootstrap(link);
 });
 

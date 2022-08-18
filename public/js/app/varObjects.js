@@ -26,6 +26,7 @@ const HARD_RELOAD_HEADER = "x-reload-app";
 const HARD_REDIRECT_HEADER = "x-redirect-app";
 const TOASTER_NOTIFICATION_TYPE = "toaster";
 const ALERT_NOTIFICATION_TYPE = "alert";
+const NONE_NOTIFICATION_TYPE = "none";
 
 /**
  * -- Controller --
@@ -119,6 +120,7 @@ window.Service = function(){
         LaunchModal                         : null,
         Bind                                : null,
         BindForm                            : null,
+        BindList                            : null,
         GetProperty                         : null,
         ListUpdate                          : null,
         TriggerEvents                       : null,
@@ -149,7 +151,6 @@ window.Service = function(){
         SYSTEM_CUSTOM                       : "custom",                 //-------------------------------------- identifier for custom functions that should be executed on a component
         SYSTEM_URL                          : "href",                   //-------------------------------------- identifier for url to use with manual form submit and List update
         SYSTEM_METHOD                       : "method",                 //-------------------------------------- identifier for method (post,put,etc..) to use with manual form submit
-        SYSTEM_PRE_FORM_EXECUTION           : "pre",                    //-------------------------------------- identifier for submit transformations that should be executed before form submission
         SYSTEM_HISTORY                      : "history",                //--------------------------------------
         SYSTEM_FILE_UPLOAD_CONTAINER        : ".file-upload",           //-------------------------------------- identifier for container holding file upload panel
         SYSTEM_CLEAR_ERROR                  : "clear-error",            //-------------------------------------- class that clears data in a form field if an error occurs
@@ -157,7 +158,6 @@ window.Service = function(){
         SYSTEM_LIST                         : "list",                   //-------------------------------------- identifier for building select lists on binding
         SYSTEM_BIND                         : "bind",                   //-------------------------------------- class that determines if the item should be considered while data binding
         SYSTEM_BIND_VALUE                   : "bind-value",             //-------------------------------------- class that determines if data should be bound to the value property
-        SYSTEM_BIND_META                    : "bind-meta",              //--------------------------------------
         SYSTEM_BIND_ELEM                    : "bind-element",           //-------------------------------------- class that allows data binding on the element to be manipulated
         SYSTEM_BIND_GLOBAL                  : "bind-global",            //-------------------------------------- class that allows data binding on the element with data in the current context being provided
         SYSTEM_LOOP                         : "loop",                   //-------------------------------------- class that determines if binding should occur in a loop

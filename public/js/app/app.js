@@ -23,6 +23,7 @@ Controller.AddProperty("FormSubmit",function(elem,e){
     let custom = ActionButton.data(Service.SYSTEM_CUSTOM);
     let complete = ActionButton.data(Service.SYSTEM_COMPLETE);
     let requestHeaders = ActionButton.data(Service.SYSTEM_HEADERS);
+    let form = [];
     let site_url = "";
     let method = "";
     let params = new FormData();
@@ -36,21 +37,20 @@ Controller.AddProperty("FormSubmit",function(elem,e){
         Service.LoadedForm = jQuery(ActionButton.parents('form'));
     }
     else{
-        const url = ActionButton.data(Service.SYSTEM_ACTION);
-        const method = ActionButton.data(Service.SYSTEM_METHOD);
         if (target.substring(0, 1) !== "#") target = `#${target}`;
         const targetContainer = jQuery(document).find(target);
-        let form = (targetContainer.is("form")) ? targetContainer : targetContainer.find("form");
+        form = (targetContainer.is("form")) ? targetContainer : targetContainer.find("form");
         if (form.length > 0) {
             Service.LoadedForm = form;
-            if(typeof url !== "undefined") form.attr("action",url);
-            if(typeof method !== "undefined") form.attr("method",method);
+            form.attr("action",form.data("action"));
+            form.attr("method",form.data("method"));
         } else {
+            //No form detected......lets build one.
             const formContent = targetContainer.clone();
             form = jQuery("<form></form>",
                 {
-                    action: url,
-                    method: method
+                    action: targetContainer.data("action"),
+                    method: targetContainer.data("method")
                 });
             form.append(formContent.children());
             //jQuery does not clone selects.....say its to expensive
@@ -58,8 +58,9 @@ Controller.AddProperty("FormSubmit",function(elem,e){
             jQuery(selects).each(function (i) {
                 form.find("select").eq(i).val(jQuery(this).val());
             });
-            //targetContainer.empty().append(form);
-            Service.LoadedForm = form;
+            //we use the target as the loaded form
+            //Form object used to retrieve data
+            Service.LoadedForm = targetContainer;
         }
     }
 
@@ -80,12 +81,12 @@ Controller.AddProperty("FormSubmit",function(elem,e){
 
     //retrieve form fields and submission data from loaded form
     //exclude file input from search...handled separately below
-    data = jQuery(Service.LoadedForm.serializeArray());
+    data = jQuery(form.serializeArray());
     jQuery.each(data,function(){
         params.append(this.name,this.value);
     });
-    site_url = Service.LoadedForm[0].action;
-    method = Service.LoadedForm[0].method;
+    site_url = form[0].action;
+    method = form[0].method;
 
     if(typeof site_url === "undefined") return false;
     if(typeof method === "undefined") method = "POST";
@@ -93,7 +94,7 @@ Controller.AddProperty("FormSubmit",function(elem,e){
 
     //determine if the form has a file, and if so serialize
     //using FormData object, or just use an object
-    const file = Service.LoadedForm.find("input[type='file']");
+    const file = form.find("input[type='file']");
     if(file.length > 0){
         jQuery(file).each(function(e){
             //determine if multiple files are selected and add
@@ -116,7 +117,7 @@ Controller.AddProperty("FormSubmit",function(elem,e){
 
     //determine if there are submit transformations and execute them
     if(typeof custom !== "undefined")
-        params = Service.ExecuteSubmitTransformation(custom,Service.LoadedForm,params);
+        params = Service.ExecuteSubmitTransformation(custom,Service.LoadedForm,params,ActionButton);
 
     //determine if we should send form to server for processing or not
     if(Service.CanSubmitForm === false){
@@ -136,33 +137,16 @@ Controller.AddProperty("FormSubmit",function(elem,e){
     if(typeof errorHandler !== "undefined" && Controller.hasOwnProperty(errorHandler)){
         error = Controller[errorHandler];
     }
-
-    //determine how the form submission should be processed
-    //if a specific action was specified we use that
-    //otherwise we use the default server request
-    let ex = Service.Action[target];
-    if(typeof ex !== "undefined") ex({
-        params,
-        success,
-        error,
-        headers,
-        complete,
-        site: site_url,
-        request: method,
-        actionBtn: ActionButton,
-        component: Service.LoadedForm
-    });
-    else Service.ServerRequest({
-        params,
-        success,
-        error,
-        headers,
-        complete,
-        site: site_url,
-        request: method,
-        actionBtn: ActionButton,
-        component: Service.LoadedForm
-    });
+    const requestData = new Requirement();
+    requestData.Params = params;
+    requestData.SuccessHandler = success;
+    requestData.ErrorHandler = error;
+    requestData.Complete = complete;
+    requestData.Site = site_url;
+    requestData.Request = method;
+    requestData.ActionBtn = ActionButton;
+    requestData.Component = Service.LoadedForm;
+    Service.ServerRequest(requestData);
 });
 
 /**
@@ -348,20 +332,6 @@ Controller.AddProperty("ReloadPanel",function(){
         "data-notification":"false"
     });
     Service.LoadPanel(Service.LoadedPanel,btn);
-});
-
-/**
- * -- Get Select List --
- * this function gets items from Service.ModelData.List based
- * on the id provided
- */
-Controller.AddProperty("UpdateSecondaryList", function(elem){
-    elem = jQuery(elem);
-    elem.data(Service.SYSTEM_NOTIFICATION,false);
-    const target = jQuery(document).find(`#${elem.data(Service.SYSTEM_TARGET)}`);
-    if(target){
-        Service.ListUpdate(elem,target);
-    }
 });
 
 window.onpopstate = function(event){

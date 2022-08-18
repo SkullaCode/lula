@@ -8,6 +8,7 @@ class Result{
 }
 
 class Requirement{
+    Site = null;
     Method = null;
     Request = null;
     Headers = null;
@@ -20,8 +21,8 @@ class Requirement{
     Complete = null;
 }
 
-const NotificationType = class {
-    Alert = "alert";
-    Toaster = "toaster";
-    None = "none";
+class ServerData{
+    Status = null;
+    Message = null;
+    Data = null;
 }

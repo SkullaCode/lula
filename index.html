@@ -19,6 +19,7 @@
     <!-- <script src="public/js/plugins/dataTables.responsive.js"></script>-->
     <script src="public/js/plugins/vanillatoasts.js"></script>
     <script src="public/js/plugins/sweetalert.min.js"></script>
+    <script src="public/js/app/classes.js"></script>
     <script src="public/js/app/varObjects.js"></script>
     <script src="public/js/app/functions.js"></script>
     <script src="public/js/app/app.js"></script>
@@ -91,14 +92,13 @@
     <div class="row content">
         <div class="col-sm-2 sidenav">
             <p><a data-action="form" data-target="SmallTarget" onclick="Controller.PanelSelect(this)">Launch Form</a></p>
-            <p><a data-action="form" data-target="SmallTarget" data-id="12" data-type="form" onclick="Controller.PanelSelect(this)">Launch Form With Data</a></p>
+            <p><a data-action="form" data-target="SmallTarget" data-id="12" onclick="Controller.PanelSelect(this)">Launch Form With Data</a></p>
             <p><a data-action="table" data-target="SmallTarget" onclick="Controller.PanelSelect(this)">Launch Table</a></p>
             <p><a data-action="datatable" data-target="SmallTarget" onclick="Controller.PanelSelect(this)">Launch DataTable</a></p>
             <p><a data-action="modal" data-type="add" data-mix="gre" onclick="Controller.ModalSelect(this)">Launch Modal</a></p>
             <p><a data-action="modal" data-id="12" onclick="Controller.ModalSelect(this)">Launch Modal With Data</a></p>
             <p><a data-action="file-select" data-target="SmallTarget" onclick="Controller.PanelSelect(this)">Image Preview</a></p>
             <p><a data-action="bad-panel" onclick="Controller.PanelSelect(this)">Default Panel</a></p>
-            <p><a data-action="list-update" onclick="Controller.PanelSelect(this)">List Update</a></p>
         </div>
         <div id="MainContainer" data-action="home" class="col-sm-8 text-left">
             <h1>Loading......</h1>
@@ -153,14 +153,26 @@
                         </div>
                         <div class="form-group">
                             <label class="bind control-label" id="OptionLabel"></label>
-                            <select name="option" id="Option" class="form-control bind bind-value" data-list="Option.List" data-default="-- Select an Option --"></select>
+                            <select name="optionData" id="OptionData" class="form-control bind bind-value" data-list="Option" data-default="-- Option Data List --"></select>
+                        </div>
+                        <div class="form-group">
+                            <label class="bind control-label" id="OptionLabel"></label>
+                            <select name="moduleData" id="ModuleData" class="form-control bind bind-value" data-list="ModuleOne.ModuleTwo" data-default="-- Module Data List --"></select>
+                        </div>
+                        <div class="form-group">
+                            <label class="bind control-label" id="OptionLabel"></label>
+                            <select name="suppliedData" id="SuppliedData" class="form-control bind bind-value" data-default="-- Supplied Data List --"></select>
+                        </div>
+                        <div class="form-group">
+                            <label class="bind control-label" id="OptionLabel"></label>
+                            <select name="controllerData" id="ControllerData" data-list="list-from-controller" class="form-control bind bind-value" data-default="-- Controller Data List --"></select>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
     </div>
-    <div id="table" data-action="table-data">
+    <div id="table">
         <table id="tableTable" class="table table-condensed table-bordered">
             <thead>
                 <tr>
@@ -191,53 +203,41 @@
                     </div>
                     <div class="modal-body">
                         <div class="row">
-                            <div class="col-xs-6" id="modal-form"></div>
+                            <div
+                                class="col-xs-6"
+                                id="modal-form"
+                                data-method="post"
+                                data-action="/form_submit.php?result=success"
+                            >
+
+                            </div>
                             <div class="col-xs-6" id="modal-image"></div>
                         </div>
                     </div>
                     <div class="modal-footer">
                         <button
                                 type="button"
-                                class="btn btn-success"
-                                data-target="#formSubmit"
-                                data-method="post"
-                                data-action="/form_submit.php?result=random"
+                                class="btn btn-primary"
+                                data-target="modal-form"
                                 data-complete="CustomCompleteHandler"
                                 onclick="Controller.FormSubmit(this)"
-                        >Submit</button>
+                        >Submit Basic</button>
                         <button
                                 type="button"
-                                class="btn btn-success"
-                                data-target="#formSubmit"
-                                data-method="post"
-                                data-action="/form_submit.php?result=success"
+                                class="btn btn-primary"
+                                data-target="modal-form"
                                 data-success-handler="CustomSuccessHandler"
                                 data-error-handler="CustomErrorHandler"
                                 data-custom="TransformFormStage1|transform-form-stage-2"
-                                data-pre="PreFormSubmitEvent"
                                 onclick="Controller.FormSubmit(this)"
-                        >Submit Success</button>
+                        >Submit Custom</button>
                         <button
                                 type="button"
                                 class="btn btn-danger"
-                                data-target="#formSubmit"
-                                data-method="post"
-                                data-action="/form_submit.php?result=fail"
-                                data-success-handler="CustomSuccessHandler"
-                                data-error-handler="CustomErrorHandler"
-                                onclick="Controller.FormSubmit(this)"
-                        >Submit Fail</button>
-                        <button
-                                type="button"
-                                class="btn btn-danger"
-                                data-target="#formSubmit"
-                                data-method="post"
-                                data-action="/form_submit.php?result=fail"
-                                data-success-handler="CustomSuccessHandler"
-                                data-error-handler="CustomErrorHandler"
+                                data-target="modal-form"
                                 data-custom="transformation-no-submit"
                                 onclick="Controller.FormSubmit(this)"
-                        >Submit Fail Pre</button>
+                        >Submit Fail Validation</button>
                         <button
                                 type="button"
                                 class="btn btn-default"
@@ -253,35 +253,6 @@
             <img src="" style="max-width: 100px; max-height: inherit;"/>
             <input class="hidden" type="file" name="myFile">
             <input type="button" class="btn btn-primary btn-sm" value="Select File" onclick="Controller.FileSelect(this)" />
-        </div>
-    </div>
-    <div id="list-update">
-        <div class="row">
-            <div class="col-xs-12">
-                <div class="panel panel-default">
-                    <div class="panel-body">
-                        <div class="form-group">
-                            <label for="">Main List</label>
-                            <select
-                                    onchange="Controller.UpdateSecondaryList(this)"
-                                    data-action="GetSecondaryListData"
-                                    data-target="secondaryList"
-                                    data class="form-control bind bind-value"
-                                    name="main"
-                                    id="mainList"
-                                    data-list="main-content"
-                            >
-                            </select>
-                        </div>
-                        <div class="form-group">
-                            <label for="">Secondary List</label>
-                            <select class="form-control" name="secondary" id="secondaryList" data-default="-- Select an Option --">
-                                <option value="">-- Select an Option --</option>
-                            </select>
-                        </div>
-                    </div>
-                </div>
-            </div>
         </div>
     </div>
 </template>
