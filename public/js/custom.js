@@ -70,3 +70,7 @@ Service.Bootstrap = function(link){
         await Controller.PanelSelect(link[0]);
     },1000);
 };
+
+Service.Modification.SelectedLink = function(component,actionBtn){
+
+};

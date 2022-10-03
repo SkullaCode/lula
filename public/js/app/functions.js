@@ -717,14 +717,6 @@ Service.AddProperty("BindForm", function (form, ds) {
             case 'radio':
                 elem.prop('checked', (el == elem.val()));
                 break;
-            case 'hidden':
-                elem.data("value", el);
-                elem.val(el);
-                break;
-            case 'color':
-                elem.data("value", el);
-                elem.val(el);
-                break;
             case 'date':
                 {
                     if (!el) {
@@ -739,37 +731,6 @@ Service.AddProperty("BindForm", function (form, ds) {
                     }
                     break;
                 }
-            case 'datetime':
-            case 'datetime-local':
-            case 'email':
-                {
-                    elem.data("value", el);
-                    elem.val(el);
-                    break;
-                }
-            case 'number':
-                elem.data("value", el);
-                elem.val(el);
-                break;
-            case 'month':
-            case 'range':
-            case 'search':
-            case 'tel':
-            case 'time':
-            case 'url':
-            case 'week':
-            case 'text':
-                elem.data("value", el);
-                elem.val(el);
-                break;
-            case 'textarea':
-                elem.data("value", el);
-                elem.val(el);
-                break;
-            case 'password':
-                elem.data("value", el);
-                elem.val(el);
-                break;
             case 'select-one':
                 {
                     elem.data("value", el);
@@ -783,6 +744,10 @@ Service.AddProperty("BindForm", function (form, ds) {
                     break;
                 }
             case 'select-multiple':
+                    break;
+            default:
+                elem.data("value", el);
+                elem.val(el);
                 break;
         }
     }
@@ -1039,6 +1004,10 @@ Service.AddProperty("LoadPanel", function (elem, actionBtn, target) {
  * @param list array of objects to construct options
  */
 Service.AddProperty("SelectListBuilder", function (elem, list, actionBtn, emptyList = true) {
+    if(typeof elem === "string"){
+        if (elem.substring(0, 1) !== "#") elem = `#${elem}`;
+        elem = jQuery(elem);
+    }
     if (emptyList) elem.empty();
     const defaultOption = elem.data("default");
     if(defaultOption){
