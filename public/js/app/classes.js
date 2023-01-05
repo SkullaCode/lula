@@ -1,4 +1,5 @@
 class Result{
+    Code = null;
     Status = null;
     Message = null;
     Data = null;
@@ -19,10 +20,4 @@ class Requirement{
     ResponseType = null;
     Params = null;
     Complete = null;
-}
-
-class ServerData{
-    Status = null;
-    Message = null;
-    Data = null;
 }

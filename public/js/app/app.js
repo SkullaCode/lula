@@ -24,8 +24,8 @@ Controller.AddProperty("FormSubmit",function(elem,e){
     let complete = ActionButton.data(Service.SYSTEM_COMPLETE);
     let requestHeaders = ActionButton.data(Service.SYSTEM_HEADERS);
     let form = [];
-    let site_url = "";
-    let method = "";
+    let site_url = ActionButton.data(Service.SYSTEM_URL);
+    let method = "post";
     let params = new FormData();
     let headers = [];
     let data = [];
@@ -33,8 +33,13 @@ Controller.AddProperty("FormSubmit",function(elem,e){
     //load the form from target specified. if not
     //load the parent form element
     if(typeof target === "undefined"){
-        target = "";
         Service.LoadedForm = jQuery(ActionButton.parents('form'));
+        if(typeof Service.LoadedForm.attr("action") !== "undefined"){
+            site_url = Service.LoadedForm.attr("action");
+        }
+        if(typeof Service.LoadedForm.attr("method") !== "undefined"){
+            method = Service.LoadedForm.attr("method");
+        }
     }
     else{
         if (target.substring(0, 1) !== "#") target = `#${target}`;
@@ -42,23 +47,29 @@ Controller.AddProperty("FormSubmit",function(elem,e){
         form = (targetContainer.is("form")) ? targetContainer : targetContainer.find("form");
         if (form.length > 0) {
             Service.LoadedForm = form;
-            form.attr("action",form.data("action"));
-            form.attr("method",form.data("method"));
+            if(typeof form.data(Service.SYSTEM_URL) !== "undefined"){
+                site_url = form.data(Service.SYSTEM_URL);
+            }
+            if(typeof form.data(Service.SYSTEM_METHOD) !== "undefined"){
+                method = form.data(Service.SYSTEM_METHOD);
+            }
         } else {
             //No form detected......lets build one.
             const formContent = targetContainer.clone();
-            form = jQuery("<form></form>",
-                {
-                    action: targetContainer.data("action"),
-                    method: targetContainer.data("method")
-                });
+            form = jQuery("<form></form>");
             form.append(formContent.children());
             //jQuery does not clone selects.....say its to expensive
             const selects = targetContainer.find("select");
             jQuery(selects).each(function (i) {
                 form.find("select").eq(i).val(jQuery(this).val());
             });
-            //we use the target as the loaded form
+            if(typeof targetContainer.data(Service.SYSTEM_URL) !== "undefined"){
+                site_url = targetContainer.data(Service.SYSTEM_URL);
+            }
+            if(typeof targetContainer.data(Service.SYSTEM_METHOD) !== "undefined"){
+                method = targetContainer.data(Service.SYSTEM_METHOD);
+            }
+            //we use the target as the loaded form.
             //Form object used to retrieve data
             Service.LoadedForm = targetContainer;
         }
@@ -85,11 +96,11 @@ Controller.AddProperty("FormSubmit",function(elem,e){
     jQuery.each(data,function(){
         params.append(this.name,this.value);
     });
-    site_url = form[0].action;
-    method = form[0].method;
 
-    if(typeof site_url === "undefined") return false;
-    if(typeof method === "undefined") method = "POST";
+    if(typeof site_url === "undefined" || site_url.length <= 0){
+        Service.ActionLoading = false;
+        return false;
+    }
     method = method.toUpperCase();
 
     //determine if the form has a file, and if so serialize
@@ -146,6 +157,7 @@ Controller.AddProperty("FormSubmit",function(elem,e){
     requestData.Request = method;
     requestData.ActionBtn = ActionButton;
     requestData.Component = Service.LoadedForm;
+    requestData.Headers = headers;
     Service.ServerRequest(requestData);
 });
 
@@ -155,7 +167,7 @@ Controller.AddProperty("FormSubmit",function(elem,e){
  * there is no other action in progress. Behaviour is to
  * locate the container with the file input and image,
  * execute click function on file input to launch dialog,
- * and setup the preview for showing when selected.
+ * and set up the preview for showing when selected.
  */
 Controller.AddProperty("FileSelect",function(elem){
     //if there is a triggered action do not execute

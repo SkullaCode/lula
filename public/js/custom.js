@@ -8,7 +8,7 @@ Service.Title = "Default Testing Application";
  * @param {Result} notification
  */
 Service.AlertNotification = function(notification){
-    swal(notification.NotificationType,notification.Message,notification.Status);
+    swal(notification.Status.toUpperCase(),notification.Message,notification.Status);
 };
 //defining a default toaster notification handler
 /**

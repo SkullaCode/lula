@@ -5,7 +5,8 @@
  * @param {Result} result
  */
 Service.AddProperty("AuthorizationHandler", function(result){
-
+    result.NotificationType = ALERT_NOTIFICATION_TYPE;
+    Service.NotificationHandler(result);
 });
 
 
@@ -177,11 +178,10 @@ Service.AddProperty("DefaultModalHandler", function (modal, actionBtn) {
  * This function handles default transformation of error
  * data from server into a error message
  *
- * @param {ServerData} data object that represents data returned from server
- * @param {object} actionBtn
+ * @param request object that represents data returned from server
  */
-Service.AddProperty("ErrorMessageHandler", function(data,actionBtn){
-    return data.Message;
+Service.AddProperty("ErrorMessageHandler", function(request,error,actionBtn){
+    return error;
 });
 
 /**
@@ -192,15 +192,16 @@ Service.AddProperty("ErrorMessageHandler", function(data,actionBtn){
  * @param request object that represents data returned from server
  */
 Service.AddProperty("ErrorDataHandler", function (request,error,actionBtn) {
-    let data = new ServerData();
-    data.Message = error;
-    data.Status = request.status;
+    let data = {};
+    if(request.responseJSON.length > 0){
+        return request.responseJSON;
+    }
     if (request.responseText.length > 0) {
         try {
-            data.Data = JSON.parse(request.responseText);
+            data = JSON.parse(request.responseText);
         }
         catch (e) {
-            data.Data = {};
+            data = {};
         }
     }
     return data;
@@ -211,11 +212,11 @@ Service.AddProperty("ErrorDataHandler", function (request,error,actionBtn) {
  * This function handles default transformation of success
  * data from server into a success message
  *
- * @param {ServerData} data that represents data returned from server
- * @param {object} actionBtn
+ * @param data data as returned from the server
+ * @param request object that represents data returned from server
  */
-Service.AddProperty("SuccessMessageHandler", function (data,actionBtn) {
-    return data.Message;
+Service.AddProperty("SuccessMessageHandler", function (request,data,actionBtn) {
+    return request.statusText;
 });
 
 /**
@@ -227,12 +228,7 @@ Service.AddProperty("SuccessMessageHandler", function (data,actionBtn) {
  * @param request object that represents data returned from server 
  */
 Service.AddProperty("SuccessDataHandler", function(request,data,actionBtn){
-    console.log({request,data});
-    const serverData = new ServerData();
-    serverData.Status = request.status;
-    serverData.Message = request.statusText;
-    serverData.Data = data;
-    return serverData;
+    return data;
 });
 
 /**
@@ -244,7 +240,7 @@ Service.AddProperty("SuccessDataHandler", function(request,data,actionBtn){
 Service.AddProperty("ServerRequest", function (requirements) {
     //ensure there is a request type
     requirements.Request = (typeof requirements.Request === "undefined" || requirements.Request === null || !requirements.Request)
-        ? 'POST'
+        ? requirements.Method.toUpperCase() || 'POST'
         : requirements.Request.toUpperCase();
 
     //ensure there are request headers
@@ -299,20 +295,20 @@ Service.AddProperty("ServerRequest", function (requirements) {
             return;
         }
         let res = new Result();
+        res.Code = jqXHR.statusCode;
         res.Status = status;
         res.Data = Service.SuccessDataHandler(jqXHR,data,requirements.ActionBtn);
-        res.Message = Service.SuccessMessageHandler(res.Data,requirements.ActionBtn);
+        res.Message = Service.SuccessMessageHandler(jqXHR,data,requirements.ActionBtn);
         res.ActionBtn = requirements.ActionBtn;
         res.Component = requirements.Component;
 
-
-        //determine default notification handling mechanism
-        res.NotificationType = requirements.ActionBtn.data(Service.SYSTEM_NOTIFICATION_ON_SUCCESS) || TOASTER_NOTIFICATION_TYPE;
         //trigger notification event
         if (typeof requirements.ActionBtn.data(Service.SYSTEM_NOTIFICATION) === "undefined" ||
             requirements.ActionBtn.data(Service.SYSTEM_NOTIFICATION) === "true" ||
             requirements.ActionBtn.data(Service.SYSTEM_NOTIFICATION) === "success"
         ) {
+            //determine default notification handling mechanism
+            res.NotificationType = requirements.ActionBtn.data(Service.SYSTEM_NOTIFICATION_ON_SUCCESS) || TOASTER_NOTIFICATION_TYPE;
             Service.NotificationHandler(res);
         }
 
@@ -325,73 +321,58 @@ Service.AddProperty("ServerRequest", function (requirements) {
             Service.ActionLoading = false;
         });
     };
+    const errorFunction = function (request, status, error) {
+        //jQuery sometimes throws a parse error but the response is successful
+        if (request.status === 200) {
+            successFunction({}, "success", request);
+            return;
+        }
+
+        const res = new Result();
+        res.Code = request.status;
+        res.Status = status;
+        res.ActionBtn = requirements.ActionBtn;
+        res.Component = requirements.Component;
+
+        //redirect to login if access error
+
+
+        //enable disabled elements
+        Service.LoadingStateOff(requirements.ActionBtn);
+
+        res.Data = Service.ErrorDataHandler(request,error,requirements.ActionBtn);
+        res.Message = Service.ErrorMessageHandler(request,error,requirements.ActionBtn);
+        if(request.status === 401 || request.status === 403){
+            Service.AuthorizationHandler(res);
+            Service.ActionLoading = false;
+            return;
+        }
+        //execute error handler
+        requirements.ErrorHandler(res);
+        if(requirements.Complete === null){
+            requirements.Complete = requirements.ActionBtn.data(Service.SYSTEM_COMPLETE);
+        }
+        Service.ExecuteCustom(requirements.Complete, requirements.Component, requirements.ActionBtn, res).then(() => {
+            //add status codes and how they should be treated here
+            if (typeof requirements.ActionBtn.data(Service.SYSTEM_NOTIFICATION) === "undefined" ||
+                requirements.ActionBtn.data(Service.SYSTEM_NOTIFICATION) === "true" ||
+                requirements.ActionBtn.data(Service.SYSTEM_NOTIFICATION) === "error"
+            ) {
+                res.NotificationType = requirements.ActionBtn.data(Service.SYSTEM_NOTIFICATION_ON_ERROR) || ALERT_NOTIFICATION_TYPE;
+                Service.NotificationHandler(res);
+            }
+            Service.ActionLoading = false;
+        });
+    };
 
     const ajax_params = {
         url: requirements.Site,
         type: requirements.Request,
         success: successFunction,
-        error: function (request, status, error) {
-            //jQuery sometimes throws a parse error but the response is successful
-            if (request.status === 200) {
-                successFunction({}, "success", request);
-                return;
-            }
-
-            const res = new Result();
-            res.Status = status;
-            res.ActionBtn = requirements.ActionBtn;
-            res.Component = requirements.Component;
-            res.NotificationType = "alert";
-
-            //redirect to login if access error
-            
-
-            //enable disabled elements
-            Service.LoadingStateOff(requirements.ActionBtn);
-
-            res.Data = Service.ErrorDataHandler(request,error,requirements.ActionBtn);
-            res.message = Service.ErrorMessageHandler(res.Data,requirements.ActionBtn);
-            if(request.status === 401 || request.status === 403){
-                Service.AuthorizationHandler(res);
-                return;
-            }
-            //execute error handler
-            requirements.ErrorHandler(res);
-            if(requirements.Complete === null){
-                requirements.Complete = requirements.ActionBtn.data(Service.SYSTEM_COMPLETE);
-            }
-            Service.ExecuteCustom(requirements.Complete, requirements.Component, requirements.ActionBtn, res).then(() => {
-                //add status codes and how they should be treated here
-                if (typeof requirements.ActionBtn.data(Service.SYSTEM_NOTIFICATION) === "undefined" ||
-                    requirements.ActionBtn.data(Service.SYSTEM_NOTIFICATION) === "true" ||
-                    requirements.ActionBtn.data(Service.SYSTEM_NOTIFICATION) === "error") {
-                    //set custom notification type if present
-                    if (typeof requirements.ActionBtn.data(Service.SYSTEM_NOTIFICATION_ON_ERROR) !== "undefined") {
-                        res.NotificationType = requirements.ActionBtn.data(Service.SYSTEM_NOTIFICATION_ON_ERROR);
-                    }
-                    switch (request.status) {
-                        case 500: {
-                            Service.NotificationHandler(res);
-                            break;
-                        }
-                        case 404: {
-                            res.Status = "error";
-                            res.Message = "Oops!";
-                            Service.NotificationHandler(res);
-                            break;
-                        }
-                        default: {
-                            res.Status = "error";
-                            res.Message = "Oops!";
-                            Service.NotificationHandler(res);
-                        }
-                    }
-                }
-                Service.ActionLoading = false;
-            });
-        },
+        error: errorFunction,
         //execute specified actions before request is sent
         beforeSend: function (xhr) {
+            //todo make this optional
             xhr.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
             if (requirements.Headers.length > 0) {
                 jQuery.each(requirements.Headers, function () {

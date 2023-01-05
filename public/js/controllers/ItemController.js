@@ -1,3 +1,5 @@
+const SERVER_ADDRESS = "http://localhost:8080";
+
 Service.Modification.AddMethod("RedHeading",function(component, actionBtn){
     let header = jQuery(component).find("h1");
     header.css("color","red");
@@ -123,6 +125,12 @@ Service.Data.AddMethod("modal-data",function(component,actionBtn){
             image.find("input[type=file]").prop("multiple",true);
             component.find("#modal-image").append(image);
         });
+        component.find("button[data-target=modal-form]").each(function(){
+            let elem = jQuery(this);
+            if(elem.data("href")){
+                elem.data("href",`${SERVER_ADDRESS}${elem.data("href")}`);
+            }
+        });
         return resolve(true);
     });
 });
@@ -136,7 +144,11 @@ Service.SubmitTransformation.AddMethod("transform-form-stage-2",function(compone
     return params;
 });
 Service.SubmitTransformation.AddMethod("transformation-no-submit", function(component,params,actionBtn){
-    alert("form submit will fail");
+    const res = new Result();
+    res.Message = "Form submission will fail due to incorrect data";
+    res.NotificationType = TOASTER_NOTIFICATION_TYPE;
+    res.Status = "error";
+    Service.NotificationHandler(res);
     Service.CanSubmitForm = false;
     return params;
 });

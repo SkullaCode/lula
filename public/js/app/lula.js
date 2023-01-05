@@ -22,6 +22,12 @@ let ModalContainer        = "modal-container";
  */
 let TemplateContainer     = "container-panel";
 
+const HARD_RELOAD_HEADER = "x-reload-app";
+const HARD_REDIRECT_HEADER = "x-redirect-app";
+const TOASTER_NOTIFICATION_TYPE = "toaster";
+const ALERT_NOTIFICATION_TYPE = "alert";
+const NONE_NOTIFICATION_TYPE = "none";
+
 /**
  * -- Controller --
  * Contains all the custom logic for the current page
@@ -67,7 +73,11 @@ window.Service = function(){
     let ModalLoading        = null;
     let ActionLoading       = null;
     let ContainerPanel      = null;
-    let ModelData           = {};
+    let ModelData           = {
+        Lists: {},
+        Listing: [],
+        SelectedEntity: {},
+    };
     let MetaData            = {};
     let PanelLoading        = [];
     let Title               = "Javascript UI";
@@ -96,7 +106,7 @@ window.Service = function(){
         Transformation                      : null,
         DomEvents                           : null,
         Data                                : null,
-        Action                              : null,
+        AuthorizationHandler                : null,
         ErrorHandler                        : null,
         SuccessHandler                      : null,
         NotificationHandler                 : null,
@@ -110,6 +120,7 @@ window.Service = function(){
         LaunchModal                         : null,
         Bind                                : null,
         BindForm                            : null,
+        BindList                            : null,
         GetProperty                         : null,
         ListUpdate                          : null,
         TriggerEvents                       : null,
@@ -140,7 +151,6 @@ window.Service = function(){
         SYSTEM_CUSTOM                       : "custom",                 //-------------------------------------- identifier for custom functions that should be executed on a component
         SYSTEM_URL                          : "href",                   //-------------------------------------- identifier for url to use with manual form submit and List update
         SYSTEM_METHOD                       : "method",                 //-------------------------------------- identifier for method (post,put,etc..) to use with manual form submit
-        SYSTEM_PRE_FORM_EXECUTION           : "pre",                    //-------------------------------------- identifier for submit transformations that should be executed before form submission
         SYSTEM_HISTORY                      : "history",                //--------------------------------------
         SYSTEM_FILE_UPLOAD_CONTAINER        : ".file-upload",           //-------------------------------------- identifier for container holding file upload panel
         SYSTEM_CLEAR_ERROR                  : "clear-error",            //-------------------------------------- class that clears data in a form field if an error occurs
@@ -148,7 +158,6 @@ window.Service = function(){
         SYSTEM_LIST                         : "list",                   //-------------------------------------- identifier for building select lists on binding
         SYSTEM_BIND                         : "bind",                   //-------------------------------------- class that determines if the item should be considered while data binding
         SYSTEM_BIND_VALUE                   : "bind-value",             //-------------------------------------- class that determines if data should be bound to the value property
-        SYSTEM_BIND_META                    : "bind-meta",              //--------------------------------------
         SYSTEM_BIND_ELEM                    : "bind-element",           //-------------------------------------- class that allows data binding on the element to be manipulated
         SYSTEM_BIND_GLOBAL                  : "bind-global",            //-------------------------------------- class that allows data binding on the element with data in the current context being provided
         SYSTEM_LOOP                         : "loop",                   //-------------------------------------- class that determines if binding should occur in a loop
@@ -257,35 +266,24 @@ window.Service.AddProperty('Data',function(){
 
     return Response;
 }());
-
 /**
- * -- Action --
- * Add a method to the action executor if a form needs a non-standard way of sending the
- * request to the server and handling the response. methods can be triggered by inline
- * onclick and onchange events or by the data-action attribute on a submit button.
- * please note that the data-action is the same item that determines the location of
- * the form if the submit button is not contained within it.
+ *  -- Authorization Handler --
+ * This function is responsible for handling all requests
+ * which return 401 and 403 status codes
+ * @param {Result} result
  */
-window.Service.AddProperty('Action',function(){
+Service.AddProperty("AuthorizationHandler", function(result){
+    result.NotificationType = ALERT_NOTIFICATION_TYPE;
+    Service.NotificationHandler(result);
+});
 
-    let store = {};
 
-    let addMethod = function(name,f){
-        Response[name] = f;
-    };
-
-    let Response = {
-        AddMethod: addMethod,
-        Store: store
-    };
-
-    return Response;
-}());
 
 /**
  * -- Error Handler --
  * This function is responsible for handling all requests
  * which return 400 or 500 level status codes
+ * @param {Result} result
  */
 Service.AddProperty("ErrorHandler", function (result) {
     //manipulate form if present
@@ -315,7 +313,7 @@ Service.AddProperty("ErrorHandler", function (result) {
  * This function handles successful responses
  * from calls to the server by default.
  *
- * @param result object containing success handler parameters
+ * @param {Result} result Result containing success handler parameters
  */
 Service.AddProperty("SuccessHandler", function (result) {
     //manipulate form if present
@@ -344,38 +342,38 @@ Service.AddProperty("SuccessHandler", function (result) {
  * -- Notification Handler --
  * This function handles the default implementation for notifications
  *
- * @param result object containing notification parameters
+ * @param {Result} result
  */
 Service.AddProperty("NotificationHandler", function (result) {
-    switch (result.notificationType) {
-        case "alert": {
+    switch (result.NotificationType) {
+        case ALERT_NOTIFICATION_TYPE: {
             if (typeof Service.AlertNotification === "function") {
                 Service.AlertNotification(result);
             }
             else {
-                alert(result.message)
+                alert(result.Message)
             }
             break;
         }
-        case "toaster": {
+        case TOASTER_NOTIFICATION_TYPE: {
             if (typeof Service.ToasterNotification === "function") {
                 Service.ToasterNotification(result);
             }
             else {
-                alert(result.message);
+                alert(result.Message);
             }
             break;
         }
-        case "none": {
+        case NONE_NOTIFICATION_TYPE: {
             break;
         }
         default: {
-            if (result.status === "success") {
+            if (result.Status === "success") {
                 if (typeof Service.ToasterNotification === "function") {
                     Service.ToasterNotification(result);
                 }
                 else {
-                    alert(result.message);
+                    alert(result.Message);
                 }
             }
             else {
@@ -383,7 +381,7 @@ Service.AddProperty("NotificationHandler", function (result) {
                     Service.AlertNotification(result);
                 }
                 else {
-                    alert(result.message)
+                    alert(result.Message)
                 }
             }
         }
@@ -450,7 +448,7 @@ Service.AddProperty("DefaultModalHandler", function (modal, actionBtn) {
  *
  * @param request object that represents data returned from server
  */
-Service.AddProperty("ErrorMessageHandler", function(error, request){
+Service.AddProperty("ErrorMessageHandler", function(request,error,actionBtn){
     return error;
 });
 
@@ -461,18 +459,17 @@ Service.AddProperty("ErrorMessageHandler", function(error, request){
  *
  * @param request object that represents data returned from server
  */
-Service.AddProperty("ErrorDataHandler", function (request) {
-    let data = {
-        Code: request.statusText,
-        Entity: "Application"
-    };
+Service.AddProperty("ErrorDataHandler", function (request,error,actionBtn) {
+    let data = {};
+    if(request.responseJSON.length > 0){
+        return request.responseJSON;
+    }
     if (request.responseText.length > 0) {
         try {
             data = JSON.parse(request.responseText);
         }
         catch (e) {
-            data.Code = "An error occurred on the server";
-            data.Entity = "Application";
+            data = {};
         }
     }
     return data;
@@ -483,9 +480,10 @@ Service.AddProperty("ErrorDataHandler", function (request) {
  * This function handles default transformation of success
  * data from server into a success message
  *
+ * @param data data as returned from the server
  * @param request object that represents data returned from server
  */
-Service.AddProperty("SuccessMessageHandler", function (request) {
+Service.AddProperty("SuccessMessageHandler", function (request,data,actionBtn) {
     return request.statusText;
 });
 
@@ -497,176 +495,155 @@ Service.AddProperty("SuccessMessageHandler", function (request) {
  * @param data data as returned from the server
  * @param request object that represents data returned from server
  */
-Service.AddProperty("SuccessDataHandler", function(data, request){
-    const contentType = request.getResponseHeader("Content-Type");
-    if(contentType === "application/json"){
-        return request.responseJSON;
-    }
-    else if(contentType === "text/html" || contentType === "text/plain"){
-        return request.responseText;
-    }
-    else{
-        return null;
-    }
+Service.AddProperty("SuccessDataHandler", function(request,data,actionBtn){
+    return data;
 });
 
 /**
  * -- Server Request --
  * This function handles ajax requests
  *
- * @param requirements object containing request parameters
+ * @param {Requirement} requirements object containing request parameters
  */
 Service.AddProperty("ServerRequest", function (requirements) {
-    //backwards compatibility, method and request is the same thing
-    if (typeof requirements.method !== "undefined") requirements.request = requirements.method;
     //ensure there is a request type
-    requirements.request = (typeof requirements.request === "undefined" || requirements.request === null || !requirements.request)
-        ? 'POST'
-        : requirements.request.toUpperCase();
+    requirements.Request = (typeof requirements.Request === "undefined" || requirements.Request === null || !requirements.Request)
+        ? requirements.Method.toUpperCase() || 'POST'
+        : requirements.Request.toUpperCase();
 
     //ensure there are request headers
-    if (typeof requirements.headers === "undefined" || requirements.headers === null || !requirements.headers) {
-        requirements.headers = [];
+    if (typeof requirements.Headers === "undefined" || requirements.Headers === null || !requirements.Headers) {
+        requirements.Headers = [];
     }
 
     //ensure there are handlers for success and error results
-    if (typeof requirements.success === "undefined" || requirements.success === null || !requirements.success) {
-        requirements.success = Service.SuccessHandler;
+    if (typeof requirements.SuccessHandler === "undefined" || requirements.SuccessHandler === null || !requirements.SuccessHandler) {
+        requirements.SuccessHandler = Service.SuccessHandler;
     }
 
-    if (typeof requirements.error === "undefined" || requirements.error === null || !requirements.error) {
-        requirements.error = Service.ErrorHandler;
+    if (typeof requirements.ErrorHandler === "undefined" || requirements.ErrorHandler === null || !requirements.ErrorHandler) {
+        requirements.ErrorHandler = Service.ErrorHandler;
     }
 
-    if (typeof requirements.component === "undefined" || requirements.component === null || !requirements.component) {
-        requirements.component = jQuery("<div></div>");
+    if (typeof requirements.Component === "undefined" || requirements.Component === null || !requirements.Component) {
+        requirements.Component = jQuery("<div></div>");
     }
 
-    if (typeof requirements.responseType === "undefined" || requirements.responseType === null || !requirements.responseType) {
-        requirements.responseType = "json";
+    if (typeof requirements.ResponseType === "undefined" || requirements.ResponseType === null || !requirements.ResponseType) {
+        requirements.ResponseType = "json";
     }
 
-    if (typeof requirements.actionBtn === "undefined" || requirements.actionBtn === null || !requirements.actionBtn) {
-        requirements.actionBtn = jQuery("<button></button>", { type: "button" });
+    if (typeof requirements.ActionBtn === "undefined" || requirements.ActionBtn === null || !requirements.ActionBtn) {
+        requirements.ActionBtn = jQuery("<button></button>", { type: "button" });
     }
 
     // fix: throws an exception if a POST request is sent
     //without a body
-    if (requirements.params === null) {
-        requirements.params = {};
+    if (requirements.Params === null) {
+        requirements.Params = {};
     }
 
     //disable form input and controls while request is
     //processed by the server
-    Service.LoadingStateOn(requirements.actionBtn);
+    Service.LoadingStateOn(requirements.ActionBtn);
 
     const successFunction = function (data, status, jqXHR) {
         //enable disabled form controls
-        Service.LoadingStateOff(requirements.actionBtn);
+        Service.LoadingStateOff(requirements.ActionBtn);
         //check if reload header is set and reload the page
         //if it is
-        if (jqXHR.getResponseHeader("X-Reload")) {
+        if (jqXHR.getResponseHeader(HARD_RELOAD_HEADER)) {
             location.reload();
             return;
         }
         //check if the redirect header is set and redirect
         //the page if it is
-        if (jqXHR.getResponseHeader("X-Redirect")) {
-            location.href = jqXHR.getResponseHeader("X-Redirect");
+        if (jqXHR.getResponseHeader(HARD_REDIRECT_HEADER)) {
+            location.href = jqXHR.getResponseHeader(HARD_REDIRECT_HEADER);
             return;
         }
-        let res = {};
-        res.status = status;
-        res.message = Service.SuccessMessageHandler(jqXHR);
-        res.data = Service.SuccessDataHandler(data,jqXHR);
-        res.actionBtn = requirements.actionBtn;
-        res.component = requirements.component;
+        let res = new Result();
+        res.Code = jqXHR.statusCode;
+        res.Status = status;
+        res.Data = Service.SuccessDataHandler(jqXHR,data,requirements.ActionBtn);
+        res.Message = Service.SuccessMessageHandler(jqXHR,data,requirements.ActionBtn);
+        res.ActionBtn = requirements.ActionBtn;
+        res.Component = requirements.Component;
 
-
-        //determine default notification handling mechanism
-        res.notificationType = requirements.actionBtn.data(Service.SYSTEM_NOTIFICATION_ON_SUCCESS) || "toaster";
         //trigger notification event
-        if (typeof requirements.actionBtn.data(Service.SYSTEM_NOTIFICATION) === "undefined" ||
-            requirements.actionBtn.data(Service.SYSTEM_NOTIFICATION) === "true" ||
-            requirements.actionBtn.data(Service.SYSTEM_NOTIFICATION) === "success"
+        if (typeof requirements.ActionBtn.data(Service.SYSTEM_NOTIFICATION) === "undefined" ||
+            requirements.ActionBtn.data(Service.SYSTEM_NOTIFICATION) === "true" ||
+            requirements.ActionBtn.data(Service.SYSTEM_NOTIFICATION) === "success"
         ) {
+            //determine default notification handling mechanism
+            res.NotificationType = requirements.ActionBtn.data(Service.SYSTEM_NOTIFICATION_ON_SUCCESS) || TOASTER_NOTIFICATION_TYPE;
             Service.NotificationHandler(res);
         }
 
         //execute the success callback with results received.
-        requirements.success(res);
-        Service.ExecuteCustom(requirements.complete, requirements.component, requirements.actionBtn, res).then(() => {
+        requirements.SuccessHandler(res);
+        if(requirements.Complete === null){
+            requirements.Complete = requirements.ActionBtn.Data(Service.SYSTEM_COMPLETE)
+        }
+        Service.ExecuteCustom(requirements.Complete, requirements.Component, requirements.ActionBtn, res).then(() => {
+            Service.ActionLoading = false;
+        });
+    };
+    const errorFunction = function (request, status, error) {
+        //jQuery sometimes throws a parse error but the response is successful
+        if (request.status === 200) {
+            successFunction({}, "success", request);
+            return;
+        }
+
+        const res = new Result();
+        res.Code = request.status;
+        res.Status = status;
+        res.ActionBtn = requirements.ActionBtn;
+        res.Component = requirements.Component;
+
+        //redirect to login if access error
+
+
+        //enable disabled elements
+        Service.LoadingStateOff(requirements.ActionBtn);
+
+        res.Data = Service.ErrorDataHandler(request,error,requirements.ActionBtn);
+        res.Message = Service.ErrorMessageHandler(request,error,requirements.ActionBtn);
+        if(request.status === 401 || request.status === 403){
+            Service.AuthorizationHandler(res);
+            Service.ActionLoading = false;
+            return;
+        }
+        //execute error handler
+        requirements.ErrorHandler(res);
+        if(requirements.Complete === null){
+            requirements.Complete = requirements.ActionBtn.data(Service.SYSTEM_COMPLETE);
+        }
+        Service.ExecuteCustom(requirements.Complete, requirements.Component, requirements.ActionBtn, res).then(() => {
+            //add status codes and how they should be treated here
+            if (typeof requirements.ActionBtn.data(Service.SYSTEM_NOTIFICATION) === "undefined" ||
+                requirements.ActionBtn.data(Service.SYSTEM_NOTIFICATION) === "true" ||
+                requirements.ActionBtn.data(Service.SYSTEM_NOTIFICATION) === "error"
+            ) {
+                res.NotificationType = requirements.ActionBtn.data(Service.SYSTEM_NOTIFICATION_ON_ERROR) || ALERT_NOTIFICATION_TYPE;
+                Service.NotificationHandler(res);
+            }
             Service.ActionLoading = false;
         });
     };
 
     const ajax_params = {
-        url: requirements.site,
-        type: requirements.request,
+        url: requirements.Site,
+        type: requirements.Request,
         success: successFunction,
-        error: function (request, status, error) {
-            //jQuery sometimes throws a parse error but the response is successful
-            if (request.status === 200) {
-                successFunction({}, "success", request);
-                return;
-            }
-
-            //redirect to login if access error
-            if(request.status === 401 || request.status === 403){
-                location.href = location.origin;
-                return;
-            }
-
-            //enable disabled elements
-            Service.LoadingStateOff(requirements.actionBtn);
-            const res = {
-                status,
-                actionBtn: requirements.actionBtn,
-                component: requirements.component,
-                notificationType: "alert"
-            };
-
-            //define and format message from server or use default implementation
-            res.message = Service.ErrorMessageHandler(error, request);
-            //define and format data from server or use default implementation
-            res.data = Service.ErrorDataHandler(request);
-            //execute error handler
-            requirements.error(res);
-            Service.ExecuteCustom(requirements.complete, requirements.component, requirements.actionBtn, res).then(() => {
-                //add status codes and how they should be treated here
-                if (typeof requirements.actionBtn.data(Service.SYSTEM_NOTIFICATION) === "undefined" ||
-                    requirements.actionBtn.data(Service.SYSTEM_NOTIFICATION) === "true" ||
-                    requirements.actionBtn.data(Service.SYSTEM_NOTIFICATION) === "error") {
-                    //set custom notification type if present
-                    if (typeof requirements.actionBtn.data(Service.SYSTEM_NOTIFICATION_ON_ERROR) !== "undefined") {
-                        res.notificationType = requirements.actionBtn.data(Service.SYSTEM_NOTIFICATION_ON_ERROR);
-                    }
-                    switch (request.status) {
-                        case 500: {
-                            Service.NotificationHandler(res);
-                            break;
-                        }
-                        case 404: {
-                            res.status = "error";
-                            res.message = "Oops!";
-                            Service.NotificationHandler(res);
-                            break;
-                        }
-                        default: {
-                            res.status = "error";
-                            res.message = "Oops!";
-                            Service.NotificationHandler(res);
-                        }
-                    }
-                }
-                Service.ActionLoading = false;
-            });
-        },
+        error: errorFunction,
         //execute specified actions before request is sent
         beforeSend: function (xhr) {
+            //todo make this optional
             xhr.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
-            if (requirements.headers.length > 0) {
-                jQuery.each(requirements.headers, function () {
+            if (requirements.Headers.length > 0) {
+                jQuery.each(requirements.Headers, function () {
                     xhr.setRequestHeader(this.Name, this.Value);
                 });
             }
@@ -676,10 +653,10 @@ Service.AddProperty("ServerRequest", function (requirements) {
     //and determine if the current request is in
     //the list.
     let requestTypes = ['POST', 'PUT', 'HEAD', 'DELETE'];
-    if (requestTypes.indexOf(requirements.request.toUpperCase()) >= 0) {
-        ajax_params.data = requirements.params;
+    if (requestTypes.indexOf(requirements.Request.toUpperCase()) >= 0) {
+        ajax_params.data = requirements.Params;
     }
-    ajax_params.dataType = requirements.responseType;
+    ajax_params.dataType = requirements.ResponseType;
     ajax_params.processData = false;
     ajax_params.contentType = false;
     ajax_params.global = false;
@@ -705,6 +682,9 @@ Service.AddProperty("LaunchModal", function (modal, actionBtn) {
         const action = modal.data(Service.SYSTEM_ACTION);
         if (typeof action === "string") {
             let func = Service.Data[action];
+            if(typeof func === "undefined"){
+                func = Service.Data[`${action}-data`];
+            }
             if (typeof func !== "undefined"){
                 func(modal, actionBtn).then(() => {
                     modal.modal();
@@ -754,27 +734,8 @@ Service.AddProperty("Bind", function (component, data, actionBtn = null) {
             }
             return;
         }
-
-        //if the element is a select list we build it out
-        if (elem.prop("tagName") === "SELECT") {
-            let list = elem.data(Service.SYSTEM_LIST);
-            if (typeof list !== "undefined") {
-                let listGroup = Service.ModelData.List[list];
-                if(typeof listGroup === "undefined"){
-                    //let's see if the list is in the data provided
-                    listGroup = Service.GetProperty(list,data)
-                }
-                if (typeof listGroup !== "undefined" && listGroup !== null && listGroup.length > 0) {
-                    Service.SelectListBuilder(elem, listGroup);
-                }else{
-                    if(elem.data(Service.SYSTEM_DEFAULT)){
-                        Service.SelectListBuilder(elem, []);
-                    }
-                }
-            }
-        }
         // if the element is an image bind the value to image source
-        if (elem.prop("tagName") === "IMG") {
+        else if (elem.prop("tagName") === "IMG") {
             if (typeof elem.data(Service.SYSTEM_PROPERTY) !== "undefined") {
                 elem.prop("src", Service.GetProperty(elem.data(Service.SYSTEM_PROPERTY), data));
             }
@@ -941,29 +902,6 @@ Service.AddProperty("Bind", function (component, data, actionBtn = null) {
             }
         }
     });
-
-    //bind meta data
-    let elems_meta = component.find(`.${Service.SYSTEM_BIND_META}`);
-    jQuery.each(elems_meta, function () {
-        let elem = jQuery(this);
-        if (elem.prop("tagName") === "IMG") {
-            if (typeof elem.prop("id") !== "undefined") {
-                elem.prop("src", Service.GetProperty(elem.prop("id"), Service.MetaData));
-            }
-        }
-        else {
-            if (typeof elem.prop("id") !== "undefined") {
-                let property = Service.GetProperty(elem.prop("id"), Service.MetaData);
-                if (typeof elem.data(Service.SYSTEM_CUSTOM) !== "undefined") {
-                    let func = Service.Transformation[elem.data(Service.SYSTEM_CUSTOM)];
-                    if (typeof func !== "undefined") {
-                        property = func(property);
-                    }
-                }
-                elem.html(property);
-            }
-        }
-    });
 });
 
 /**
@@ -1028,14 +966,6 @@ Service.AddProperty("BindForm", function (form, ds) {
             case 'radio':
                 elem.prop('checked', (el == elem.val()));
                 break;
-            case 'hidden':
-                elem.data("value", el);
-                elem.val(el);
-                break;
-            case 'color':
-                elem.data("value", el);
-                elem.val(el);
-                break;
             case 'date':
             {
                 if (!el) {
@@ -1050,37 +980,6 @@ Service.AddProperty("BindForm", function (form, ds) {
                 }
                 break;
             }
-            case 'datetime':
-            case 'datetime-local':
-            case 'email':
-            {
-                elem.data("value", el);
-                elem.val(el);
-                break;
-            }
-            case 'number':
-                elem.data("value", el);
-                elem.val(el);
-                break;
-            case 'month':
-            case 'range':
-            case 'search':
-            case 'tel':
-            case 'time':
-            case 'url':
-            case 'week':
-            case 'text':
-                elem.data("value", el);
-                elem.val(el);
-                break;
-            case 'textarea':
-                elem.data("value", el);
-                elem.val(el);
-                break;
-            case 'password':
-                elem.data("value", el);
-                elem.val(el);
-                break;
             case 'select-one':
             {
                 elem.data("value", el);
@@ -1095,10 +994,59 @@ Service.AddProperty("BindForm", function (form, ds) {
             }
             case 'select-multiple':
                 break;
+            default:
+                elem.data("value", el);
+                elem.val(el);
+                break;
         }
     }
     for (let x = 0; (els && x < els.length); x++) {
         Service.TriggerEvents(jQuery(els[x]));
+    }
+});
+
+/**
+ * -- Bind List --
+ * this function is responsible for binding the lists
+ * provided to the select elements of the desired
+ * component.
+ *
+ * @param component element that will have its elements bound
+ * @param data data set from which values will be used in binding
+ * @param actionBtn button that was used in chain execution
+ */
+Service.AddProperty("BindList", function (component, data = [],  actionBtn = null){
+    if(
+        typeof data !== "undefined" &&
+        typeof data !== "string" &&
+        data !== null &&
+        typeof data === "object" &&
+        data.length > 0
+    ){
+        Service.SelectListBuilder(component, data);
+    }else{
+        const selectElems = component.find("select");
+        jQuery.each(selectElems,function(){
+            let elem = jQuery(this);
+            let list = elem.data(Service.SYSTEM_LIST);
+            if (typeof list !== "undefined") {
+                let listData = Service.GetProperty(list,Service.ModelData.Lists);
+                if(typeof listData === "undefined" || listData === null || listData.length <= 0){
+                    if(Controller.hasOwnProperty(list)){
+                        listData = Controller[list](actionBtn);
+                    }
+                }
+                if (typeof listData !== "undefined" && listData !== null && listData.length > 0) {
+                    Service.SelectListBuilder(elem, listData);
+                }else{
+                    if(elem.data(Service.SYSTEM_DEFAULT)){
+                        Service.SelectListBuilder(elem, []);
+                    }
+                }
+            }else{
+                Service.SelectListBuilder(elem, []);
+            }
+        });
     }
 });
 
@@ -1141,7 +1089,7 @@ Service.AddProperty("GetProperty", function (id, data) {
  * @param elem the element selected
  * @param target the element to update with created select list
  */
-Service.AddProperty("ListUpdate", function (elem, target) {
+/*Service.AddProperty("ListUpdate", function (elem, target) {
     elem = jQuery(elem);
     if (elem.val()) {
         elem.data(Service.SYSTEM_NOTIFICATION,false);
@@ -1163,7 +1111,7 @@ Service.AddProperty("ListUpdate", function (elem, target) {
                 }
             }
         }
-        /*if(typeof url !== "undefined"){
+        /!*if(typeof url !== "undefined"){
             const site = `${url}/${elem.val()}`;
             const method = "GET";
             const params = {};
@@ -1175,9 +1123,9 @@ Service.AddProperty("ListUpdate", function (elem, target) {
             serverObject.actionBtn = elem;
             serverObject.complete = complete;
             Service.ServerRequest(serverObject);
-        }*/
+        }*!/
     }
-});
+});*/
 
 /**
  * -- Trigger Events --
@@ -1305,6 +1253,10 @@ Service.AddProperty("LoadPanel", function (elem, actionBtn, target) {
  * @param list array of objects to construct options
  */
 Service.AddProperty("SelectListBuilder", function (elem, list, actionBtn, emptyList = true) {
+    if(typeof elem === "string"){
+        if (elem.substring(0, 1) !== "#") elem = `#${elem}`;
+        elem = jQuery(elem);
+    }
     if (emptyList) elem.empty();
     const defaultOption = elem.data("default");
     if(defaultOption){
@@ -1348,49 +1300,16 @@ Service.AddProperty("FindElement", function (name, actionBtn = null) {
             }
             //add system actions as data properties
             if (typeof action !== "undefined") element.data(Service.SYSTEM_ACTION, action);
+            //bind Select Lists
+            Service.BindList(element,[],actionBtn);
             resolve(element);
         } else {
+            //todo determine if name is a url and use server request to fetch it
             const container = jQuery("<div></div>");
             container.append(Service.DefaultElementHandler(actionBtn));
             resolve(container);
         }
     });
-});
-
-/**
- * -- Find Local Element --
- * this function retrieves templates from the
- * template tag and ensures they are recognized by the DOM
- *
- * @param name name of the element to retrieve
- * @param actionBtn object triggering action
- */
-Service.AddProperty("FindLocalElement", function (name, actionBtn = null) {
-    let templateContent = jQuery('template').prop('content');
-    templateContent = jQuery(templateContent);
-    //add hash tag if not present. element lookup is always by id
-    if (name.substring(0, 1) !== "#") name = `#${name}`;
-    let item = templateContent.find(name);
-    if (item.length > 0) {
-        /**
-         * todo cloning the first item in the list... need to ensure
-         * that highest order divs are selected
-         **/
-        let clone = jQuery(item[0]).clone();
-        const action = clone.data(Service.SYSTEM_ACTION);
-        let element = jQuery(clone.html());
-        //ensure we have one root element
-        if (element.length !== 1) {
-            element = jQuery("<div></div>").append(clone.html())
-        }
-        //add system actions as data properties
-        if (typeof action !== "undefined") element.data(Service.SYSTEM_ACTION, action);
-        return element;
-    } else {
-        const container = jQuery("<div></div>");
-        container.append(Service.DefaultElementHandler(actionBtn));
-        return container;
-    }
 });
 
 /**
@@ -1521,8 +1440,6 @@ Service.AddProperty("LoadPanelTransition", function (container, panel, actionBtn
  * defined panel into it
  */
 Service.AddProperty("Bootstrap", function(link = null){
-    Service.ModelData.List = {};
-
     setTimeout(async function(){
         await Controller.PanelSelect(document.getElementById(`${MainContainer}`));
         if(link !== null) await Controller.PanelSelect(link[0]);
@@ -1553,8 +1470,9 @@ Controller.AddProperty("FormSubmit",function(elem,e){
     let custom = ActionButton.data(Service.SYSTEM_CUSTOM);
     let complete = ActionButton.data(Service.SYSTEM_COMPLETE);
     let requestHeaders = ActionButton.data(Service.SYSTEM_HEADERS);
-    let site_url = "";
-    let method = "";
+    let form = [];
+    let site_url = ActionButton.data(Service.SYSTEM_URL);
+    let method = "post";
     let params = new FormData();
     let headers = [];
     let data = [];
@@ -1562,34 +1480,45 @@ Controller.AddProperty("FormSubmit",function(elem,e){
     //load the form from target specified. if not
     //load the parent form element
     if(typeof target === "undefined"){
-        target = "";
         Service.LoadedForm = jQuery(ActionButton.parents('form'));
+        if(typeof Service.LoadedForm.attr("action") !== "undefined"){
+            site_url = Service.LoadedForm.attr("action");
+        }
+        if(typeof Service.LoadedForm.attr("method") !== "undefined"){
+            method = Service.LoadedForm.attr("method");
+        }
     }
     else{
-        const url = ActionButton.data(Service.SYSTEM_ACTION);
-        const method = ActionButton.data(Service.SYSTEM_METHOD);
         if (target.substring(0, 1) !== "#") target = `#${target}`;
         const targetContainer = jQuery(document).find(target);
-        let form = (targetContainer.is("form")) ? targetContainer : targetContainer.find("form");
+        form = (targetContainer.is("form")) ? targetContainer : targetContainer.find("form");
         if (form.length > 0) {
             Service.LoadedForm = form;
-            if(typeof url !== "undefined") form.attr("action",url);
-            if(typeof method !== "undefined") form.attr("method",method);
+            if(typeof form.data(Service.SYSTEM_URL) !== "undefined"){
+                site_url = form.data(Service.SYSTEM_URL);
+            }
+            if(typeof form.data(Service.SYSTEM_METHOD) !== "undefined"){
+                method = form.data(Service.SYSTEM_METHOD);
+            }
         } else {
+            //No form detected......lets build one.
             const formContent = targetContainer.clone();
-            form = jQuery("<form></form>",
-                {
-                    action: url,
-                    method: method
-                });
+            form = jQuery("<form></form>");
             form.append(formContent.children());
             //jQuery does not clone selects.....say its to expensive
             const selects = targetContainer.find("select");
             jQuery(selects).each(function (i) {
                 form.find("select").eq(i).val(jQuery(this).val());
             });
-            //targetContainer.empty().append(form);
-            Service.LoadedForm = form;
+            if(typeof targetContainer.data(Service.SYSTEM_URL) !== "undefined"){
+                site_url = targetContainer.data(Service.SYSTEM_URL);
+            }
+            if(typeof targetContainer.data(Service.SYSTEM_METHOD) !== "undefined"){
+                method = targetContainer.data(Service.SYSTEM_METHOD);
+            }
+            //we use the target as the loaded form.
+            //Form object used to retrieve data
+            Service.LoadedForm = targetContainer;
         }
     }
 
@@ -1610,20 +1539,20 @@ Controller.AddProperty("FormSubmit",function(elem,e){
 
     //retrieve form fields and submission data from loaded form
     //exclude file input from search...handled separately below
-    data = jQuery(Service.LoadedForm.serializeArray());
+    data = jQuery(form.serializeArray());
     jQuery.each(data,function(){
         params.append(this.name,this.value);
     });
-    site_url = Service.LoadedForm[0].action;
-    method = Service.LoadedForm[0].method;
 
-    if(typeof site_url === "undefined") return false;
-    if(typeof method === "undefined") method = "POST";
+    if(typeof site_url === "undefined" || site_url.length <= 0){
+        Service.ActionLoading = false;
+        return false;
+    }
     method = method.toUpperCase();
 
     //determine if the form has a file, and if so serialize
     //using FormData object, or just use an object
-    const file = Service.LoadedForm.find("input[type='file']");
+    const file = form.find("input[type='file']");
     if(file.length > 0){
         jQuery(file).each(function(e){
             //determine if multiple files are selected and add
@@ -1646,7 +1575,7 @@ Controller.AddProperty("FormSubmit",function(elem,e){
 
     //determine if there are submit transformations and execute them
     if(typeof custom !== "undefined")
-        params = Service.ExecuteSubmitTransformation(custom,Service.LoadedForm,params);
+        params = Service.ExecuteSubmitTransformation(custom,Service.LoadedForm,params,ActionButton);
 
     //determine if we should send form to server for processing or not
     if(Service.CanSubmitForm === false){
@@ -1666,33 +1595,17 @@ Controller.AddProperty("FormSubmit",function(elem,e){
     if(typeof errorHandler !== "undefined" && Controller.hasOwnProperty(errorHandler)){
         error = Controller[errorHandler];
     }
-
-    //determine how the form submission should be processed
-    //if a specific action was specified we use that
-    //otherwise we use the default server request
-    let ex = Service.Action[target];
-    if(typeof ex !== "undefined") ex({
-        params,
-        success,
-        error,
-        headers,
-        complete,
-        site: site_url,
-        request: method,
-        actionBtn: ActionButton,
-        component: Service.LoadedForm
-    });
-    else Service.ServerRequest({
-        params,
-        success,
-        error,
-        headers,
-        complete,
-        site: site_url,
-        request: method,
-        actionBtn: ActionButton,
-        component: Service.LoadedForm
-    });
+    const requestData = new Requirement();
+    requestData.Params = params;
+    requestData.SuccessHandler = success;
+    requestData.ErrorHandler = error;
+    requestData.Complete = complete;
+    requestData.Site = site_url;
+    requestData.Request = method;
+    requestData.ActionBtn = ActionButton;
+    requestData.Component = Service.LoadedForm;
+    requestData.Headers = headers;
+    Service.ServerRequest(requestData);
 });
 
 /**
@@ -1701,7 +1614,7 @@ Controller.AddProperty("FormSubmit",function(elem,e){
  * there is no other action in progress. Behaviour is to
  * locate the container with the file input and image,
  * execute click function on file input to launch dialog,
- * and setup the preview for showing when selected.
+ * and set up the preview for showing when selected.
  */
 Controller.AddProperty("FileSelect",function(elem){
     //if there is a triggered action do not execute
@@ -1878,20 +1791,6 @@ Controller.AddProperty("ReloadPanel",function(){
         "data-notification":"false"
     });
     Service.LoadPanel(Service.LoadedPanel,btn);
-});
-
-/**
- * -- Get Select List --
- * this function gets items from Service.ModelData.List based
- * on the id provided
- */
-Controller.AddProperty("UpdateSecondaryList", function(elem){
-    elem = jQuery(elem);
-    elem.data(Service.SYSTEM_NOTIFICATION,false);
-    const target = jQuery(document).find(`#${elem.data(Service.SYSTEM_TARGET)}`);
-    if(target){
-        Service.ListUpdate(elem,target);
-    }
 });
 
 window.onpopstate = function(event){
