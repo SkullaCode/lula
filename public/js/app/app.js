@@ -40,6 +40,9 @@ Controller.AddProperty("FormSubmit",function(elem,e){
         if(typeof Service.LoadedForm.attr("method") !== "undefined"){
             method = Service.LoadedForm.attr("method");
         }
+        //retrieve form fields and submission data from loaded form
+        //exclude file input from search...handled separately below
+        data = Service.LoadedForm.serializeArray();
     }
     else{
         if (target.substring(0, 1) !== "#") target = `#${target}`;
@@ -53,6 +56,9 @@ Controller.AddProperty("FormSubmit",function(elem,e){
             if(typeof form.data(Service.SYSTEM_METHOD) !== "undefined"){
                 method = form.data(Service.SYSTEM_METHOD);
             }
+            //retrieve form fields and submission data from loaded form
+            //exclude file input from search...handled separately below
+            data = form.serializeArray();
         } else {
             //No form detected......lets build one.
             const formContent = targetContainer.clone();
@@ -72,6 +78,9 @@ Controller.AddProperty("FormSubmit",function(elem,e){
             //we use the target as the loaded form.
             //Form object used to retrieve data
             Service.LoadedForm = targetContainer;
+            //retrieve form fields and submission data from loaded form
+            //exclude file input from search...handled separately below
+            data = form.serializeArray();
         }
     }
 
@@ -88,14 +97,8 @@ Controller.AddProperty("FormSubmit",function(elem,e){
         }
     }
 
-
-
-    //retrieve form fields and submission data from loaded form
-    //exclude file input from search...handled separately below
-    data = jQuery(form.serializeArray());
-    jQuery.each(data,function(){
-        params.append(this.name,this.value);
-    });
+    //create FormData object from form values
+    params = Service.FormData(data);
 
     if(typeof site_url === "undefined" || site_url.length <= 0){
         Service.ActionLoading = false;
@@ -105,7 +108,7 @@ Controller.AddProperty("FormSubmit",function(elem,e){
 
     //determine if the form has a file, and if so serialize
     //using FormData object, or just use an object
-    const file = form.find("input[type='file']");
+    const file = Service.LoadedForm.find("input[type='file']");
     if(file.length > 0){
         jQuery(file).each(function(e){
             //determine if multiple files are selected and add

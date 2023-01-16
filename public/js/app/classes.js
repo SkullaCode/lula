@@ -9,15 +9,15 @@ class Result{
 }
 
 class Requirement{
-    Site = null;
+    Site = "";
     Method = null;
-    Request = null;
-    Headers = null;
+    Request = "POST";
+    Headers = [];
     SuccessHandler = null;
     ErrorHandler = null;
     Component = null;
     ActionBtn = null;
     ResponseType = null;
-    Params = null;
+    Params = new FormData();
     Complete = null;
 }

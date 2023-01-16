@@ -216,7 +216,18 @@ Service.AddProperty("ErrorDataHandler", function (request,error,actionBtn) {
  * @param request object that represents data returned from server
  */
 Service.AddProperty("SuccessMessageHandler", function (request,data,actionBtn) {
-    return request.statusText;
+    let message = request.getResponseHeader("x-success-message");
+    if(typeof message !== "undefined" && message !== null && message.length > 0)
+        return message;
+    message = request.statusText;
+    if(typeof message !== "undefined" && message !== null && message.length > 0)
+        return message;
+    if(typeof data.message !== "undefined") {
+        message = data.message;
+        if(typeof message !== "undefined" && message !== null && message.length > 0)
+            return message;
+    }
+    return "Task completed!";
 });
 
 /**
@@ -239,9 +250,12 @@ Service.AddProperty("SuccessDataHandler", function(request,data,actionBtn){
  */
 Service.AddProperty("ServerRequest", function (requirements) {
     //ensure there is a request type
-    requirements.Request = (typeof requirements.Request === "undefined" || requirements.Request === null || !requirements.Request)
-        ? requirements.Method.toUpperCase() || 'POST'
-        : requirements.Request.toUpperCase();
+    //Request was the default but Method is a better name
+    //Request kept for backward compatibilty
+    //Will be removed in the future
+    if(typeof requirements.Method !== "undefined" && requirements.Method !== null && !requirements.Method){
+        requirements.Request = requirements.Method;
+    }
 
     //ensure there are request headers
     if (typeof requirements.Headers === "undefined" || requirements.Headers === null || !requirements.Headers) {
@@ -272,7 +286,7 @@ Service.AddProperty("ServerRequest", function (requirements) {
     // fix: throws an exception if a POST request is sent
     //without a body
     if (requirements.Params === null) {
-        requirements.Params = {};
+        requirements.Params = new FormData();
     }
 
     //disable form input and controls while request is
@@ -1045,6 +1059,49 @@ Service.AddProperty("FindElement", function (name, actionBtn = null) {
 });
 
 /**
+ * -- Find Element Sync --
+ * this function retrieves templates from the
+ * template tag or from a server side call and
+ * ensures they are recognized by the DOM
+ *
+ * @param name name of the element to retrieve
+ * @param actionBtn object triggering action
+ */
+Service.AddProperty("FindElementSync", function (name, actionBtn = null) {
+    let templateContent = jQuery('template').prop('content');
+    templateContent = jQuery(templateContent);
+    let item = "";
+    if(typeof name !== "undefined" && name.length > 0){
+        //add hash tag if not present. element lookup is always by id
+        if (name.substring(0, 1) !== "#") name = `#${name}`;
+            item = templateContent.find(name);
+    }
+    if (item.length > 0) {
+        /**
+         * todo cloning the first item in the list... need to ensure
+         * that highest order divs are selected
+         **/
+        let clone = jQuery(item[0]).clone();
+        const action = clone.data(Service.SYSTEM_ACTION);
+        let element = jQuery(clone.html());
+        //ensure we have one root element
+        if (element.length !== 1) {
+            element = jQuery("<div></div>").append(clone.html())
+        }
+        //add system actions as data properties
+        if (typeof action !== "undefined") element.data(Service.SYSTEM_ACTION, action);
+        //bind Select Lists
+        Service.BindList(element,[],actionBtn);
+        return element;
+    } else {
+        //todo determine if name is a url and use server request to fetch it
+        const container = jQuery("<div></div>");
+        container.append(Service.DefaultElementHandler(actionBtn));
+        return container;
+    }
+});
+
+/**
  * -- Execute Custom --
  * this function automates the execution of modifications to
  * panels or modals that have been loaded
@@ -1176,4 +1233,25 @@ Service.AddProperty("Bootstrap", function(link = null){
         await Controller.PanelSelect(document.getElementById(`${MainContainer}`));
         if(link !== null) await Controller.PanelSelect(link[0]);
     },1000);
+});
+
+/**
+ * -- FormData --
+ * this function converts a regular JavaScript
+ * object to a FormData one
+ */
+Service.AddProperty("FormData",function(data){
+    const params = new FormData();
+    if(jQuery.isArray(data)){
+        jQuery.each(data,function(){
+            params.append(this.name,this.value);
+        });
+    }else{
+        jQuery.each(data,function(e){
+            if (data.hasOwnProperty(e)) {
+                params.append(e,data[e]);
+            }
+        });
+    }
+    return params;
 });

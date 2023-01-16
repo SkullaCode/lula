@@ -1,3 +1,26 @@
+class Result{
+    Code = null;
+    Status = null;
+    Message = null;
+    Data = null;
+    ActionBtn = null;
+    Component = null;
+    NotificationType = null;        
+}
+
+class Requirement{
+    Site = "";
+    Method = null;
+    Request = "POST";
+    Headers = [];
+    SuccessHandler = null;
+    ErrorHandler = null;
+    Component = null;
+    ActionBtn = null;
+    ResponseType = null;
+    Params = new FormData();
+    Complete = null;
+}
 /**
  * -- MainContainer --
  * Defines the main container for panel switching
@@ -83,7 +106,7 @@ window.Service = function(){
     let Title               = "Javascript UI";
 
     let addProperty = function(name,f){
-        Response[name] = f;
+         Response[name] = f;
     };
 
     let addMethod = function(name,f){
@@ -140,6 +163,7 @@ window.Service = function(){
         LoadingStateOff                     : null,
         CanSubmitForm                       : null,
         Bootstrap                           : null,
+        FormData                            : null,                         
         AddProperty                         : addProperty,
         AddMethod                           : addMethod,
         SYSTEM_ID                           : "id",                     //-------------------------------------- identifier for elements
@@ -484,16 +508,27 @@ Service.AddProperty("ErrorDataHandler", function (request,error,actionBtn) {
  * @param request object that represents data returned from server
  */
 Service.AddProperty("SuccessMessageHandler", function (request,data,actionBtn) {
-    return request.statusText;
+    let message = request.getResponseHeader("x-success-message");
+    if(typeof message !== "undefined" && message !== null && message.length > 0)
+        return message;
+    message = request.statusText;
+    if(typeof message !== "undefined" && message !== null && message.length > 0)
+        return message;
+    if(typeof data.message !== "undefined") {
+        message = data.message;
+        if(typeof message !== "undefined" && message !== null && message.length > 0)
+            return message;
+    }
+    return "Task completed!";
 });
 
 /**
  * -- Success Data Handler --
  * This function handles the default transformation of success
  * data from the server into a usable format
- *
+ * 
  * @param data data as returned from the server
- * @param request object that represents data returned from server
+ * @param request object that represents data returned from server 
  */
 Service.AddProperty("SuccessDataHandler", function(request,data,actionBtn){
     return data;
@@ -507,9 +542,12 @@ Service.AddProperty("SuccessDataHandler", function(request,data,actionBtn){
  */
 Service.AddProperty("ServerRequest", function (requirements) {
     //ensure there is a request type
-    requirements.Request = (typeof requirements.Request === "undefined" || requirements.Request === null || !requirements.Request)
-        ? requirements.Method.toUpperCase() || 'POST'
-        : requirements.Request.toUpperCase();
+    //Request was the default but Method is a better name
+    //Request kept for backward compatibilty
+    //Will be removed in the future
+    if(typeof requirements.Method !== "undefined" && requirements.Method !== null && !requirements.Method){
+        requirements.Request = requirements.Method;
+    }
 
     //ensure there are request headers
     if (typeof requirements.Headers === "undefined" || requirements.Headers === null || !requirements.Headers) {
@@ -540,7 +578,7 @@ Service.AddProperty("ServerRequest", function (requirements) {
     // fix: throws an exception if a POST request is sent
     //without a body
     if (requirements.Params === null) {
-        requirements.Params = {};
+        requirements.Params = new FormData();
     }
 
     //disable form input and controls while request is
@@ -670,36 +708,36 @@ Service.AddProperty("ServerRequest", function (requirements) {
  *
  */
 Service.AddProperty("LaunchModal", function (modal, actionBtn) {
-    return new Promise(function(resolve){
-        modal.on('hide.bs.modal', function (e) {
+   return new Promise(function(resolve){
+       modal.on('hide.bs.modal', function (e) {
 
-        });
-        modal.on('hidden.bs.modal', function () {
-            Service.LoadedModal.remove();
-            Service.LoadedModal = null;
-            jQuery(`.${ModalContainer}`).empty();
-        });
-        const action = modal.data(Service.SYSTEM_ACTION);
-        if (typeof action === "string") {
-            let func = Service.Data[action];
-            if(typeof func === "undefined"){
-                func = Service.Data[`${action}-data`];
-            }
-            if (typeof func !== "undefined"){
-                func(modal, actionBtn).then(() => {
-                    modal.modal();
-                    resolve(true);
-                });
-            }else{
-                modal.modal();
-                resolve(true);
-            }
-        }
-        else{
-            modal.modal();
-            resolve(true);
-        }
-    });
+       });
+       modal.on('hidden.bs.modal', function () {
+           Service.LoadedModal.remove();
+           Service.LoadedModal = null;
+           jQuery(`.${ModalContainer}`).empty();
+       });
+       const action = modal.data(Service.SYSTEM_ACTION);
+       if (typeof action === "string") {
+           let func = Service.Data[action];
+           if(typeof func === "undefined"){
+               func = Service.Data[`${action}-data`];
+           }
+           if (typeof func !== "undefined"){
+               func(modal, actionBtn).then(() => {
+                   modal.modal();
+                   resolve(true);
+               });
+           }else{
+               modal.modal();
+               resolve(true);
+           }
+       }
+       else{
+           modal.modal();
+           resolve(true);
+       }
+   });
 });
 
 /**
@@ -967,33 +1005,33 @@ Service.AddProperty("BindForm", function (form, ds) {
                 elem.prop('checked', (el == elem.val()));
                 break;
             case 'date':
-            {
-                if (!el) {
-                    elem.val("");
-                } else {
-                    let dob = new Date(el);
-                    let day = ("0" + dob.getDate()).slice(-2);
-                    let month = ("0" + (dob.getMonth() + 1)).slice(-2);
-                    dob = dob.getFullYear() + "-" + (month) + "-" + (day);
-                    elem.data("value", dob);
-                    elem.val(dob);
-                }
-                break;
-            }
-            case 'select-one':
-            {
-                elem.data("value", el);
-                let options = elem.find("option");
-                elem.prop("selectedIndex", 0);
-                options.each(function (i) {
-                    if (this.value == el) {
-                        elem.prop("selectedIndex", i);
+                {
+                    if (!el) {
+                        elem.val("");
+                    } else {
+                        let dob = new Date(el);
+                        let day = ("0" + dob.getDate()).slice(-2);
+                        let month = ("0" + (dob.getMonth() + 1)).slice(-2);
+                        dob = dob.getFullYear() + "-" + (month) + "-" + (day);
+                        elem.data("value", dob);
+                        elem.val(dob);
                     }
-                });
-                break;
-            }
+                    break;
+                }
+            case 'select-one':
+                {
+                    elem.data("value", el);
+                    let options = elem.find("option");
+                    elem.prop("selectedIndex", 0);
+                    options.each(function (i) {
+                        if (this.value == el) {
+                            elem.prop("selectedIndex", i);
+                        }
+                    });
+                    break;
+                }
             case 'select-multiple':
-                break;
+                    break;
             default:
                 elem.data("value", el);
                 elem.val(el);
@@ -1284,7 +1322,7 @@ Service.AddProperty("FindElement", function (name, actionBtn = null) {
         if(typeof name !== "undefined" && name.length > 0){
             //add hash tag if not present. element lookup is always by id
             if (name.substring(0, 1) !== "#") name = `#${name}`;
-            item = templateContent.find(name);
+             item = templateContent.find(name);
         }
         if (item.length > 0) {
             /**
@@ -1310,6 +1348,49 @@ Service.AddProperty("FindElement", function (name, actionBtn = null) {
             resolve(container);
         }
     });
+});
+
+/**
+ * -- Find Element Sync --
+ * this function retrieves templates from the
+ * template tag or from a server side call and
+ * ensures they are recognized by the DOM
+ *
+ * @param name name of the element to retrieve
+ * @param actionBtn object triggering action
+ */
+Service.AddProperty("FindElementSync", function (name, actionBtn = null) {
+    let templateContent = jQuery('template').prop('content');
+    templateContent = jQuery(templateContent);
+    let item = "";
+    if(typeof name !== "undefined" && name.length > 0){
+        //add hash tag if not present. element lookup is always by id
+        if (name.substring(0, 1) !== "#") name = `#${name}`;
+            item = templateContent.find(name);
+    }
+    if (item.length > 0) {
+        /**
+         * todo cloning the first item in the list... need to ensure
+         * that highest order divs are selected
+         **/
+        let clone = jQuery(item[0]).clone();
+        const action = clone.data(Service.SYSTEM_ACTION);
+        let element = jQuery(clone.html());
+        //ensure we have one root element
+        if (element.length !== 1) {
+            element = jQuery("<div></div>").append(clone.html())
+        }
+        //add system actions as data properties
+        if (typeof action !== "undefined") element.data(Service.SYSTEM_ACTION, action);
+        //bind Select Lists
+        Service.BindList(element,[],actionBtn);
+        return element;
+    } else {
+        //todo determine if name is a url and use server request to fetch it
+        const container = jQuery("<div></div>");
+        container.append(Service.DefaultElementHandler(actionBtn));
+        return container;
+    }
 });
 
 /**
@@ -1445,6 +1526,27 @@ Service.AddProperty("Bootstrap", function(link = null){
         if(link !== null) await Controller.PanelSelect(link[0]);
     },1000);
 });
+
+/**
+ * -- FormData --
+ * this function converts a regular JavaScript
+ * object to a FormData one
+ */
+Service.AddProperty("FormData",function(data){
+    const params = new FormData();
+    if(jQuery.isArray(data)){
+        jQuery.each(data,function(){
+            params.append(this.name,this.value);
+        });
+    }else{
+        jQuery.each(data,function(e){
+            if (data.hasOwnProperty(e)) {
+                params.append(e,data[e]);
+            }
+        });
+    }
+    return params;
+});
 /**
  * -- Form Submit --
  * Handles form submission triggered by the element placed on.
@@ -1487,6 +1589,9 @@ Controller.AddProperty("FormSubmit",function(elem,e){
         if(typeof Service.LoadedForm.attr("method") !== "undefined"){
             method = Service.LoadedForm.attr("method");
         }
+        //retrieve form fields and submission data from loaded form
+        //exclude file input from search...handled separately below
+        data = Service.LoadedForm.serializeArray();
     }
     else{
         if (target.substring(0, 1) !== "#") target = `#${target}`;
@@ -1500,6 +1605,9 @@ Controller.AddProperty("FormSubmit",function(elem,e){
             if(typeof form.data(Service.SYSTEM_METHOD) !== "undefined"){
                 method = form.data(Service.SYSTEM_METHOD);
             }
+            //retrieve form fields and submission data from loaded form
+            //exclude file input from search...handled separately below
+            data = form.serializeArray();
         } else {
             //No form detected......lets build one.
             const formContent = targetContainer.clone();
@@ -1519,6 +1627,9 @@ Controller.AddProperty("FormSubmit",function(elem,e){
             //we use the target as the loaded form.
             //Form object used to retrieve data
             Service.LoadedForm = targetContainer;
+            //retrieve form fields and submission data from loaded form
+            //exclude file input from search...handled separately below
+            data = form.serializeArray();
         }
     }
 
@@ -1535,14 +1646,8 @@ Controller.AddProperty("FormSubmit",function(elem,e){
         }
     }
 
-
-
-    //retrieve form fields and submission data from loaded form
-    //exclude file input from search...handled separately below
-    data = jQuery(form.serializeArray());
-    jQuery.each(data,function(){
-        params.append(this.name,this.value);
-    });
+    //create FormData object from form values
+    params = Service.FormData(data);
 
     if(typeof site_url === "undefined" || site_url.length <= 0){
         Service.ActionLoading = false;
@@ -1552,7 +1657,7 @@ Controller.AddProperty("FormSubmit",function(elem,e){
 
     //determine if the form has a file, and if so serialize
     //using FormData object, or just use an object
-    const file = form.find("input[type='file']");
+    const file = Service.LoadedForm.find("input[type='file']");
     if(file.length > 0){
         jQuery(file).each(function(e){
             //determine if multiple files are selected and add
@@ -1721,7 +1826,7 @@ Controller.AddProperty("PanelSelect",function(elem){
         return false;
     }
     Service.PanelLoading.push(ActionButton.data(Service.SYSTEM_ACTION));
-
+    
     //make action button aware of loaded type
     ActionButton.data(Service.SYSTEM_LOAD_TYPE,"panel");
     //get history url if defined
