@@ -181,7 +181,33 @@ Service.AddProperty("DefaultModalHandler", function (modal, actionBtn) {
  * @param request object that represents data returned from server
  */
 Service.AddProperty("ErrorMessageHandler", function(request,error,actionBtn){
-    return error;
+    let message = request.getResponseHeader("x-error-message");
+    if(typeof message !== "undefined" && message !== null && message.length > 0)
+        return message;
+    if(typeof error !== "undefined") {
+        message = error;
+        if(typeof message !== "undefined" && message !== null && message.length > 0)
+            return message;
+    }
+    if(typeof request.responseJSON !== "undefined" && typeof request.responseJSON.message !== "undefined"){
+        message = request.responseJSON.message;
+        if(typeof message !== "undefined" && message !== null && message.length > 0)
+            return message;
+    }
+    if (typeof request.responseText !== "undefined" && request.responseText.length > 0){
+        try {
+            message = JSON.parse(request.responseText).message;
+        }
+        catch (e) {
+            message = null;
+        }
+        if(typeof message !== "undefined" && message !== null && message.length > 0)
+            return message;
+    }
+    message = request.statusText;
+    if(typeof message !== "undefined" && message !== null && message.length > 0)
+        return message;
+    return "Internal Server Error!";
 });
 
 /**
