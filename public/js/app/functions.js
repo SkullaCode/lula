@@ -1035,7 +1035,15 @@ Service.AddProperty("SelectListBuilder", function (elem, list, actionBtn, emptyL
         elem.append(`<option data-value="" value=""> ${defaultOption} </option>`);
     }
     jQuery.each(list, function () {
-        elem.append(`<option data-value="${this.Value}" value="${this.Value}"> ${this.Text} </option>`);
+        let val = '';
+        let txt = '';
+        if(typeof this.value !== "undefined") val = this.value;
+        if(val.length === 0 && typeof this.Value !== "undefined") val = this.Value;
+        if(val.length === 0 && typeof this.VALUE !== "undefined") val = this.VALUE;
+        if(typeof this.text !== "undefined") txt = this.text;
+        if(txt.length === 0 && typeof this.Text !== "undefined") txt = this.Text;
+        if(txt.length === 0 && typeof this.TEXT !== "undefined") txt = this.TEXT;
+        elem.append(`<option data-value="${val}" value="${val}"> ${txt} </option>`);
     });
 });
 
