@@ -20,6 +20,10 @@ Controller.AddProperty("FormSubmit",function(elem,e){
     Service.ActionLoading = true;
     Service.CanSubmitForm = true;
     let target = ActionButton.data(Service.SYSTEM_TARGET);
+    //fallback to action if target not defined
+    if(typeof target === "undefined"){
+        target = ActionButton.data(Service.SYSTEM_ACTION);
+    }
     let custom = ActionButton.data(Service.SYSTEM_CUSTOM);
     let complete = ActionButton.data(Service.SYSTEM_COMPLETE);
     let requestHeaders = ActionButton.data(Service.SYSTEM_HEADERS);

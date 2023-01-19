@@ -354,12 +354,13 @@ Service.AddProperty("ServerRequest", function (requirements) {
 
         //execute the success callback with results received.
         requirements.SuccessHandler(res);
-        if(requirements.Complete === null){
-            requirements.Complete = requirements.ActionBtn.Data(Service.SYSTEM_COMPLETE)
-        }
-        Service.ExecuteCustom(requirements.Complete, requirements.Component, requirements.ActionBtn, res).then(() => {
+        if(typeof requirements.Complete !== "undefined" && requirements.Complete !== null && requirements.Complete.length > 0){
+            Service.ExecuteCustom(requirements.Complete, requirements.Component, requirements.ActionBtn, res).then(() => {
+                Service.ActionLoading = false;
+            });
+        }else{
             Service.ActionLoading = false;
-        });
+        }
     };
     const errorFunction = function (request, status, error) {
         //jQuery sometimes throws a parse error but the response is successful

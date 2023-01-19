@@ -647,12 +647,13 @@ Service.AddProperty("ServerRequest", function (requirements) {
 
         //execute the success callback with results received.
         requirements.SuccessHandler(res);
-        if(requirements.Complete === null){
-            requirements.Complete = requirements.ActionBtn.Data(Service.SYSTEM_COMPLETE)
-        }
-        Service.ExecuteCustom(requirements.Complete, requirements.Component, requirements.ActionBtn, res).then(() => {
+        if(typeof requirements.Complete !== "undefined" && requirements.Complete !== null && requirements.Complete.length > 0){
+            Service.ExecuteCustom(requirements.Complete, requirements.Component, requirements.ActionBtn, res).then(() => {
+                Service.ActionLoading = false;
+            });
+        }else{
             Service.ActionLoading = false;
-        });
+        }
     };
     const errorFunction = function (request, status, error) {
         //jQuery sometimes throws a parse error but the response is successful
@@ -1602,6 +1603,10 @@ Controller.AddProperty("FormSubmit",function(elem,e){
     Service.ActionLoading = true;
     Service.CanSubmitForm = true;
     let target = ActionButton.data(Service.SYSTEM_TARGET);
+    //fallback to action if target not defined
+    if(typeof target === "undefined"){
+        target = ActionButton.data(Service.SYSTEM_ACTION);
+    }
     let custom = ActionButton.data(Service.SYSTEM_CUSTOM);
     let complete = ActionButton.data(Service.SYSTEM_COMPLETE);
     let requestHeaders = ActionButton.data(Service.SYSTEM_HEADERS);
