@@ -354,7 +354,7 @@ Service.AddProperty("ServerRequest", function (requirements) {
 
         //execute the success callback with results received.
         requirements.SuccessHandler(res);
-        if(typeof requirements.Complete !== "undefined" && requirements.Complete !== null && requirements.Complete.length > 0){
+        if(typeof requirements.Complete !== "undefined" && requirements.Complete !== null){
             Service.ExecuteCustom(requirements.Complete, requirements.Component, requirements.ActionBtn, res).then(() => {
                 Service.ActionLoading = false;
             });
@@ -459,9 +459,17 @@ Service.AddProperty("LaunchModal", function (modal, actionBtn) {
                func = Service.Data[`${action}-data`];
            }
            if (typeof func !== "undefined"){
-               func(modal, actionBtn).then(() => {
-                   modal.modal();
-                   resolve(true);
+               //promise from data call should resolve boolean true|false
+               //if not success will be undefined
+               //if data call fails and false is resolved the modal will not load
+               func(modal, actionBtn).then((success) => {
+                   if(!success){
+                       Service.LoadedModal.remove();
+                       Service.LoadedModal = null;
+                       jQuery(`.${ModalContainer}`).empty();
+                   }
+                   if(success) modal.modal();
+                   resolve(success);
                });
            }else{
                modal.modal();
