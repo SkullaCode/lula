@@ -1,3 +1,5 @@
+// noinspection JSUnresolvedFunction,JSUnresolvedVariable
+
 /**
  *  -- Authorization Handler --
  * This function is responsible for handling all requests
@@ -260,9 +262,9 @@ Service.AddProperty("SuccessMessageHandler", function (request,data,actionBtn) {
  * -- Success Data Handler --
  * This function handles the default transformation of success
  * data from the server into a usable format
- * 
+ *
  * @param data data as returned from the server
- * @param request object that represents data returned from server 
+ * @param request object that represents data returned from server
  */
 Service.AddProperty("SuccessDataHandler", function(request,data,actionBtn){
     return data;
@@ -277,7 +279,7 @@ Service.AddProperty("SuccessDataHandler", function(request,data,actionBtn){
 Service.AddProperty("ServerRequest", function (requirements) {
     //ensure there is a request type
     //Request was the default but Method is a better name
-    //Request kept for backward compatibilty
+    //Request kept for backward compatibility
     //Will be removed in the future
     if(typeof requirements.Method !== "undefined" && requirements.Method !== null && !requirements.Method){
         requirements.Request = requirements.Method;
@@ -375,7 +377,7 @@ Service.AddProperty("ServerRequest", function (requirements) {
         res.ActionBtn = requirements.ActionBtn;
         res.Component = requirements.Component;
 
-        //redirect to login if access error
+        //redirect to log-in if access error
 
 
         //enable disabled elements
@@ -390,20 +392,19 @@ Service.AddProperty("ServerRequest", function (requirements) {
         }
         //execute error handler
         requirements.ErrorHandler(res);
-        if(requirements.Complete === null){
-            requirements.Complete = requirements.ActionBtn.data(Service.SYSTEM_COMPLETE);
+        if(typeof requirements.Complete !== "undefined" && requirements.Complete !== null){
+            Service.ExecuteCustom(requirements.Complete, requirements.Component, requirements.ActionBtn, res).then(() => {
+                //add status codes and how they should be treated here
+                if (typeof requirements.ActionBtn.data(Service.SYSTEM_NOTIFICATION) === "undefined" ||
+                    requirements.ActionBtn.data(Service.SYSTEM_NOTIFICATION) === "true" ||
+                    requirements.ActionBtn.data(Service.SYSTEM_NOTIFICATION) === "error"
+                ) {
+                    res.NotificationType = requirements.ActionBtn.data(Service.SYSTEM_NOTIFICATION_ON_ERROR) || ALERT_NOTIFICATION_TYPE;
+                    Service.NotificationHandler(res);
+                }
+                Service.ActionLoading = false;
+            });
         }
-        Service.ExecuteCustom(requirements.Complete, requirements.Component, requirements.ActionBtn, res).then(() => {
-            //add status codes and how they should be treated here
-            if (typeof requirements.ActionBtn.data(Service.SYSTEM_NOTIFICATION) === "undefined" ||
-                requirements.ActionBtn.data(Service.SYSTEM_NOTIFICATION) === "true" ||
-                requirements.ActionBtn.data(Service.SYSTEM_NOTIFICATION) === "error"
-            ) {
-                res.NotificationType = requirements.ActionBtn.data(Service.SYSTEM_NOTIFICATION_ON_ERROR) || ALERT_NOTIFICATION_TYPE;
-                Service.NotificationHandler(res);
-            }
-            Service.ActionLoading = false;
-        });
     };
 
     const ajax_params = {
@@ -501,7 +502,7 @@ Service.AddProperty("Bind", function (component, data, actionBtn = null) {
 
         //determine if global transformation should take place
         if (elem.hasClass(Service.SYSTEM_BIND_GLOBAL)) {
-            //if custom function not present nothing happens
+            //if custom function absent nothing happens
             if (typeof elem.data(Service.SYSTEM_CUSTOM) !== "undefined") {
                 const action = elem.data(Service.SYSTEM_CUSTOM).split("|");
                 action.forEach(function (item) {
@@ -862,7 +863,7 @@ Service.AddProperty("GetProperty", function (id, data) {
 /**
  * -- List Update --
  * this function is used for creating a secondary dropdown
- * list from a primary one (eg. Selecting a country and
+ * list from a primary one (e.g. Selecting a country and
  * retrieving associated states)
  *
  * @param elem the element selected
@@ -1069,7 +1070,7 @@ Service.AddProperty("FindElement", function (name, actionBtn = null) {
         templateContent = jQuery(templateContent);
         let item = "";
         if(typeof name !== "undefined" && name.length > 0){
-            //add hash tag if not present. element lookup is always by id
+            //add hashtag if not present. element lookup is always by id
             if (name.substring(0, 1) !== "#") name = `#${name}`;
              item = templateContent.find(name);
         }
@@ -1113,7 +1114,7 @@ Service.AddProperty("FindElementSync", function (name, actionBtn = null) {
     templateContent = jQuery(templateContent);
     let item = "";
     if(typeof name !== "undefined" && name.length > 0){
-        //add hash tag if not present. element lookup is always by id
+        //add hashtag if not present. element lookup is always by id
         if (name.substring(0, 1) !== "#") name = `#${name}`;
             item = templateContent.find(name);
     }
