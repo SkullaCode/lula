@@ -134,6 +134,24 @@ Service.Data.AddMethod("modal-data",function(component,actionBtn){
         return resolve(true);
     });
 });
+Service.Data.AddMethod("inline-editor-data",function(component,actionBtn){
+    return new Promise(function(resolve){
+        const data = [
+            { ID: 1, Name: "John Doe", Age: 30, Gender: 1, GenderDisplay : "Male" },
+            { ID: 2, Name: "Ricky Smith", Age: 24, Gender: 1, GenderDisplay : "Male"  },
+            { ID: 3, Name: "Deandra Williams", Age: 45, Gender: 2, GenderDisplay : "Female"  },
+            { ID: 4, Name: "Troy Jackson", Age: 26, Gender: 1, GenderDisplay : "Male"  },
+            { ID: 5, Name: "David Keane", Age: 63, Gender: 1, GenderDisplay : "Male"  },
+            { ID: 6, Name: "Marcia Thomas", Age: 53, Gender: 2  , GenderDisplay : "Female"},
+            { ID: 7, Name: "Travis Greene", Age: 48, Gender: 1, GenderDisplay : "Male"  },
+        ];
+
+        const tableOne = component.find("#inline-table-one");
+        InlineEditorLoad(tableOne,"inline-editor-info",data);
+        resolve();
+
+    });
+});
 
 Service.SubmitTransformation.TransformFormStage1 = function(component,params,actionBtn){
     alert("form is being transformed..... stage 1");
@@ -173,6 +191,15 @@ Service.Transformation.AddMethod("form-header", function(component, data, action
     }
 
 });
+
+function InlineEditorLoad(component,name,data){
+    const editorData = Service.FindElementSync(name);
+    Service.Bind(editorData,data);
+    const viewRow = editorData.find("#view").find("tr");
+    const addRow = editorData.find("#add").find("tr");
+    component.append(viewRow)
+    component.append(addRow);
+};
 
 
 Controller.Init = function () {
