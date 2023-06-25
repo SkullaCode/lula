@@ -5,7 +5,7 @@ class Result{
     Data = null;
     ActionBtn = null;
     Component = null;
-    NotificationType = null;
+    NotificationType = null;        
 }
 
 class Requirement{
@@ -106,7 +106,7 @@ window.Service = function(){
     let Title               = "Javascript UI";
 
     let addProperty = function(name,f){
-        Response[name] = f;
+         Response[name] = f;
     };
 
     let addMethod = function(name,f){
@@ -164,7 +164,7 @@ window.Service = function(){
         CanSubmitForm                       : null,
         Bootstrap                           : null,
         FindElementSync                     : null,
-        FormData                            : null,
+        FormData                            : null,                         
         AddProperty                         : addProperty,
         AddMethod                           : addMethod,
         SYSTEM_ID                           : "id",                     //-------------------------------------- identifier for elements
@@ -737,44 +737,44 @@ Service.AddProperty("ServerRequest", function (requirements) {
  *
  */
 Service.AddProperty("LaunchModal", function (modal, actionBtn) {
-    return new Promise(function(resolve){
-        modal.on('hide.bs.modal', function (e) {
+   return new Promise(function(resolve){
+       modal.on('hide.bs.modal', function (e) {
 
-        });
-        modal.on('hidden.bs.modal', function () {
-            Service.LoadedModal.remove();
-            Service.LoadedModal = null;
-            jQuery(`.${ModalContainer}`).empty();
-        });
-        const action = modal.data(Service.SYSTEM_ACTION);
-        if (typeof action === "string") {
-            let func = Service.Data[action];
-            if(typeof func === "undefined"){
-                func = Service.Data[`${action}-data`];
-            }
-            if (typeof func !== "undefined"){
-                //promise from data call should resolve boolean true|false
-                //if not success will be undefined
-                //if data call fails and false is resolved the modal will not load
-                func(modal, actionBtn).then((success) => {
-                    if(!success){
-                        Service.LoadedModal.remove();
-                        Service.LoadedModal = null;
-                        jQuery(`.${ModalContainer}`).empty();
-                    }
-                    if(success) modal.modal();
-                    resolve(success);
-                });
-            }else{
-                modal.modal();
-                resolve(true);
-            }
-        }
-        else{
-            modal.modal();
-            resolve(true);
-        }
-    });
+       });
+       modal.on('hidden.bs.modal', function () {
+           Service.LoadedModal.remove();
+           Service.LoadedModal = null;
+           jQuery(`.${ModalContainer}`).empty();
+       });
+       const action = modal.data(Service.SYSTEM_ACTION);
+       if (typeof action === "string") {
+           let func = Service.Data[action];
+           if(typeof func === "undefined"){
+               func = Service.Data[`${action}-data`];
+           }
+           if (typeof func !== "undefined"){
+               //promise from data call should resolve boolean true|false
+               //if not success will be undefined
+               //if data call fails and false is resolved the modal will not load
+               func(modal, actionBtn).then((success) => {
+                   if(!success){
+                       Service.LoadedModal.remove();
+                       Service.LoadedModal = null;
+                       jQuery(`.${ModalContainer}`).empty();
+                   }
+                   if(success) modal.modal();
+                   resolve(success);
+               });
+           }else{
+               modal.modal();
+               resolve(true);
+           }
+       }
+       else{
+           modal.modal();
+           resolve(true);
+       }
+   });
 });
 
 /**
@@ -1007,24 +1007,6 @@ Service.AddProperty("BindForm", function (form, ds) {
         )
             el = Service.GetProperty(elem.prop("name"), ds);
 
-        //if element is a select list build it out using select list builder
-        /*if (elem[0].type === 'select-one') {
-            let list = elem.data(Service.SYSTEM_LIST);
-            if (typeof list !== "undefined") {
-                let listGroup = Service.ModelData.List[list];
-                if(typeof listGroup === "undefined"){
-                    listGroup = Service.GetProperty(list,ds)
-                }
-                if (typeof listGroup !== "undefined" && listGroup !== null && listGroup.length > 0) {
-                    Service.SelectListBuilder(elem, listGroup);
-                }else{
-                    if(elem.data(Service.SYSTEM_DEFAULT)){
-                        Service.SelectListBuilder(elem, []);
-                    }
-                }
-            }
-        }*/
-
         if (
             el === null ||
             typeof el === "undefined" ||
@@ -1040,33 +1022,33 @@ Service.AddProperty("BindForm", function (form, ds) {
                 elem.prop('checked', (el == elem.val()));
                 break;
             case 'date':
-            {
-                if (!el) {
-                    elem.val("");
-                } else {
-                    let dob = new Date(el);
-                    let day = ("0" + dob.getDate()).slice(-2);
-                    let month = ("0" + (dob.getMonth() + 1)).slice(-2);
-                    dob = dob.getFullYear() + "-" + (month) + "-" + (day);
-                    elem.data("value", dob);
-                    elem.val(dob);
-                }
-                break;
-            }
-            case 'select-one':
-            {
-                elem.data("value", el);
-                let options = elem.find("option");
-                elem.prop("selectedIndex", 0);
-                options.each(function (i) {
-                    if (this.value == el) {
-                        elem.prop("selectedIndex", i);
+                {
+                    if (!el) {
+                        elem.val("");
+                    } else {
+                        let dob = new Date(el);
+                        let day = ("0" + dob.getDate()).slice(-2);
+                        let month = ("0" + (dob.getMonth() + 1)).slice(-2);
+                        dob = dob.getFullYear() + "-" + (month) + "-" + (day);
+                        elem.data("value", dob);
+                        elem.val(dob);
                     }
-                });
-                break;
-            }
+                    break;
+                }
+            case 'select-one':
+                {
+                    elem.data("value", el);
+                    let options = elem.find("option");
+                    elem.prop("selectedIndex", 0);
+                    options.each(function (i) {
+                        if (this.value == el) {
+                            elem.prop("selectedIndex", i);
+                        }
+                    });
+                    break;
+                }
             case 'select-multiple':
-                break;
+                    break;
             default:
                 elem.data("value", el);
                 elem.val(el);
@@ -1365,7 +1347,7 @@ Service.AddProperty("FindElement", function (name, actionBtn = null) {
         if(typeof name !== "undefined" && name.length > 0){
             //add hashtag if not present. element lookup is always by id
             if (name.substring(0, 1) !== "#") name = `#${name}`;
-            item = templateContent.find(name);
+             item = templateContent.find(name);
         }
         if (item.length > 0) {
             /**
@@ -1409,7 +1391,7 @@ Service.AddProperty("FindElementSync", function (name, actionBtn = null) {
     if(typeof name !== "undefined" && name.length > 0){
         //add hashtag if not present. element lookup is always by id
         if (name.substring(0, 1) !== "#") name = `#${name}`;
-        item = templateContent.find(name);
+            item = templateContent.find(name);
     }
     if (item.length > 0) {
         /**
@@ -1873,7 +1855,7 @@ Controller.AddProperty("PanelSelect",function(elem){
         return false;
     }
     Service.PanelLoading.push(ActionButton.data(Service.SYSTEM_ACTION));
-
+    
     //make action button aware of loaded type
     ActionButton.data(Service.SYSTEM_LOAD_TYPE,"panel");
     //get history url if defined

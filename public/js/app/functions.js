@@ -714,24 +714,6 @@ Service.AddProperty("BindForm", function (form, ds) {
         )
             el = Service.GetProperty(elem.prop("name"), ds);
 
-        //if element is a select list build it out using select list builder
-        /*if (elem[0].type === 'select-one') {
-            let list = elem.data(Service.SYSTEM_LIST);
-            if (typeof list !== "undefined") {
-                let listGroup = Service.ModelData.List[list];
-                if(typeof listGroup === "undefined"){
-                    listGroup = Service.GetProperty(list,ds)
-                }
-                if (typeof listGroup !== "undefined" && listGroup !== null && listGroup.length > 0) {
-                    Service.SelectListBuilder(elem, listGroup);
-                }else{
-                    if(elem.data(Service.SYSTEM_DEFAULT)){
-                        Service.SelectListBuilder(elem, []);
-                    }
-                }
-            }
-        }*/
-
         if (
             el === null ||
             typeof el === "undefined" ||
