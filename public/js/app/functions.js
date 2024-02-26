@@ -360,6 +360,10 @@ Service.AddProperty("ServerRequest", function (requirements) {
             Service.ExecuteCustom(requirements.Complete, requirements.Component, requirements.ActionBtn, res).then(() => {
                 Service.ActionLoading = false;
             });
+        }else if(typeof requirements.ActionBtn.data(Service.SYSTEM_COMPLETE) !== "undefined" && requirements.ActionBtn.data(Service.SYSTEM_COMPLETE) !== null){
+            Service.ExecuteCustom(requirements.ActionBtn.data(Service.SYSTEM_COMPLETE), requirements.Component, requirements.ActionBtn, res).then(() => {
+                Service.ActionLoading = false;
+            });
         }else{
             Service.ActionLoading = false;
         }
@@ -404,6 +408,15 @@ Service.AddProperty("ServerRequest", function (requirements) {
                 }
                 Service.ActionLoading = false;
             });
+        }else{
+            if (typeof requirements.ActionBtn.data(Service.SYSTEM_NOTIFICATION) === "undefined" ||
+                requirements.ActionBtn.data(Service.SYSTEM_NOTIFICATION) === "true" ||
+                requirements.ActionBtn.data(Service.SYSTEM_NOTIFICATION) === "error"
+            ) {
+                res.NotificationType = requirements.ActionBtn.data(Service.SYSTEM_NOTIFICATION_ON_ERROR) || ALERT_NOTIFICATION_TYPE;
+                Service.NotificationHandler(res);
+            }
+            Service.ActionLoading = false;
         }
     };
 
@@ -544,7 +557,7 @@ Service.AddProperty("Bind", function (component, data, actionBtn = null) {
                         elem.val(property);
                     }
                     elem.attr('data-value', property);
-                    elem.data("value", property);
+                    //elem.data("value", property);
                     if (elem.prop("tagName") === "SELECT") {
                         let options = elem.find("option");
                         elem.prop("selectedIndex", 0);
@@ -651,35 +664,37 @@ Service.AddProperty("Bind", function (component, data, actionBtn = null) {
                 }
             }
             else {
-                let property = Service.GetProperty(elem.prop("id"), data);
-                if (typeof elem.data(Service.SYSTEM_CUSTOM) !== "undefined") {
-                    if (!elem.hasClass(Service.SYSTEM_BIND_ELEM)) {
-                        property = Service.Transform(elem.data(Service.SYSTEM_CUSTOM), null, property, actionBtn);
+                if(elem.prop("id").length > 0){
+                    let property = Service.GetProperty(elem.prop("id"), data);
+                    if (typeof elem.data(Service.SYSTEM_CUSTOM) !== "undefined") {
+                        if (!elem.hasClass(Service.SYSTEM_BIND_ELEM)) {
+                            property = Service.Transform(elem.data(Service.SYSTEM_CUSTOM), null, property, actionBtn);
+                        }
                     }
-                }
-                //transform element instead of data provided
-                if (elem.hasClass(Service.SYSTEM_BIND_ELEM)) {
-                    Service.Transform(elem.data(Service.SYSTEM_CUSTOM), elem, property, actionBtn);
-                }
-                //bind property to element as valid HTML
-                else if (elem.hasClass(Service.SYSTEM_BIND_VALUE)) {
-                    if (elem.is('input,select,textarea')) {
-                        elem.val(property);
+                    //transform element instead of data provided
+                    if (elem.hasClass(Service.SYSTEM_BIND_ELEM)) {
+                        Service.Transform(elem.data(Service.SYSTEM_CUSTOM), elem, property, actionBtn);
                     }
-                    elem.attr('data-value', property);
-                    elem.data("value", property);
-                    if (elem.prop("tagName") === "SELECT") {
-                        let options = elem.find("option");
-                        elem.prop("selectedIndex", 0);
-                        options.each(function (i) {
-                            if (this.value == property) {
-                                elem.prop("selectedIndex", i);
-                            }
-                        });
+                    //bind property to element as valid HTML
+                    else if (elem.hasClass(Service.SYSTEM_BIND_VALUE)) {
+                        if (elem.is('input,select,textarea')) {
+                            elem.val(property);
+                        }
+                        elem.attr('data-value', property);
+                        //elem.data("value", property);
+                        if (elem.prop("tagName") === "SELECT") {
+                            let options = elem.find("option");
+                            elem.prop("selectedIndex", 0);
+                            options.each(function (i) {
+                                if (this.value == property) {
+                                    elem.prop("selectedIndex", i);
+                                }
+                            });
+                        }
                     }
-                }
-                else {
-                    elem.html(property);
+                    else {
+                        elem.html(property);
+                    }
                 }
             }
         }
@@ -1069,7 +1084,11 @@ Service.AddProperty("FindElement", function (name, actionBtn = null) {
                 element = jQuery("<div></div>").append(clone.html())
             }
             //add system actions as data properties
-            if (typeof action !== "undefined") element.data(Service.SYSTEM_ACTION, action);
+            //if no data action is provided default to element name
+            if (typeof action !== "undefined")
+                element.data(Service.SYSTEM_ACTION, action);
+            else
+                element.data(Service.SYSTEM_ACTION, name.substring(1));
             //bind Select Lists
             Service.BindList(element,[],actionBtn);
             resolve(element);

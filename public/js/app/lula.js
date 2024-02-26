@@ -653,6 +653,10 @@ Service.AddProperty("ServerRequest", function (requirements) {
             Service.ExecuteCustom(requirements.Complete, requirements.Component, requirements.ActionBtn, res).then(() => {
                 Service.ActionLoading = false;
             });
+        }else if(typeof requirements.ActionBtn.data(Service.SYSTEM_COMPLETE) !== "undefined" && requirements.ActionBtn.data(Service.SYSTEM_COMPLETE) !== null){
+            Service.ExecuteCustom(requirements.ActionBtn.data(Service.SYSTEM_COMPLETE), requirements.Component, requirements.ActionBtn, res).then(() => {
+                Service.ActionLoading = false;
+            });
         }else{
             Service.ActionLoading = false;
         }
@@ -697,6 +701,15 @@ Service.AddProperty("ServerRequest", function (requirements) {
                 }
                 Service.ActionLoading = false;
             });
+        }else{
+            if (typeof requirements.ActionBtn.data(Service.SYSTEM_NOTIFICATION) === "undefined" ||
+                requirements.ActionBtn.data(Service.SYSTEM_NOTIFICATION) === "true" ||
+                requirements.ActionBtn.data(Service.SYSTEM_NOTIFICATION) === "error"
+            ) {
+                res.NotificationType = requirements.ActionBtn.data(Service.SYSTEM_NOTIFICATION_ON_ERROR) || ALERT_NOTIFICATION_TYPE;
+                Service.NotificationHandler(res);
+            }
+            Service.ActionLoading = false;
         }
     };
 
@@ -737,44 +750,44 @@ Service.AddProperty("ServerRequest", function (requirements) {
  *
  */
 Service.AddProperty("LaunchModal", function (modal, actionBtn) {
-   return new Promise(function(resolve){
-       modal.on('hide.bs.modal', function (e) {
+    return new Promise(function(resolve){
+        modal.on('hide.bs.modal', function (e) {
 
-       });
-       modal.on('hidden.bs.modal', function () {
-           Service.LoadedModal.remove();
-           Service.LoadedModal = null;
-           jQuery(`.${ModalContainer}`).empty();
-       });
-       const action = modal.data(Service.SYSTEM_ACTION);
-       if (typeof action === "string") {
-           let func = Service.Data[action];
-           if(typeof func === "undefined"){
-               func = Service.Data[`${action}-data`];
-           }
-           if (typeof func !== "undefined"){
-               //promise from data call should resolve boolean true|false
-               //if not success will be undefined
-               //if data call fails and false is resolved the modal will not load
-               func(modal, actionBtn).then((success) => {
-                   if(!success){
-                       Service.LoadedModal.remove();
-                       Service.LoadedModal = null;
-                       jQuery(`.${ModalContainer}`).empty();
-                   }
-                   if(success) modal.modal();
-                   resolve(success);
-               });
-           }else{
-               modal.modal();
-               resolve(true);
-           }
-       }
-       else{
-           modal.modal();
-           resolve(true);
-       }
-   });
+        });
+        modal.on('hidden.bs.modal', function () {
+            Service.LoadedModal.remove();
+            Service.LoadedModal = null;
+            jQuery(`.${ModalContainer}`).empty();
+        });
+        const action = modal.data(Service.SYSTEM_ACTION);
+        if (typeof action === "string") {
+            let func = Service.Data[action];
+            if(typeof func === "undefined"){
+                func = Service.Data[`${action}-data`];
+            }
+            if (typeof func !== "undefined"){
+                //promise from data call should resolve boolean true|false
+                //if not success will be undefined
+                //if data call fails and false is resolved the modal will not load
+                func(modal, actionBtn).then((success) => {
+                    if(!success){
+                        Service.LoadedModal.remove();
+                        Service.LoadedModal = null;
+                        jQuery(`.${ModalContainer}`).empty();
+                    }
+                    if(success) modal.modal();
+                    resolve(success);
+                });
+            }else{
+                modal.modal();
+                resolve(true);
+            }
+        }
+        else{
+            modal.modal();
+            resolve(true);
+        }
+    });
 });
 
 /**
@@ -837,7 +850,7 @@ Service.AddProperty("Bind", function (component, data, actionBtn = null) {
                         elem.val(property);
                     }
                     elem.attr('data-value', property);
-                    elem.data("value", property);
+                    //elem.data("value", property);
                     if (elem.prop("tagName") === "SELECT") {
                         let options = elem.find("option");
                         elem.prop("selectedIndex", 0);
@@ -944,35 +957,37 @@ Service.AddProperty("Bind", function (component, data, actionBtn = null) {
                 }
             }
             else {
-                let property = Service.GetProperty(elem.prop("id"), data);
-                if (typeof elem.data(Service.SYSTEM_CUSTOM) !== "undefined") {
-                    if (!elem.hasClass(Service.SYSTEM_BIND_ELEM)) {
-                        property = Service.Transform(elem.data(Service.SYSTEM_CUSTOM), null, property, actionBtn);
+                if(elem.prop("id").length > 0){
+                    let property = Service.GetProperty(elem.prop("id"), data);
+                    if (typeof elem.data(Service.SYSTEM_CUSTOM) !== "undefined") {
+                        if (!elem.hasClass(Service.SYSTEM_BIND_ELEM)) {
+                            property = Service.Transform(elem.data(Service.SYSTEM_CUSTOM), null, property, actionBtn);
+                        }
                     }
-                }
-                //transform element instead of data provided
-                if (elem.hasClass(Service.SYSTEM_BIND_ELEM)) {
-                    Service.Transform(elem.data(Service.SYSTEM_CUSTOM), elem, property, actionBtn);
-                }
-                //bind property to element as valid HTML
-                else if (elem.hasClass(Service.SYSTEM_BIND_VALUE)) {
-                    if (elem.is('input,select,textarea')) {
-                        elem.val(property);
+                    //transform element instead of data provided
+                    if (elem.hasClass(Service.SYSTEM_BIND_ELEM)) {
+                        Service.Transform(elem.data(Service.SYSTEM_CUSTOM), elem, property, actionBtn);
                     }
-                    elem.attr('data-value', property);
-                    elem.data("value", property);
-                    if (elem.prop("tagName") === "SELECT") {
-                        let options = elem.find("option");
-                        elem.prop("selectedIndex", 0);
-                        options.each(function (i) {
-                            if (this.value == property) {
-                                elem.prop("selectedIndex", i);
-                            }
-                        });
+                    //bind property to element as valid HTML
+                    else if (elem.hasClass(Service.SYSTEM_BIND_VALUE)) {
+                        if (elem.is('input,select,textarea')) {
+                            elem.val(property);
+                        }
+                        elem.attr('data-value', property);
+                        //elem.data("value", property);
+                        if (elem.prop("tagName") === "SELECT") {
+                            let options = elem.find("option");
+                            elem.prop("selectedIndex", 0);
+                            options.each(function (i) {
+                                if (this.value == property) {
+                                    elem.prop("selectedIndex", i);
+                                }
+                            });
+                        }
                     }
-                }
-                else {
-                    elem.html(property);
+                    else {
+                        elem.html(property);
+                    }
                 }
             }
         }
@@ -1022,33 +1037,33 @@ Service.AddProperty("BindForm", function (form, ds) {
                 elem.prop('checked', (el == elem.val()));
                 break;
             case 'date':
-                {
-                    if (!el) {
-                        elem.val("");
-                    } else {
-                        let dob = new Date(el);
-                        let day = ("0" + dob.getDate()).slice(-2);
-                        let month = ("0" + (dob.getMonth() + 1)).slice(-2);
-                        dob = dob.getFullYear() + "-" + (month) + "-" + (day);
-                        elem.data("value", dob);
-                        elem.val(dob);
-                    }
-                    break;
+            {
+                if (!el) {
+                    elem.val("");
+                } else {
+                    let dob = new Date(el);
+                    let day = ("0" + dob.getDate()).slice(-2);
+                    let month = ("0" + (dob.getMonth() + 1)).slice(-2);
+                    dob = dob.getFullYear() + "-" + (month) + "-" + (day);
+                    elem.data("value", dob);
+                    elem.val(dob);
                 }
+                break;
+            }
             case 'select-one':
-                {
-                    elem.data("value", el);
-                    let options = elem.find("option");
-                    elem.prop("selectedIndex", 0);
-                    options.each(function (i) {
-                        if (this.value == el) {
-                            elem.prop("selectedIndex", i);
-                        }
-                    });
-                    break;
-                }
+            {
+                elem.data("value", el);
+                let options = elem.find("option");
+                elem.prop("selectedIndex", 0);
+                options.each(function (i) {
+                    if (this.value == el) {
+                        elem.prop("selectedIndex", i);
+                    }
+                });
+                break;
+            }
             case 'select-multiple':
-                    break;
+                break;
             default:
                 elem.data("value", el);
                 elem.val(el);
@@ -1347,7 +1362,7 @@ Service.AddProperty("FindElement", function (name, actionBtn = null) {
         if(typeof name !== "undefined" && name.length > 0){
             //add hashtag if not present. element lookup is always by id
             if (name.substring(0, 1) !== "#") name = `#${name}`;
-             item = templateContent.find(name);
+                item = templateContent.find(name);
         }
         if (item.length > 0) {
             /**
@@ -1362,7 +1377,11 @@ Service.AddProperty("FindElement", function (name, actionBtn = null) {
                 element = jQuery("<div></div>").append(clone.html())
             }
             //add system actions as data properties
-            if (typeof action !== "undefined") element.data(Service.SYSTEM_ACTION, action);
+            //if no data action is provided default to element name
+            if (typeof action !== "undefined")
+                element.data(Service.SYSTEM_ACTION, action);
+            else
+                element.data(Service.SYSTEM_ACTION, name.substring(1));
             //bind Select Lists
             Service.BindList(element,[],actionBtn);
             resolve(element);

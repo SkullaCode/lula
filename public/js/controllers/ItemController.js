@@ -1,4 +1,4 @@
-const SERVER_ADDRESS = "http://localhost:8080";
+const SERVER_ADDRESS = "http://localhost:8000";
 
 Service.Modification.AddMethod("RedHeading",function(component, actionBtn){
     let header = jQuery(component).find("h1");
