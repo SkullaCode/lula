@@ -597,7 +597,7 @@ Service.AddProperty("Bind", function (component, data, actionBtn = null) {
                                 }
                                 //transform element instead of data provided
                                 if (childElem.hasClass(Service.SYSTEM_BIND_ELEM)) {
-                                    Service.Transform(childElem.data(Service.SYSTEM_CUSTOM), childElem, property, actionBtn);
+                                    Service.Transform(childElem.data(Service.SYSTEM_CUSTOM), childElem, item, actionBtn);
                                 }
                                 //bind property to element as valid HTML
                                 else if (childElem.hasClass(Service.SYSTEM_BIND_VALUE)) {
@@ -630,7 +630,7 @@ Service.AddProperty("Bind", function (component, data, actionBtn = null) {
 
                                 //transform element instead of data provided
                                 if (childElem.hasClass(Service.SYSTEM_BIND_ELEM)) {
-                                    Service.Transform(childElem.data(Service.SYSTEM_CUSTOM), childElem, property, actionBtn);
+                                    Service.Transform(childElem.data(Service.SYSTEM_CUSTOM), childElem, item, actionBtn);
                                 }
                                 //bind property to element as valid HTML
                                 else if (childElem.hasClass(Service.SYSTEM_BIND_VALUE)) {
@@ -1184,9 +1184,9 @@ Service.AddProperty("Transform", function (action, elem, property, actionBtn) {
         action.forEach(function (item) {
             if (elem === null) {
                 if (Service.Transformation.hasOwnProperty(item)) {
-                    property = Service.Transformation[item](property, actionBtn);
+                    property = Service.Transformation[item](property, null, actionBtn);
                 } else if (Controller.hasOwnProperty(item)) {
-                    property = Controller[item](property, actionBtn);
+                    property = Controller[item](property, null, actionBtn);
                 }
             } else {
                 if (Service.Transformation.hasOwnProperty(item)) {

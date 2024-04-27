@@ -171,11 +171,14 @@ Service.SubmitTransformation.AddMethod("transformation-no-submit", function(comp
     return params;
 });
 
-Service.Transformation.capitalize = function(component, actionBtn){
-    return (typeof component === "undefined" || component === null)
-        ? "" : component.toUpperCase();
+Service.Transformation.capitalize = function(component, data, actionBtn){
+    if(data === null){
+        return (typeof component === "undefined" || component === null)
+            ? "" : component.toUpperCase();
+    }
+    component.text(data.Name.toUpperCase());
 };
-Service.Transformation.AddMethod("add-age", function(component,property, actionBtn){
+Service.Transformation.AddMethod("add-age", function(component, property, actionBtn){
     if(actionBtn.data("id")){
         component.val(40);
     }else{
@@ -189,7 +192,6 @@ Service.Transformation.AddMethod("form-header", function(component, data, action
     }else{
         component.html(`<p>The form below should be blank</p>`)
     }
-
 });
 
 function InlineEditorLoad(component,name,data){
@@ -211,7 +213,6 @@ Controller.CustomSuccessHandler = function(result){
 };
 Controller.CustomErrorHandler = function(e){
     alert("Custom error handler was fired");
-    console.log({e});
     Service.ErrorHandler(e);
 };
 Controller.AddMethod("list-from-controller",function(btn){
