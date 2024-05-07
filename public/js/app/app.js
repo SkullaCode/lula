@@ -7,13 +7,7 @@
  * function on form fields if present, and send the result to
  * Service.ServerRequest to be processed.
  */
-Controller.AddProperty("FormSubmit",function(elem,e){
-    //prevent default action for submit button
-    if(typeof e !== "undefined"){
-        e.preventDefault();
-    }else{
-        window.event.preventDefault();
-    }
+Controller.AddProperty("FormSubmit",function(elem){
     //exit if another submission is in progress
     if(Service.ActionLoading) return false;
     const ActionButton = jQuery(elem);
@@ -54,6 +48,8 @@ Controller.AddProperty("FormSubmit",function(elem,e){
         form = (targetContainer.is("form")) ? targetContainer : targetContainer.find("form");
         if (form.length > 0) {
             Service.LoadedForm = form;
+            site_url = form.prop("action");
+            method = form.prop("method");
             if(typeof form.data(Service.SYSTEM_URL) !== "undefined"){
                 site_url = form.data(Service.SYSTEM_URL);
             }

@@ -5,7 +5,7 @@ class Result{
     Data = null;
     ActionBtn = null;
     Component = null;
-    NotificationType = null;        
+    NotificationType = null;
 }
 
 class Requirement{
@@ -106,7 +106,7 @@ window.Service = function(){
     let Title               = "Javascript UI";
 
     let addProperty = function(name,f){
-         Response[name] = f;
+        Response[name] = f;
     };
 
     let addMethod = function(name,f){
@@ -164,7 +164,7 @@ window.Service = function(){
         CanSubmitForm                       : null,
         Bootstrap                           : null,
         FindElementSync                     : null,
-        FormData                            : null,                         
+        FormData                            : null,
         AddProperty                         : addProperty,
         AddMethod                           : addMethod,
         SYSTEM_ID                           : "id",                     //-------------------------------------- identifier for elements
@@ -834,6 +834,8 @@ Service.AddProperty("Bind", function (component, data, actionBtn = null) {
         else {
             if (typeof elem.data(Service.SYSTEM_PROPERTY) !== "undefined") {
                 let property = Service.GetProperty(elem.data(Service.SYSTEM_PROPERTY), data);
+                //if the element found does not have any associated data we exit!!
+                if(typeof property === "undefined") return;
                 //determine if a transformation method is present on the element
                 if (typeof elem.data(Service.SYSTEM_CUSTOM) !== "undefined") {
                     if (!elem.hasClass(Service.SYSTEM_BIND_ELEM)) {
@@ -867,7 +869,8 @@ Service.AddProperty("Bind", function (component, data, actionBtn = null) {
             }
             else if (typeof elem.data(Service.SYSTEM_LOOP) !== "undefined") {
                 let property = Service.GetProperty(elem.data(Service.SYSTEM_LOOP), data);
-
+                //if the element found does not have any associated data we exit!!
+                if(typeof property === "undefined") return;
                 //get the looped element
                 let child = elem.children();
                 elem.empty();
@@ -959,6 +962,8 @@ Service.AddProperty("Bind", function (component, data, actionBtn = null) {
             else {
                 if(elem.prop("id").length > 0){
                     let property = Service.GetProperty(elem.prop("id"), data);
+                    //if the element found does not have any associated data we exit!!
+                    if(typeof property === "undefined") return;
                     if (typeof elem.data(Service.SYSTEM_CUSTOM) !== "undefined") {
                         if (!elem.hasClass(Service.SYSTEM_BIND_ELEM)) {
                             property = Service.Transform(elem.data(Service.SYSTEM_CUSTOM), null, property, actionBtn);
@@ -1410,7 +1415,7 @@ Service.AddProperty("FindElementSync", function (name, actionBtn = null) {
     if(typeof name !== "undefined" && name.length > 0){
         //add hashtag if not present. element lookup is always by id
         if (name.substring(0, 1) !== "#") name = `#${name}`;
-            item = templateContent.find(name);
+        item = templateContent.find(name);
     }
     if (item.length > 0) {
         /**
@@ -1600,13 +1605,7 @@ Service.AddProperty("FormData",function(data){
  * function on form fields if present, and send the result to
  * Service.ServerRequest to be processed.
  */
-Controller.AddProperty("FormSubmit",function(elem,e){
-    //prevent default action for submit button
-    if(typeof e !== "undefined"){
-        e.preventDefault();
-    }else{
-        window.event.preventDefault();
-    }
+Controller.AddProperty("FormSubmit",function(elem){
     //exit if another submission is in progress
     if(Service.ActionLoading) return false;
     const ActionButton = jQuery(elem);
@@ -1647,6 +1646,8 @@ Controller.AddProperty("FormSubmit",function(elem,e){
         form = (targetContainer.is("form")) ? targetContainer : targetContainer.find("form");
         if (form.length > 0) {
             Service.LoadedForm = form;
+            site_url = form.prop("action");
+            method = form.prop("method");
             if(typeof form.data(Service.SYSTEM_URL) !== "undefined"){
                 site_url = form.data(Service.SYSTEM_URL);
             }
@@ -1874,7 +1875,7 @@ Controller.AddProperty("PanelSelect",function(elem){
         return false;
     }
     Service.PanelLoading.push(ActionButton.data(Service.SYSTEM_ACTION));
-    
+
     //make action button aware of loaded type
     ActionButton.data(Service.SYSTEM_LOAD_TYPE,"panel");
     //get history url if defined

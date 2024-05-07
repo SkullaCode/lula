@@ -541,6 +541,8 @@ Service.AddProperty("Bind", function (component, data, actionBtn = null) {
         else {
             if (typeof elem.data(Service.SYSTEM_PROPERTY) !== "undefined") {
                 let property = Service.GetProperty(elem.data(Service.SYSTEM_PROPERTY), data);
+                //if the element found does not have any associated data we exit!!
+                if(typeof property === "undefined") return;
                 //determine if a transformation method is present on the element
                 if (typeof elem.data(Service.SYSTEM_CUSTOM) !== "undefined") {
                     if (!elem.hasClass(Service.SYSTEM_BIND_ELEM)) {
@@ -574,7 +576,8 @@ Service.AddProperty("Bind", function (component, data, actionBtn = null) {
             }
             else if (typeof elem.data(Service.SYSTEM_LOOP) !== "undefined") {
                 let property = Service.GetProperty(elem.data(Service.SYSTEM_LOOP), data);
-
+                //if the element found does not have any associated data we exit!!
+                if(typeof property === "undefined") return;
                 //get the looped element
                 let child = elem.children();
                 elem.empty();
@@ -666,6 +669,8 @@ Service.AddProperty("Bind", function (component, data, actionBtn = null) {
             else {
                 if(elem.prop("id").length > 0){
                     let property = Service.GetProperty(elem.prop("id"), data);
+                    //if the element found does not have any associated data we exit!!
+                    if(typeof property === "undefined") return;
                     if (typeof elem.data(Service.SYSTEM_CUSTOM) !== "undefined") {
                         if (!elem.hasClass(Service.SYSTEM_BIND_ELEM)) {
                             property = Service.Transform(elem.data(Service.SYSTEM_CUSTOM), null, property, actionBtn);
