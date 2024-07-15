@@ -11,7 +11,9 @@ class Result{
 class Requirement{
     Site = "";
     Method = null;
+    /** @deprecated*/ //always use METHOD!!!
     Request = "POST";
+    Notification = "true";
     Headers = [];
     SuccessHandler = null;
     ErrorHandler = null;
@@ -514,15 +516,14 @@ Service.AddProperty("ErrorMessageHandler", function(request,error,actionBtn){
  */
 Service.AddProperty("ErrorDataHandler", function (request,error,actionBtn) {
     let data = {};
-    if(request.responseJSON.length > 0){
-        return request.responseJSON;
+    if(typeof request.responseJSON !== "undefined"){
+        data = request.responseJSON;
     }
-    if (request.responseText.length > 0) {
+    else if (typeof request.responseText !== "undefined" && request.responseText.length > 0) {
         try {
             data = JSON.parse(request.responseText);
         }
         catch (e) {
-            data = {};
         }
     }
     return data;
@@ -574,34 +575,44 @@ Service.AddProperty("ServerRequest", function (requirements) {
     //Request was the default but Method is a better name
     //Request kept for backward compatibility
     //Will be removed in the future
-    if(typeof requirements.Method !== "undefined" && requirements.Method !== null && !requirements.Method){
+    if(typeof requirements.Method !== "undefined" && requirements.Method !== null){
         requirements.Request = requirements.Method;
     }
 
     //ensure there are request headers
-    if (typeof requirements.Headers === "undefined" || requirements.Headers === null || !requirements.Headers) {
+    if (typeof requirements.Headers === "undefined" || requirements.Headers === null) {
         requirements.Headers = [];
     }
 
     //ensure there are handlers for success and error results
-    if (typeof requirements.SuccessHandler === "undefined" || requirements.SuccessHandler === null || !requirements.SuccessHandler) {
+    if (typeof requirements.SuccessHandler === "undefined" || requirements.SuccessHandler === null) {
         requirements.SuccessHandler = Service.SuccessHandler;
     }
 
-    if (typeof requirements.ErrorHandler === "undefined" || requirements.ErrorHandler === null || !requirements.ErrorHandler) {
+    if (typeof requirements.ErrorHandler === "undefined" || requirements.ErrorHandler === null) {
         requirements.ErrorHandler = Service.ErrorHandler;
     }
 
-    if (typeof requirements.Component === "undefined" || requirements.Component === null || !requirements.Component) {
+    if (typeof requirements.Component === "undefined" || requirements.Component === null) {
         requirements.Component = jQuery("<div></div>");
     }
 
-    if (typeof requirements.ResponseType === "undefined" || requirements.ResponseType === null || !requirements.ResponseType) {
+    if (typeof requirements.ResponseType === "undefined" || requirements.ResponseType === null) {
         requirements.ResponseType = "json";
     }
 
-    if (typeof requirements.ActionBtn === "undefined" || requirements.ActionBtn === null || !requirements.ActionBtn) {
+    if (typeof requirements.ActionBtn === "undefined" || requirements.ActionBtn === null) {
         requirements.ActionBtn = jQuery("<button></button>", { type: "button" });
+        if(typeof requirements.Notification === "undefined" || requirements.Notification.length === 0){
+            //requirements.ActionBtn.data(Service.SYSTEM_NOTIFICATION,"true");
+            requirements.Notification = "true"
+        }
+    }else{
+        if((typeof requirements.Notification === "undefined" || requirements.Notification.length === 0) && typeof requirements.ActionBtn.data(Service.SYSTEM_NOTIFICATION) !== "undefined"){
+            requirements.Notification = requirements.ActionBtn.data(Service.SYSTEM_NOTIFICATION)
+        }else{
+            requirements.Notification = "true";
+        }
     }
 
     // fix: throws an exception if a POST request is sent
@@ -638,10 +649,7 @@ Service.AddProperty("ServerRequest", function (requirements) {
         res.Component = requirements.Component;
 
         //trigger notification event
-        if (typeof requirements.ActionBtn.data(Service.SYSTEM_NOTIFICATION) === "undefined" ||
-            requirements.ActionBtn.data(Service.SYSTEM_NOTIFICATION) === "true" ||
-            requirements.ActionBtn.data(Service.SYSTEM_NOTIFICATION) === "success"
-        ) {
+        if (requirements.Notification === "true" || requirements.Notification === "success") {
             //determine default notification handling mechanism
             res.NotificationType = requirements.ActionBtn.data(Service.SYSTEM_NOTIFICATION_ON_SUCCESS) || TOASTER_NOTIFICATION_TYPE;
             Service.NotificationHandler(res);
@@ -692,20 +700,14 @@ Service.AddProperty("ServerRequest", function (requirements) {
         if(typeof requirements.Complete !== "undefined" && requirements.Complete !== null){
             Service.ExecuteCustom(requirements.Complete, requirements.Component, requirements.ActionBtn, res).then(() => {
                 //add status codes and how they should be treated here
-                if (typeof requirements.ActionBtn.data(Service.SYSTEM_NOTIFICATION) === "undefined" ||
-                    requirements.ActionBtn.data(Service.SYSTEM_NOTIFICATION) === "true" ||
-                    requirements.ActionBtn.data(Service.SYSTEM_NOTIFICATION) === "error"
-                ) {
+                if (requirements.Notification === "true" || requirements.Notification === "error") {
                     res.NotificationType = requirements.ActionBtn.data(Service.SYSTEM_NOTIFICATION_ON_ERROR) || ALERT_NOTIFICATION_TYPE;
                     Service.NotificationHandler(res);
                 }
                 Service.ActionLoading = false;
             });
         }else{
-            if (typeof requirements.ActionBtn.data(Service.SYSTEM_NOTIFICATION) === "undefined" ||
-                requirements.ActionBtn.data(Service.SYSTEM_NOTIFICATION) === "true" ||
-                requirements.ActionBtn.data(Service.SYSTEM_NOTIFICATION) === "error"
-            ) {
+            if (requirements.Notification === "true" || requirements.Notification === "error") {
                 res.NotificationType = requirements.ActionBtn.data(Service.SYSTEM_NOTIFICATION_ON_ERROR) || ALERT_NOTIFICATION_TYPE;
                 Service.NotificationHandler(res);
             }
@@ -802,7 +804,12 @@ Service.AddProperty("LaunchModal", function (modal, actionBtn) {
  * @param data data set from which values will be used in binding
  */
 Service.AddProperty("Bind", function (component, data, actionBtn = null) {
-    let elems = component.find(`.${Service.SYSTEM_BIND}`);
+    let elems = [];
+    if(component.hasClass(`${Service.SYSTEM_BIND}`)){
+        elems.push(component);
+    }else{
+        elems = component.find(`.${Service.SYSTEM_BIND}`);
+    }
     jQuery.each(elems, function () {
         let elem = jQuery(this);
 
@@ -833,39 +840,7 @@ Service.AddProperty("Bind", function (component, data, actionBtn = null) {
         }
         else {
             if (typeof elem.data(Service.SYSTEM_PROPERTY) !== "undefined") {
-                let property = Service.GetProperty(elem.data(Service.SYSTEM_PROPERTY), data);
-                //if the element found does not have any associated data we exit!!
-                if(typeof property === "undefined") return;
-                //determine if a transformation method is present on the element
-                if (typeof elem.data(Service.SYSTEM_CUSTOM) !== "undefined") {
-                    if (!elem.hasClass(Service.SYSTEM_BIND_ELEM)) {
-                        property = Service.Transform(elem.data(Service.SYSTEM_CUSTOM), null, property, actionBtn);
-                    }
-                }
-                //transform element instead of data provided
-                if (elem.hasClass(Service.SYSTEM_BIND_ELEM)) {
-                    Service.Transform(elem.data(Service.SYSTEM_CUSTOM), elem, property, actionBtn);
-                }
-                //bind property to element as valid HTML
-                else if (elem.hasClass(Service.SYSTEM_BIND_VALUE)) {
-                    if (elem.is('input,select,textarea')) {
-                        elem.val(property);
-                    }
-                    elem.attr('data-value', property);
-                    //elem.data("value", property);
-                    if (elem.prop("tagName") === "SELECT") {
-                        let options = elem.find("option");
-                        elem.prop("selectedIndex", 0);
-                        options.each(function (i) {
-                            if (this.value == property) {
-                                elem.prop("selectedIndex", i);
-                            }
-                        });
-                    }
-                }
-                else {
-                    elem.html(property);
-                }
+                Service.BindProperty(elem,elem.data(Service.SYSTEM_PROPERTY),data,actionBtn);
             }
             else if (typeof elem.data(Service.SYSTEM_LOOP) !== "undefined") {
                 let property = Service.GetProperty(elem.data(Service.SYSTEM_LOOP), data);
@@ -881,75 +856,23 @@ Service.AddProperty("Bind", function (component, data, actionBtn = null) {
                         let childClone = child.clone();
                         //find all the elements that should be bound
                         let childElems = childClone.find(`.${Service.SYSTEM_BIND_LOOP}`);
-                        $.each(childElems, function () {
-                            let childElem = jQuery(this);
-                            if (typeof childElem.data(Service.SYSTEM_PROPERTY) !== "undefined") {
-                                let property = Service.GetProperty(childElem.data(Service.SYSTEM_PROPERTY), item);
-                                //determine if a transformation method is present on the element
-                                if (typeof childElem.data(Service.SYSTEM_CUSTOM) !== "undefined") {
-                                    if (!childElem.hasClass(Service.SYSTEM_BIND_ELEM)) {
-                                        property = Service.Transform(childElem.data(Service.SYSTEM_CUSTOM), null, property, actionBtn);
-                                    }
-                                }
-                                //transform element instead of data provided
-                                if (childElem.hasClass(Service.SYSTEM_BIND_ELEM)) {
-                                    Service.Transform(childElem.data(Service.SYSTEM_CUSTOM), childElem, item, actionBtn);
-                                }
-                                //bind property to element as valid HTML
-                                else if (childElem.hasClass(Service.SYSTEM_BIND_VALUE)) {
-                                    if (childElem.is('input,select,textarea')) {
-                                        childElem.val(property);
-                                    }
-                                    childElem.attr('data-value', property);
-                                    childElem.data("value", property);
-                                    if (childElem.prop("tagName") === "SELECT") {
-                                        let options = childElem.find("option");
-                                        childElem.prop("selectedIndex", 0);
-                                        options.each(function (i) {
-                                            if (this.value == property) {
-                                                childElem.prop("selectedIndex", i);
-                                            }
-                                        });
-                                    }
+                        if(childElems.length === 0 && childClone.hasClass(`${Service.SYSTEM_BIND_LOOP}`)){
+                            if (typeof childClone.data(Service.SYSTEM_PROPERTY) !== "undefined") {
+                                Service.BindProperty(childClone, childClone.data(Service.SYSTEM_PROPERTY), item, actionBtn);
+                            }else{
+                                Service.BindProperty(childClone, childClone.prop("id"), item, actionBtn);
+                            }
+                        }else{
+                            $.each(childElems, function () {
+                                let childElem = jQuery(this);
+                                if (typeof childElem.data(Service.SYSTEM_PROPERTY) !== "undefined") {
+                                    Service.BindProperty(childElem, childElem.data(Service.SYSTEM_PROPERTY), item, actionBtn);
                                 }
                                 else {
-                                    childElem.html(property);
+                                    Service.BindProperty(childElem, childElem.prop("id"), item, actionBtn);
                                 }
-                            }
-                            else {
-                                let property = Service.GetProperty(childElem.prop("id"), item);
-                                if (typeof childElem.data(Service.SYSTEM_CUSTOM) !== "undefined") {
-                                    if (!childElem.hasClass(Service.SYSTEM_BIND_ELEM)) {
-                                        property = Service.Transform(childElem.data(Service.SYSTEM_CUSTOM), null, property, actionBtn);
-                                    }
-                                }
-
-                                //transform element instead of data provided
-                                if (childElem.hasClass(Service.SYSTEM_BIND_ELEM)) {
-                                    Service.Transform(childElem.data(Service.SYSTEM_CUSTOM), childElem, item, actionBtn);
-                                }
-                                //bind property to element as valid HTML
-                                else if (childElem.hasClass(Service.SYSTEM_BIND_VALUE)) {
-                                    if (childElem.is('input,select,textarea')) {
-                                        childElem.val(property);
-                                    }
-                                    childElem.attr('data-value', property);
-                                    childElem.data("value", property);
-                                    if (childElem.prop("tagName") === "SELECT") {
-                                        let options = childElem.find("option");
-                                        childElem.prop("selectedIndex", 0);
-                                        options.each(function (i) {
-                                            if (this.value == property) {
-                                                childElem.prop("selectedIndex", i);
-                                            }
-                                        });
-                                    }
-                                }
-                                else {
-                                    childElem.html(property);
-                                }
-                            }
-                        });
+                            });
+                        }
                         // add the element with the bindings to the parent
                         elem.append(childClone);
                     });
@@ -961,38 +884,7 @@ Service.AddProperty("Bind", function (component, data, actionBtn = null) {
             }
             else {
                 if(elem.prop("id").length > 0){
-                    let property = Service.GetProperty(elem.prop("id"), data);
-                    //if the element found does not have any associated data we exit!!
-                    if(typeof property === "undefined") return;
-                    if (typeof elem.data(Service.SYSTEM_CUSTOM) !== "undefined") {
-                        if (!elem.hasClass(Service.SYSTEM_BIND_ELEM)) {
-                            property = Service.Transform(elem.data(Service.SYSTEM_CUSTOM), null, property, actionBtn);
-                        }
-                    }
-                    //transform element instead of data provided
-                    if (elem.hasClass(Service.SYSTEM_BIND_ELEM)) {
-                        Service.Transform(elem.data(Service.SYSTEM_CUSTOM), elem, property, actionBtn);
-                    }
-                    //bind property to element as valid HTML
-                    else if (elem.hasClass(Service.SYSTEM_BIND_VALUE)) {
-                        if (elem.is('input,select,textarea')) {
-                            elem.val(property);
-                        }
-                        elem.attr('data-value', property);
-                        //elem.data("value", property);
-                        if (elem.prop("tagName") === "SELECT") {
-                            let options = elem.find("option");
-                            elem.prop("selectedIndex", 0);
-                            options.each(function (i) {
-                                if (this.value == property) {
-                                    elem.prop("selectedIndex", i);
-                                }
-                            });
-                        }
-                    }
-                    else {
-                        elem.html(property);
-                    }
+                    Service.BindProperty(elem, elem.prop("id"), data, actionBtn);
                 }
             }
         }
@@ -1122,6 +1014,52 @@ Service.AddProperty("BindList", function (component, data = [],  actionBtn = nul
                 Service.SelectListBuilder(elem, []);
             }
         });
+    }
+});
+
+/**
+ * -- Bind Property --
+ * this function is responsible for binding data values
+ * to the DOM element provided.
+ *
+ * @param elem the DOM element to which the data values will be bound
+ * @param propertyName name of the data value identifier in the data collection provided
+ * @param data data collection provided
+ * @param actionBtn event action button
+ */
+Service.AddProperty("BindProperty" , function(elem, propertyName, data, actionBtn){
+    let property = Service.GetProperty(propertyName, data);
+    //if the element found does not have any associated data we exit!!
+    if(typeof property === "undefined") return;
+    //determine if a transformation method is present on the element
+    if (typeof elem.data(Service.SYSTEM_CUSTOM) !== "undefined") {
+        if (!elem.hasClass(Service.SYSTEM_BIND_ELEM)) {
+            property = Service.Transform(elem.data(Service.SYSTEM_CUSTOM), null, property, actionBtn);
+        }
+    }
+    //transform element instead of data provided
+    if (elem.hasClass(Service.SYSTEM_BIND_ELEM)) {
+        Service.Transform(elem.data(Service.SYSTEM_CUSTOM), elem, property, actionBtn);
+    }
+    //bind property to element as valid HTML
+    else if (elem.hasClass(Service.SYSTEM_BIND_VALUE)) {
+        if (elem.is('input,select,textarea')) {
+            elem.val(property);
+        }
+        elem.attr('data-value', property);
+        //elem.data("value", property);
+        if (elem.prop("tagName") === "SELECT") {
+            let options = elem.find("option");
+            elem.prop("selectedIndex", 0);
+            options.each(function (i) {
+                if (this.value == property) {
+                    elem.prop("selectedIndex", i);
+                }
+            });
+        }
+    }
+    else {
+        elem.html(property);
     }
 });
 

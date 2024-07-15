@@ -11,7 +11,9 @@ class Result{
 class Requirement{
     Site = "";
     Method = null;
+    /** @deprecated*/ //always use METHOD!!!
     Request = "POST";
+    Notification = "true";
     Headers = [];
     SuccessHandler = null;
     ErrorHandler = null;
