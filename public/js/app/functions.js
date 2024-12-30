@@ -897,8 +897,10 @@ Service.AddProperty("LoadPanel", function (elem, actionBtn, target) {
             const tContainer = jQuery("<div></div>");
             let action = elem.data(Service.SYSTEM_ACTION);
             //check if a data function is defined by convention
+            //todo run multiple checks for all possible ways action can be set
             if(!Service.Data.hasOwnProperty(action)){
-                action = `${actionBtn[0].dataset[Service.SYSTEM_ACTION]}-data`;
+                //action = `${actionBtn[0].dataset[Service.SYSTEM_ACTION]}-data`;
+                action = `${actionBtn.data(Service.SYSTEM_ACTION)}-data`;
             }
             if (Service.Data.hasOwnProperty(action)) {
                 Service.Data[action](elem, actionBtn).then(() => {
