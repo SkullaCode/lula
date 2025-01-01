@@ -18,7 +18,7 @@ Service.Data.Default = function(component, actionBtn){
     return new Promise(function(resolve){
         const data = "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.";
         Service.Bind(component,{ data });
-        resolve();
+        resolve(true);
     });
 
 
@@ -57,13 +57,13 @@ Service.Data.AddMethod("form-data",function(component,actionBtn){
 Service.Data.AddMethod("table-data",function(component,actionBtn){
     return new Promise(function(resolve){
         const data = [
-            { ID: 1, Name: "John Doe", Age: 30 },
-            { ID: 2, Name: "Ricky Smith", Age: 24 },
-            { ID: 3, Name: "Dean Williams", Age: 45 },
-            { ID: 4, Name: "Troy Jackson", Age: 26 },
-            { ID: 5, Name: "David Keane", Age: 63 },
-            { ID: 6, Name: "Mark Thomas", Age: 53 },
-            { ID: 7, Name: "Travis Greene", Age: 48 },
+            { ID: 1, FirstName: "John", LastName: "Doe", Age: 30 },
+            { ID: 2, FirstName: "Ricky", LastName: "Smith", Age: 24 },
+            { ID: 3, FirstName: "Dean", LastName: "Williams", Age: 45 },
+            { ID: 4, FirstName: "Troy", LastName: "Jackson", Age: 26 },
+            { ID: 5, FirstName: "David", LastName: "Keane", Age: 63 },
+            { ID: 6, FirstName: "Mark", LastName: "Thomas", Age: 53 },
+            { ID: 7, FirstName: "Travis", LastName: "Greene", Age: 48 },
         ];
         Service.Bind(component,data);
         return resolve(true);
@@ -86,7 +86,7 @@ Service.Data.AddMethod("datatable-data",function(component,actionBtn){
             { title: "Age",  data: "Age"}
         ];
 
-        component.find("#datatableTable").DataTable({
+        component.DataTable({
             data: data,
             columns: listingHeaders
         });
@@ -176,7 +176,24 @@ Service.Transformation.capitalize = function(component, data, actionBtn){
         return (typeof component === "undefined" || component === null)
             ? "" : component.toUpperCase();
     }
-    component.text(data.Name.toUpperCase());
+    component.text(data.LastName.toUpperCase());
+};
+Service.Transformation.plusTwo = function(component, data, actionBtn){
+    component.html(data + 2);
+};
+Service.Transformation.randomColor = function(component, data, actionBtn){
+    const colors = [
+        "blue",
+        "brown",
+        "coral",
+        "crimson",
+        "teal",
+        "yellow"
+    ];
+    const color = ((Math.floor(Math.random() * 100) + 1) % 2) === 0;
+    if(color){
+        component.css("color",colors[Math.floor(Math.random() * 5)])
+    }
 };
 Service.Transformation.AddMethod("add-age", function(component, property, actionBtn){
     if(actionBtn.data("id")){

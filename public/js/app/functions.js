@@ -453,8 +453,11 @@ Service.AddProperty("ServerRequest", function (requirements) {
 /**
  * -- LaunchModal --
  * This function handles default implementation for
- * launching a modal
+ * launching a modal.
  *
+ * @param modal element to be launched as modal
+ * @param actionBtn current action button selected
+ * @return boolean
  */
 Service.AddProperty("LaunchModal", function (modal, actionBtn) {
    return new Promise(function(resolve){
@@ -466,47 +469,24 @@ Service.AddProperty("LaunchModal", function (modal, actionBtn) {
            Service.LoadedModal = null;
            jQuery(`.${ModalContainer}`).empty();
        });
-       const action = modal.data(Service.SYSTEM_ACTION);
-       if (typeof action === "string") {
-           let func = Service.Data[action];
-           if(typeof func === "undefined"){
-               func = Service.Data[`${action}-data`];
-           }
-           if (typeof func !== "undefined"){
-               //promise from data call should resolve boolean true|false
-               //if not success will be undefined
-               //if data call fails and false is resolved the modal will not load
-               func(modal, actionBtn).then((success) => {
-                   if(!success){
-                       Service.LoadedModal.remove();
-                       Service.LoadedModal = null;
-                       jQuery(`.${ModalContainer}`).empty();
-                   }
-                   if(success) modal.modal();
-                   resolve(success);
-               });
-           }else{
-               modal.modal();
-               resolve(true);
-           }
-       }
-       else{
-           modal.modal();
-           resolve(true);
-       }
+       modal.modal();
+       resolve(true);
    });
 });
 
 /**
  * -- Bind --
- * this function is responsible for binding the data
+ * This function is responsible for binding the data
  * provided to the elements of the desired
  * component. only components with the class 'bind'
- * or 'bind-loop' are handled by this function. Binding
- * is done using the id property.
+ * or 'bind-loop' are handled by this function.
+ * Binding is done using the id attribute or
+ * data-property data attribute.
  *
  * @param component element that will have its elements bound
  * @param data data set from which values will be used in binding
+ * @param actionBtn current action button selected
+ * @return void
  */
 Service.AddProperty("Bind", function (component, data, actionBtn = null) {
     let elems = [];
@@ -561,16 +541,23 @@ Service.AddProperty("Bind", function (component, data, actionBtn = null) {
                         let childClone = child.clone();
                         //find all the elements that should be bound
                         let childElems = childClone.find(`.${Service.SYSTEM_BIND_LOOP}`);
-                        if(childElems.length === 0 && childClone.hasClass(`${Service.SYSTEM_BIND_LOOP}`)){
-                            if (typeof childClone.data(Service.SYSTEM_PROPERTY) !== "undefined") {
+                        if(childClone.hasClass(`${Service.SYSTEM_BIND_LOOP}`)){
+                            if (childClone.hasClass(Service.SYSTEM_BIND_GLOBAL)) {
+                                Service.BindProperty(childClone, null, property, actionBtn);
+                            }
+                            else if (typeof childClone.data(Service.SYSTEM_PROPERTY) !== "undefined") {
                                 Service.BindProperty(childClone, childClone.data(Service.SYSTEM_PROPERTY), item, actionBtn);
                             }else{
                                 Service.BindProperty(childClone, childClone.prop("id"), item, actionBtn);
                             }
-                        }else{
+                        }
+                        if(childElems.length > 0){
                             $.each(childElems, function () {
                                 let childElem = jQuery(this);
-                                if (typeof childElem.data(Service.SYSTEM_PROPERTY) !== "undefined") {
+                                if (childElem.hasClass(Service.SYSTEM_BIND_GLOBAL)) {
+                                    Service.BindProperty(childElem, null, property, actionBtn);
+                                }
+                                else if (typeof childElem.data(Service.SYSTEM_PROPERTY) !== "undefined") {
                                     Service.BindProperty(childElem, childElem.data(Service.SYSTEM_PROPERTY), item, actionBtn);
                                 }
                                 else {
@@ -724,15 +711,26 @@ Service.AddProperty("BindList", function (component, data = [],  actionBtn = nul
 
 /**
  * -- Bind Property --
- * this function is responsible for binding data values
+ * This function is responsible for binding data values
  * to the DOM element provided.
  *
  * @param elem the DOM element to which the data values will be bound
  * @param propertyName name of the data value identifier in the data collection provided
  * @param data data collection provided
- * @param actionBtn event action button
+ * @param actionBtn current action button selected
+ * @return void
  */
 Service.AddProperty("BindProperty" , function(elem, propertyName, data, actionBtn){
+    //element for transformation only will not have property name
+    if(typeof propertyName === "undefined" || propertyName === null || propertyName.length <= 0){
+        if (
+            typeof elem.data(Service.SYSTEM_CUSTOM) !== "undefined" &&
+            (elem.hasClass(Service.SYSTEM_BIND_ELEM) || elem.hasClass(Service.SYSTEM_BIND_GLOBAL))
+        ) {
+            Service.Transform(elem.data(Service.SYSTEM_CUSTOM), elem, data, actionBtn);
+        }
+        return;
+    }
     let property = Service.GetProperty(propertyName, data);
     //if the element found does not have any associated data we exit!!
     if(typeof property === "undefined") return;
@@ -884,82 +882,105 @@ Service.AddProperty("ImagePreview", function (input, target) {
 
 /**
  * -- Load Panel --
- * this function is responsible for loading html templates
+ * This function is responsible for loading html templates
  * into the panel location specified. if no location
  * is specified the default is used.
  *
  * @param elem the panel selected to be loaded
+ * @param actionBtn current action button selected
  * @param target location where it should be placed
+ * @return Promise
  */
 Service.AddProperty("LoadPanel", function (elem, actionBtn, target) {
     return new Promise((resolve) => {
-        if (typeof elem !== "undefined" && typeof elem === "object") {
-            const tContainer = jQuery("<div></div>");
-            let action = elem.data(Service.SYSTEM_ACTION);
-            //check if a data function is defined by convention
-            //todo run multiple checks for all possible ways action can be set
-            if(!Service.Data.hasOwnProperty(action)){
-                //action = `${actionBtn[0].dataset[Service.SYSTEM_ACTION]}-data`;
-                action = `${actionBtn.data(Service.SYSTEM_ACTION)}-data`;
-            }
-            if (Service.Data.hasOwnProperty(action)) {
-                Service.Data[action](elem, actionBtn).then(() => {
-                    // we have to place panel on the DOM before we load it.....
-                    // idk if its a javascript thing or jQuery thing
-                    Service.ContainerPanel = jQuery(`#${TemplateContainer}`);
+        const tContainer = jQuery("<div></div>");
+        // we have to place panel on the DOM before we load it.....
+        // idk if its a javascript thing or jQuery thing
+        Service.ContainerPanel = jQuery(`#${TemplateContainer}`);
 
-                    //if template container not found....just build one
-                    if (Service.ContainerPanel.length <= 0) {
-                        jQuery("<body>").append(tContainer);
-                        Service.ContainerPanel = tContainer;
-                    }
-                    Service.ContainerPanel.empty().append(elem);
-                    //elem_id is the DOM container that will hold the panel
-                    //if for some reason it does not exist the panel will not display
-                    let elem_id = (
-                        typeof target !== "undefined" &&
-                        target !== null &&
-                        target.length > 0
-                    ) ? jQuery(`#${target}`) : jQuery(`#${MainContainer}`);
-                    Service.LoadPanelTransition(elem_id, elem);
-                    //empty and remove temp container
-                    Service.ContainerPanel.empty();
-                    Service.ContainerPanel = null;
-                    //add elem as LoadedPanel for further reference
-                    Service.LoadedPanel = elem;
-                    tContainer.empty().remove();
-                    return resolve(true);
-                });
-            }
-            else{
-                // we have to place panel on the DOM before we load it.....
-                // idk if its a javascript thing or jQuery thing
-                Service.ContainerPanel = jQuery(`#${TemplateContainer}`);
-
-                //if template container not found....just build one
-                if (Service.ContainerPanel.length <= 0) {
-                    jQuery("<body>").append(tContainer);
-                    Service.ContainerPanel = tContainer;
-                }
-                Service.ContainerPanel.empty().append(elem);
-                //elem_id is the DOM container that will hold the panel
-                //if for some reason it does not exist the panel will not display
-                let elem_id = (
-                    typeof target !== "undefined" &&
-                    target !== null &&
-                    target.length > 0
-                ) ? jQuery(`#${target}`) : jQuery(`#${MainContainer}`);
-                Service.LoadPanelTransition(elem_id, elem);
-                //empty and remove temp container
-                Service.ContainerPanel.empty();
-                Service.ContainerPanel = null;
-                //add elem as LoadedPanel for further reference
-                Service.LoadedPanel = elem;
-                tContainer.empty().remove();
-                return resolve(true);
-            }
+        //if template container not found....just build one
+        if (Service.ContainerPanel.length <= 0) {
+            jQuery("<body>").append(tContainer);
+            Service.ContainerPanel = tContainer;
         }
-        resolve(false);
+        Service.ContainerPanel.empty().append(elem);
+        //elem_id is the DOM container that will hold the panel
+        //if for some reason it does not exist the panel will not display
+        let elem_id = (
+            typeof target !== "undefined" &&
+            target !== null &&
+            target.length > 0
+        ) ? jQuery(`#${target}`) : jQuery(`#${MainContainer}`);
+        Service.LoadPanelTransition(elem_id, elem);
+        //empty and remove temp container
+        Service.ContainerPanel.empty();
+        Service.ContainerPanel = null;
+        tContainer.empty().remove();
+        return resolve(elem);
+    });
+});
+
+/**
+ * -- Load Modal --
+ * This function is responsible for sanitizing data
+ * attributes associated with the element, placing
+ *  the element in the modal container, and loading
+ *  the element on the DOM as a modal.
+ *
+ *  @param elem the element selected to be modal
+ *  @param actionBtn current action button selected
+ *  @return Promise
+ */
+Service.AddProperty("LoadModal", function(elem, actionBtn){
+    return new Promise((resolve) => {
+        let modal = elem;
+        //format modal... has to be structured a specific way
+        //to work
+        if (!modal.hasClass("modal")) {
+            modal = Service.DefaultModalHandler(elem,actionBtn);
+        }
+        //place modal on the DOM
+        const modalContainer = jQuery(`#${ModalContainer}`);
+        modalContainer.empty().append(modal);
+        //update modal attributes
+        const dataAttributes = actionBtn.data();
+        const filterList = [Service.SYSTEM_ACTION,Service.SYSTEM_COMPLETE];
+        jQuery.each(dataAttributes,function(key,value){
+            //filter out action and custom attribute
+            // these are defined on the modal
+            if(jQuery.inArray(key,filterList) === -1){
+                modal.data(key,value);
+            }
+        });
+        resolve(modal);
+    });
+});
+
+/**
+ * -- Load Data --
+ * This function is responsible for loading data
+ * into the element specified from the action attribute
+ * or determined by element name convention.
+ *
+ * @param elem the element selected to load data into
+ * @param actionBtn current action button selected
+ * @return Promise
+ */
+Service.AddProperty("LoadData", function(elem, actionBtn) {
+    return new Promise(function(resolve){
+        let action = elem.data(Service.SYSTEM_ACTION);
+        //check if a data function is defined by convention
+        //todo run multiple checks for all possible ways action can be set
+        if(!Service.Data.hasOwnProperty(action)){
+            action = `${actionBtn.data(Service.SYSTEM_ACTION)}-data`;
+        }
+        if (Service.Data.hasOwnProperty(action)) {
+            Service.Data[action](elem, actionBtn).then(function(success){
+                resolve(success);
+            });
+        }else{
+            resolve(true)
+        }
     });
 });
 

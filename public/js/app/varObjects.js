@@ -68,7 +68,6 @@ window.Controller = function(){
  */
 window.Service = function(){
     let LoadedModal         = null;
-    let LoadedPanel         = null;
     let LoadedForm          = null;
     let ModalLoading        = null;
     let ActionLoading       = null;
@@ -80,6 +79,7 @@ window.Service = function(){
     };
     let MetaData            = {};
     let PanelLoading        = [];
+    let LoadedPanel         = {};
     let Title               = "Javascript UI";
 
     let addProperty = function(name,f){
@@ -126,6 +126,8 @@ window.Service = function(){
         TriggerEvents                       : null,
         ImagePreview                        : null,
         LoadPanel                           : null,
+        LoadModal                           : null,
+        LoadData                            : null,
         LoadLayout                          : null,
         LoadPanelTransition                 : null,
         SelectListBuilder                   : null,

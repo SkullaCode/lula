@@ -221,36 +221,23 @@ Controller.AddProperty("ModalSelect",function(elem){
     //if a modal is already loaded do not execute
     if(Service.LoadedModal === null){
         let action = ActionButton.data(Service.SYSTEM_ACTION);
-        Service.FindElement(action, ActionButton).then((elem) =>{
-            Service.LoadedModal = elem;
-
-            //format modal... has to be structured a specific way
-            //to work
-            if (!Service.LoadedModal.hasClass("modal")) {
-                Service.LoadedModal = Service.DefaultModalHandler(elem,ActionButton);
-            }
-            //place modal on the DOM
-            const modalContainer = jQuery(`#${ModalContainer}`);
-            modalContainer.empty().append(Service.LoadedModal);
-            //update modal attributes
-            const dataAttributes = ActionButton.data();
-            const filterList = [Service.SYSTEM_ACTION,Service.SYSTEM_COMPLETE];
-            jQuery.each(dataAttributes,function(key,value){
-                //filter out action and custom attribute
-                // these are defined on the modal
-                if(jQuery.inArray(key,filterList) === -1){
-                    Service.LoadedModal.data(key,value);
-                }
-            });
-            //execute custom modifications
-            Service.ExecuteCustom(ActionButton.data(Service.SYSTEM_CUSTOM),Service.LoadedModal,ActionButton).then(() => {
-                // launch modal
-                Service.LaunchModal(Service.LoadedModal,ActionButton).then(() => {
-                    //execute complete modifications
-                    Service.ExecuteCustom(ActionButton.data(Service.SYSTEM_COMPLETE),Service.LoadedModal,ActionButton).then(() => {
+        Service.FindElement(action, ActionButton).then((elem) => {
+            Service.ExecuteCustom(ActionButton.data(Service.SYSTEM_CUSTOM),elem,ActionButton).then(() => {
+                Service.LoadData(elem, ActionButton).then((success) => {
+                    if(!success){
                         Service.ModalLoading = false;
-                    });
-                });
+                    }else{
+                        Service.LoadModal(elem, ActionButton).then((modal) => {
+                            Service.LaunchModal(modal,ActionButton).then(() => {
+                                //execute complete modifications
+                                Service.ExecuteCustom(ActionButton.data(Service.SYSTEM_COMPLETE),modal,ActionButton).then(() => {
+                                    Service.LoadedModal = modal;
+                                    Service.ModalLoading = false;
+                                });
+                            });
+                        })
+                    }
+                })
             });
         });
     }
@@ -282,56 +269,74 @@ Controller.AddProperty("PanelSelect",function(elem){
     ActionButton.data(Service.SYSTEM_LOAD_TYPE,"panel");
     //get history url if defined
     const history = ActionButton.data(Service.SYSTEM_HISTORY);
+    //define properties to store on history
+    const historyData = {};
+    //attributes that should be persisted if present on the action button
+    const filterList = [
+        Service.SYSTEM_ACTION,
+        Service.SYSTEM_COMPLETE,
+        Service.SYSTEM_TARGET,
+        Service.SYSTEM_CUSTOM,
+        Service.SYSTEM_HISTORY,
+        Service.SYSTEM_NOTIFICATION_ON_SUCCESS,
+        Service.SYSTEM_NOTIFICATION_ON_ERROR,
+        Service.SYSTEM_NOTIFICATION,
+        Service.SYSTEM_TITLE
+    ];
+    //add them to history data if present
+    jQuery.each(ActionButton.data(),function(key,value){
+        if(jQuery.inArray(key,filterList) !== -1) {
+            historyData[key] = value;
+        }
+        //add values that are strings....other types will cause errors
+        else if(typeof value === "string"){
+            historyData[key] = value;
+        }
+    });
+
+    //add history record
+    if(typeof history === "undefined"){
+        window.history.pushState({
+            data: historyData,
+            panelSelect: true
+        },"");
+    }
+
+    //determine and set page title
+    const title = (typeof ActionButton.data(Service.SYSTEM_TITLE) !== "undefined")
+        ? ActionButton.data(Service.SYSTEM_TITLE)
+        : ActionButton.data(Service.SYSTEM_ACTION);
+    window.document.title = `${Service.Title} - ${title}`;
+
     //locate panel
     Service.FindElement(ActionButton.data(Service.SYSTEM_ACTION), ActionButton).then((panel) =>{
-        //define properties to store on history
-        const historyData = {};
-        //attributes that should be persisted if present on the action button
-        const filterList = [
-            Service.SYSTEM_ACTION,
-            Service.SYSTEM_COMPLETE,
-            Service.SYSTEM_TARGET,
-            Service.SYSTEM_CUSTOM,
-            Service.SYSTEM_HISTORY,
-            Service.SYSTEM_NOTIFICATION_ON_SUCCESS,
-            Service.SYSTEM_NOTIFICATION_ON_ERROR,
-            Service.SYSTEM_NOTIFICATION,
-            Service.SYSTEM_TITLE
-        ];
-        //add them to history data if present
-        jQuery.each(ActionButton.data(),function(key,value){
-            if(jQuery.inArray(key,filterList) !== -1) {
-                historyData[key] = value;
-            }
-            //add values that are strings....other types will cause errors
-            else if(typeof value === "string"){
-                historyData[key] = value;
-            }
-        });
-
-        //add history record
-        if(typeof history === "undefined"){
-            window.history.pushState({
-                data: historyData,
-                panelSelect: true
-            },"");
-        }
-
-        //determine and set page title
-        const title = (typeof ActionButton.data(Service.SYSTEM_TITLE) !== "undefined")
-            ? ActionButton.data(Service.SYSTEM_TITLE)
-            : ActionButton.data(Service.SYSTEM_ACTION);
-        window.document.title = `${Service.Title} - ${title}`;
         //execute custom modifications
-        Service.ExecuteCustom(ActionButton.data(Service.SYSTEM_CUSTOM),Service.LoadedPanel,ActionButton).then(() => {
-            //load panel unto the DOM
-            Service.LoadPanel(panel,ActionButton,ActionButton.data(Service.SYSTEM_TARGET)).then(() =>{
-                //execute complete modifications
-                Service.ExecuteCustom(ActionButton.data(Service.SYSTEM_COMPLETE),Service.LoadedPanel,ActionButton).then(() => {
-                    //remove action from loading list.......
-                    const index = Service.PanelLoading.indexOf(action);
-                    Service.PanelLoading.splice(index,1);
-                });
+        Service.ExecuteCustom(ActionButton.data(Service.SYSTEM_CUSTOM),panel,ActionButton).then(() => {
+            Service.LoadData(panel, ActionButton).then((success) => {
+                const target =
+                    (
+                        typeof ActionButton.data(Service.SYSTEM_TARGET) !== "undefined" &&
+                        ActionButton.data(Service.SYSTEM_TARGET) !== null &&
+                        ActionButton.data(Service.SYSTEM_TARGET).length > 0
+                    ) ? ActionButton.data(Service.SYSTEM_TARGET) : MainContainer;
+                if(success){
+                    //load panel unto the DOM
+                    Service.LoadPanel(panel,ActionButton,ActionButton.data(Service.SYSTEM_TARGET)).then((loadedPanel) =>{
+                        //execute complete modifications
+                        Service.ExecuteCustom(ActionButton.data(Service.SYSTEM_COMPLETE),loadedPanel,ActionButton).then(() => {
+                            Service.LoadedPanel[target] = { ActionButton, LoadedPanel: loadedPanel };
+                        });
+                    });
+                }else{
+                    const container = jQuery("<div></div>");
+                    container.append(Service.DefaultElementHandler(ActionButton));
+                    Service.LoadPanel(container,ActionButton,ActionButton.data(Service.SYSTEM_TARGET)).then((loadedPanel) =>{
+                        Service.LoadedPanel[target] = { ActionButton, LoadedPanel: loadedPanel };
+                    });
+                }
+                //remove action from loading list.......
+                const index = Service.PanelLoading.indexOf(action);
+                Service.PanelLoading.splice(index,1);
             });
         });
     });
@@ -341,12 +346,32 @@ Controller.AddProperty("PanelSelect",function(elem){
  * -- Reload Panel --
  * this function reloads the current panel
  */
-Controller.AddProperty("ReloadPanel",function(){
-    const btn = jQuery("<button></button>",{
-        type:"button",
-        "data-notification":"false"
+Controller.AddProperty("ReloadPanel",function(target = null){
+    if(target === null){
+        target = MainContainer;
+    }
+    else if(typeof target !== "string"){
+        target = jQuery(target).data("action");
+    }
+
+    if(typeof Service.LoadedPanel[target] === "undefined") return;
+    const panel = Service.LoadedPanel[target].LoadedPanel;
+    const btn = Service.LoadedPanel[target].ActionButton;
+    Service.LoadData(panel, btn).then((success) => {
+        if(success){
+            Service.LoadPanel(panel, btn, target).then((loadedPanel) => {
+                Service.ExecuteCustom(btn.data(Service.SYSTEM_COMPLETE),loadedPanel,btn).then(() => {
+                    Service.LoadedPanel[target].LoadedPanel = loadedPanel;
+                });
+            });
+        }else{
+            const container = jQuery("<div></div>");
+            container.append(Service.DefaultElementHandler(btn));
+            Service.LoadPanel(container, btn, target).then((loadedPanel) =>{
+                Service.LoadedPanel[target].LoadedPanel = loadedPanel;
+            });
+        }
     });
-    Service.LoadPanel(Service.LoadedPanel,btn);
 });
 
 window.onpopstate = function(event){

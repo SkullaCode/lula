@@ -99,6 +99,8 @@
             <p><a data-action="modal" data-id="12" onclick="Controller.ModalSelect(this)">Launch Modal With Data</a></p>
             <p><a data-action="file-select" data-target="SmallTarget" onclick="Controller.PanelSelect(this)">Image Preview</a></p>
             <p><a data-action="bad-panel" onclick="Controller.PanelSelect(this)">Default Panel</a></p>
+            <p><a data-action="MainContainer" onclick="Controller.ReloadPanel(this)">Reload Main Container</a></p>
+            <p><a data-action="SmallTarget" onclick="Controller.ReloadPanel(this)">Reload Small Target</a></p>
         </div>
         <div id="MainContainer" data-action="home" class="col-sm-8 text-left">
             <h1>Loading......</h1>
@@ -176,22 +178,22 @@
         <table id="tableTable" class="table table-condensed table-bordered">
             <thead>
                 <tr>
-                    <th>Name</th>
+                    <th>First Name</th>
+                    <th>Last Name</th>
                     <th>Age</th>
                 </tr>
             </thead>
             <tbody class="bind" data-loop="">
-                <tr>
-                    <td class="bind-loop bind-element" id="Name" data-custom="capitalize"></td>
-                    <td class="bind-loop" id="Age"></td>
+                <tr class="bind-loop bind-global" data-custom="randomColor">
+                    <td class="bind-loop" id="FirstName" data-custom="capitalize"></td>
+                    <td class="bind-loop bind-element" data-custom="capitalize"></td>
+                    <td class="bind-loop bind-element" id="Age" data-custom="plusTwo"></td>
                 </tr>
             </tbody>
         </table>
     </div>
     <div id="datatable" data-action="datatable-data">
-        <div>
-            <table id="datatableTable" class="table table-condensed table-bordered"></table>
-        </div>
+        <table id="datatableTable" class="table table-condensed table-bordered"></table>
     </div>
     <div id="modal" data-action="modal-data">
         <div id="myModal" class="modal fade" role="dialog">
