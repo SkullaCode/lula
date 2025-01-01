@@ -143,7 +143,8 @@ window.Service = function(){
         CanSubmitForm                       : null,
         Bootstrap                           : null,
         FindElementSync                     : null,
-        FormData                            : null,                         
+        FormData                            : null,
+        Link                                : null,
         AddProperty                         : addProperty,
         AddMethod                           : addMethod,
         SYSTEM_ID                           : "id",                     //-------------------------------------- identifier for elements

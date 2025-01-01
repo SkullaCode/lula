@@ -1244,8 +1244,11 @@ Service.AddProperty("Bootstrap", function(link = null){
 
 /**
  * -- FormData --
- * this function converts a regular JavaScript
- * object to a FormData one
+ * This function converts a regular JavaScript
+ * object to a FormData one.
+ *
+ * @param data javascript object with parameters
+ * @return FormData
  */
 Service.AddProperty("FormData",function(data){
     const params = new FormData();
@@ -1261,4 +1264,27 @@ Service.AddProperty("FormData",function(data){
         });
     }
     return params;
+});
+
+/**
+ * -- Link --
+ * This function creates an element that can
+ * be used to trigger Controller functions
+ * (PanelSelect, ModelSelect, etc...).
+ *
+ * @param action template item to target
+ * @param target container to place element
+ * @param complete actions to run when loading complete
+ * @param notification determines how notification is shown
+ * @return Element
+ */
+Service.AddProperty("Link", function(action, target = null, complete = "", notification = "error"){
+    const link = jQuery("<a></a>");
+    link.attr("data-action",action);
+    if(target !== null){
+        link.attr("data-target",target);
+    }
+    link.attr("data-complete",complete);
+    link.attr("data-notification",notification);
+    return link[0];
 });
