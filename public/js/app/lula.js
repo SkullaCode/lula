@@ -1576,14 +1576,30 @@ Service.AddProperty("FormData",function(data){
  * @param notification determines how notification is shown
  * @return Element
  */
-Service.AddProperty("Link", function(action, target = null, complete = "", notification = "error"){
+Service.AddProperty("Link", function(action, target = null, complete = "", notification = "error", params = {}){
     const link = jQuery("<a></a>");
+    if(typeof action === "object" && action !== null && action.length > 0) {
+        jQuery.each(action,function(e){
+            if (action.hasOwnProperty(e)) {
+                link.attr(`data-${e}`,action[e]);
+            }
+        });
+        return link[0];
+    }
+
     link.attr("data-action",action);
     if(target !== null){
         link.attr("data-target",target);
     }
     link.attr("data-complete",complete);
     link.attr("data-notification",notification);
+    if(typeof params === "object" && params !== null && params.length > 0) {
+        jQuery.each(params,function(e){
+            if (params.hasOwnProperty(e)) {
+                link.attr(`data-${e}`,params[e]);
+            }
+        });
+    }
     return link[0];
 });
 /**

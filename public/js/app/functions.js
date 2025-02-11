@@ -131,7 +131,10 @@ Service.AddProperty("NotificationHandler", function (result) {
  */
 Service.AddProperty("DefaultElementHandler", function (actionBtn) {
     const elem = jQuery("<div></div>", { class: "alert alert-danger" });
-    elem.append("<p>The panel you are trying to load experienced an error while rendering....</p>");
+    const type = (typeof actionBtn.data(Service.SYSTEM_LOAD_TYPE) !== "undefined")
+        ?  actionBtn.data(Service.SYSTEM_LOAD_TYPE)
+        : "panel";
+    elem.append(`<p>The ${type} you are trying to load experienced an error while rendering....</p>`);
     return elem;
 });
 
@@ -1230,19 +1233,6 @@ Service.AddProperty("LoadPanelTransition", function (container, panel, actionBtn
 });
 
 /**
- * -- Bootstrap --
- * this function defines default process for loading the DOM.
- * It searches for the defined main container and loads the
- * defined panel into it
- */
-Service.AddProperty("Bootstrap", function(link = null){
-    setTimeout(async function(){
-        await Controller.PanelSelect(document.getElementById(`${MainContainer}`));
-        if(link !== null) await Controller.PanelSelect(link[0]);
-    },1000);
-});
-
-/**
  * -- FormData --
  * This function converts a regular JavaScript
  * object to a FormData one.
@@ -1278,13 +1268,29 @@ Service.AddProperty("FormData",function(data){
  * @param notification determines how notification is shown
  * @return Element
  */
-Service.AddProperty("Link", function(action, target = null, complete = "", notification = "error"){
+Service.AddProperty("Link", function(action, target = null, complete = "", notification = "error", params = {}){
     const link = jQuery("<a></a>");
+    if(typeof action === "object" && action !== null && action.length > 0) {
+        jQuery.each(action,function(e){
+            if (action.hasOwnProperty(e)) {
+                link.attr(`data-${e}`,action[e]);
+            }
+        });
+        return link[0];
+    }
+
     link.attr("data-action",action);
     if(target !== null){
         link.attr("data-target",target);
     }
     link.attr("data-complete",complete);
     link.attr("data-notification",notification);
+    if(typeof params === "object" && params !== null && params.length > 0) {
+        jQuery.each(params,function(e){
+            if (params.hasOwnProperty(e)) {
+                link.attr(`data-${e}`,params[e]);
+            }
+        });
+    }
     return link[0];
 });

@@ -224,8 +224,15 @@ Controller.AddProperty("ModalSelect",function(elem){
         Service.FindElement(action, ActionButton).then((elem) => {
             Service.ExecuteCustom(ActionButton.data(Service.SYSTEM_CUSTOM),elem,ActionButton).then(() => {
                 Service.LoadData(elem, ActionButton).then((success) => {
-                    if(!success){
-                        Service.ModalLoading = false;
+                    if(!success) {
+                        elem = Service.DefaultModalHandler(Service.DefaultElementHandler(ActionButton),ActionButton);
+                        Service.LoadModal(elem, ActionButton).then((modal) => {
+                            Service.LaunchModal(modal,ActionButton).then(() => {
+                                modal.find(".modal-title").empty().text("Modal Launch Error")
+                                Service.LoadedModal = modal;
+                                Service.ModalLoading = false;
+                            });
+                        })
                     }else{
                         Service.LoadModal(elem, ActionButton).then((modal) => {
                             Service.LaunchModal(modal,ActionButton).then(() => {

@@ -141,7 +141,6 @@ window.Service = function(){
         LoadingStateOn                      : null,
         LoadingStateOff                     : null,
         CanSubmitForm                       : null,
-        Bootstrap                           : null,
         FindElementSync                     : null,
         FormData                            : null,
         Link                                : null,

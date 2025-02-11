@@ -109,6 +109,9 @@ Service.Data.AddMethod("modal-data",function(component,actionBtn){
             ControllerData:3
         };
         const id = actionBtn.data(Service.SYSTEM_ID);
+        if(id !== 12){
+            return resolve(false);
+        }
         component.find(".modal-body").attr("id","formSubmit");
         if(typeof id !== "undefined"){
             data[12].ModalTitle = "New Modal";
@@ -248,9 +251,7 @@ Controller.AddMethod("list-from-controller",function(btn){
 //launch application when javascript and jQuery is finished loading
 jQuery(function(){
     window.Controller.Init();
-    const link = jQuery("<a>");
-    link.attr("data-action","form");
-    link.attr("data-target","SmallTarget");
-    Service.Bootstrap(link);
+    Controller.PanelSelect(Service.Link("home"));
+    Controller.PanelSelect(Service.Link("form","SmallTarget"));
 });
 
