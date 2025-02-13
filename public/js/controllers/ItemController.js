@@ -257,7 +257,7 @@ Controller.AddMethod("list-from-controller",function(btn){
 //launch application when javascript and jQuery is finished loading
 jQuery(function(){
     window.Controller.Init();
-    Controller.PanelSelect(Service.Link("home"));
-    Controller.PanelSelect(Service.Link("form","SmallTarget"));
+    Controller.PanelSelect(Service.Link({action:"home", notification:"error", complete:"SetDefaultLink"}));
+    Controller.PanelSelect(Service.Link({action:"form", target:"SmallTarget"}));
 });
 

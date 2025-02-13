@@ -27,50 +27,10 @@ Service.ToasterNotification = function(notification){
     jQuery("#vanillatoasts-container").css("z-index",2050);
 };
 
-//defining application start process
-//overriding default bootstrap process
-Service.Bootstrap = function(link){
-    Service.ModelData.Lists['Option'] = [
-        {
-            Text:"Start",
-            Value:1
-        },
-        {
-            Text:"Stop",
-            Value:2
-        }
-    ];
-    Service.ModelData.Lists['ModuleOne'] ={
-        "ModuleTwo":[
-            {
-                Text:"Module Start",
-                Value:1
-            },
-            {
-                Text:"Module Stop",
-                Value:2
-            }
-        ]
-    };
-
-
-    if(sessionStorage.getItem('GenderList') !== null){
-        Service.ModelData.Lists['Gender'] = JSON.parse(sessionStorage.getItem('GenderList'));
-    }
-    else{
-        const data = [
-            { Value: 1, Text: "Male"},
-            { Value: 2, Text: "Female"}
-        ];
-        Service.ModelData.Lists['Gender'] = data;
-        sessionStorage.setItem('GenderList',JSON.stringify(data));
-    }
-    setTimeout(async function(){
-        await Controller.PanelSelect(document.getElementById(`${MainContainer}`));
-        await Controller.PanelSelect(link[0]);
-    },1000);
-};
-
 Service.Modification.SelectedLink = function(component,actionBtn){
-
+    $(document).find(".nav-link").removeClass("active");
+    actionBtn.parents(".nav-link").addClass("active");
+};
+Service.Modification.SetDefaultLink = function(component, actionBtn){
+    $(document).find(".default-link").addClass("active");
 };

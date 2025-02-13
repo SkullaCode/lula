@@ -1567,8 +1567,9 @@ Service.AddProperty("FormData",function(data){
  * @return Element
  */
 Service.AddProperty("Link", function(action, target = null, complete = "", notification = "error", params = {}){
+    debugger;
     const link = jQuery("<a></a>");
-    if(typeof action === "object" && action !== null && action.length > 0) {
+    if(action !== null && typeof action !== "undefined" && typeof action === "object") {
         jQuery.each(action,function(e){
             if (action.hasOwnProperty(e)) {
                 link.attr(`data-${e}`,action[e]);
