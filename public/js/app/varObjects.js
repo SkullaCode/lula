@@ -173,7 +173,8 @@ window.Service = function(){
         SYSTEM_NOTIFICATION_ON_ERROR        : "notification-error",     //-------------------------------------- determines which notification type (alert or toaster) should be used on error
         SYSTEM_NOTIFICATION                 : "notification",           //-------------------------------------- determines if notification should be executed
         SYSTEM_TITLE                        : "title",                  //--------------------------------------
-        SYSTEM_DEFAULT                      : "default"                 //-------------------------------------- determines what should be in the first option of a select list
+        SYSTEM_DEFAULT                      : "default",                //-------------------------------------- determines what should be in the first option of a select list
+        SYSTEM_HIDE                         : "hide"                    //-------------------------------------- determines action to run when a modal is hidden
     };
 
     return Response;

@@ -465,7 +465,7 @@ Service.AddProperty("ServerRequest", function (requirements) {
 Service.AddProperty("LaunchModal", function (modal, actionBtn) {
    return new Promise(function(resolve){
        modal.on('hide.bs.modal', function (e) {
-
+           Service.ExecuteCustom(actionBtn.data(Service.SYSTEM_HIDE),this,actionBtn,e);
        });
        modal.on('hidden.bs.modal', function () {
            Service.LoadedModal.remove();

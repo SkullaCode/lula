@@ -166,7 +166,6 @@ window.Service = function(){
         LoadingStateOn                      : null,
         LoadingStateOff                     : null,
         CanSubmitForm                       : null,
-        Bootstrap                           : null,
         FindElementSync                     : null,
         FormData                            : null,
         Link                                : null,
@@ -199,7 +198,8 @@ window.Service = function(){
         SYSTEM_NOTIFICATION_ON_ERROR        : "notification-error",     //-------------------------------------- determines which notification type (alert or toaster) should be used on error
         SYSTEM_NOTIFICATION                 : "notification",           //-------------------------------------- determines if notification should be executed
         SYSTEM_TITLE                        : "title",                  //--------------------------------------
-        SYSTEM_DEFAULT                      : "default"                 //-------------------------------------- determines what should be in the first option of a select list
+        SYSTEM_DEFAULT                      : "default",                //-------------------------------------- determines what should be in the first option of a select list
+        SYSTEM_HIDE                         : "hide"                    //-------------------------------------- determines action to run when a modal is hidden
     };
 
     return Response;
@@ -429,7 +429,10 @@ Service.AddProperty("NotificationHandler", function (result) {
  */
 Service.AddProperty("DefaultElementHandler", function (actionBtn) {
     const elem = jQuery("<div></div>", { class: "alert alert-danger" });
-    elem.append("<p>The panel you are trying to load experienced an error while rendering....</p>");
+    const type = (typeof actionBtn.data(Service.SYSTEM_LOAD_TYPE) !== "undefined")
+        ?  actionBtn.data(Service.SYSTEM_LOAD_TYPE)
+        : "panel";
+    elem.append(`<p>The ${type} you are trying to load experienced an error while rendering....</p>`);
     return elem;
 });
 
@@ -760,7 +763,7 @@ Service.AddProperty("ServerRequest", function (requirements) {
 Service.AddProperty("LaunchModal", function (modal, actionBtn) {
     return new Promise(function(resolve){
         modal.on('hide.bs.modal', function (e) {
-
+            Service.ExecuteCustom(actionBtn.data(Service.SYSTEM_HIDE),this,actionBtn,e);
         });
         modal.on('hidden.bs.modal', function () {
             Service.LoadedModal.remove();
@@ -1528,19 +1531,6 @@ Service.AddProperty("LoadPanelTransition", function (container, panel, actionBtn
 });
 
 /**
- * -- Bootstrap --
- * this function defines default process for loading the DOM.
- * It searches for the defined main container and loads the
- * defined panel into it
- */
-Service.AddProperty("Bootstrap", function(link = null){
-    setTimeout(async function(){
-        await Controller.PanelSelect(document.getElementById(`${MainContainer}`));
-        if(link !== null) await Controller.PanelSelect(link[0]);
-    },1000);
-});
-
-/**
  * -- FormData --
  * This function converts a regular JavaScript
  * object to a FormData one.
@@ -1828,8 +1818,15 @@ Controller.AddProperty("ModalSelect",function(elem){
         Service.FindElement(action, ActionButton).then((elem) => {
             Service.ExecuteCustom(ActionButton.data(Service.SYSTEM_CUSTOM),elem,ActionButton).then(() => {
                 Service.LoadData(elem, ActionButton).then((success) => {
-                    if(!success){
-                        Service.ModalLoading = false;
+                    if(!success) {
+                        elem = Service.DefaultModalHandler(Service.DefaultElementHandler(ActionButton),ActionButton);
+                        Service.LoadModal(elem, ActionButton).then((modal) => {
+                            Service.LaunchModal(modal,ActionButton).then(() => {
+                                modal.find(".modal-title").empty().text("Modal Launch Error")
+                                Service.LoadedModal = modal;
+                                Service.ModalLoading = false;
+                            });
+                        })
                     }else{
                         Service.LoadModal(elem, ActionButton).then((modal) => {
                             Service.LaunchModal(modal,ActionButton).then(() => {

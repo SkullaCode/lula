@@ -13,6 +13,9 @@ Service.Modification.CustomCompleteHandler = function(component, actionBtn, resu
     let message = (result.Status === "success") ? "successfully" : "in error";
     alert(`Complete handler was fired ${message}`);
 };
+Service.Modification.ShowHideAlert = function(component, actionBtn, event){
+    alert("The small target panel will be reloaded!");
+};
 
 Service.Data.Default = function(component, actionBtn){
     return new Promise(function(resolve){
@@ -234,6 +237,9 @@ Controller.CustomSuccessHandler = function(result){
 Controller.CustomErrorHandler = function(e){
     alert("Custom error handler was fired");
     Service.ErrorHandler(e);
+};
+Controller.ModalHide = function(component, actionBtn){
+    Controller.ReloadPanel("SmallTarget");
 };
 Controller.AddMethod("list-from-controller",function(btn){
     return [
