@@ -309,18 +309,27 @@ Service.AddProperty("ServerRequest", function (requirements) {
         requirements.ResponseType = "json";
     }
 
-    if (typeof requirements.ActionBtn === "undefined" || requirements.ActionBtn === null) {
+    if (typeof requirements.ActionBtn === "undefined" ||
+        requirements.ActionBtn === null ||
+        requirements.ActionBtn.length === 0
+    ) {
         requirements.ActionBtn = jQuery("<button></button>", { type: "button" });
-        if(typeof requirements.Notification === "undefined" || requirements.Notification.length === 0){
-            //requirements.ActionBtn.data(Service.SYSTEM_NOTIFICATION,"true");
-            requirements.Notification = "true"
-        }
-    }else{
-        if((typeof requirements.Notification === "undefined" || requirements.Notification.length === 0) && typeof requirements.ActionBtn.data(Service.SYSTEM_NOTIFICATION) !== "undefined"){
-            requirements.Notification = requirements.ActionBtn.data(Service.SYSTEM_NOTIFICATION)
-        }else{
-            requirements.Notification = "true";
-        }
+    }
+
+    if(
+        typeof requirements.Notification === "undefined" ||
+        requirements.Notification === null ||
+        requirements.Notification.length === 0
+    ){
+        requirements.Notification = requirements.ActionBtn.data(Service.SYSTEM_NOTIFICATION);
+    }
+
+    if(
+        typeof requirements.Notification === "undefined" ||
+        requirements.Notification === null ||
+        requirements.Notification.length === 0
+    ){
+        requirements.Notification = "true";
     }
 
     // fix: throws an exception if a POST request is sent

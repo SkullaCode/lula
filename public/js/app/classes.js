@@ -13,7 +13,7 @@ class Requirement{
     Method = null;
     /** @deprecated*/ //always use METHOD!!!
     Request = "POST";
-    Notification = "true";
+    Notification = null;
     Headers = [];
     SuccessHandler = null;
     ErrorHandler = null;

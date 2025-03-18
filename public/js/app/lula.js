@@ -13,7 +13,7 @@ class Requirement{
     Method = null;
     /** @deprecated*/ //always use METHOD!!!
     Request = "POST";
-    Notification = "true";
+    Notification = null;
     Headers = [];
     SuccessHandler = null;
     ErrorHandler = null;
@@ -607,18 +607,27 @@ Service.AddProperty("ServerRequest", function (requirements) {
         requirements.ResponseType = "json";
     }
 
-    if (typeof requirements.ActionBtn === "undefined" || requirements.ActionBtn === null) {
+    if (typeof requirements.ActionBtn === "undefined" ||
+        requirements.ActionBtn === null ||
+        requirements.ActionBtn.length === 0
+    ) {
         requirements.ActionBtn = jQuery("<button></button>", { type: "button" });
-        if(typeof requirements.Notification === "undefined" || requirements.Notification.length === 0){
-            //requirements.ActionBtn.data(Service.SYSTEM_NOTIFICATION,"true");
-            requirements.Notification = "true"
-        }
-    }else{
-        if((typeof requirements.Notification === "undefined" || requirements.Notification.length === 0) && typeof requirements.ActionBtn.data(Service.SYSTEM_NOTIFICATION) !== "undefined"){
-            requirements.Notification = requirements.ActionBtn.data(Service.SYSTEM_NOTIFICATION)
-        }else{
-            requirements.Notification = "true";
-        }
+    }
+
+    if(
+        typeof requirements.Notification === "undefined" ||
+        requirements.Notification === null ||
+        requirements.Notification.length === 0
+    ){
+        requirements.Notification = requirements.ActionBtn.data(Service.SYSTEM_NOTIFICATION);
+    }
+
+    if(
+        typeof requirements.Notification === "undefined" ||
+        requirements.Notification === null ||
+        requirements.Notification.length === 0
+    ){
+        requirements.Notification = "true";
     }
 
     // fix: throws an exception if a POST request is sent
@@ -1567,7 +1576,6 @@ Service.AddProperty("FormData",function(data){
  * @return Element
  */
 Service.AddProperty("Link", function(action, target = null, complete = "", notification = "error", params = {}){
-    debugger;
     const link = jQuery("<a></a>");
     if(action !== null && typeof action !== "undefined" && typeof action === "object") {
         jQuery.each(action,function(e){
